@@ -1,0 +1,994 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%97%82%EF%B8%8F%3C/text%3E%3C/svg%3E" />
+<title>工作台</title>
+<style>
+  :root {
+    --paper: #eef1ec;
+    --paper-raised: #ffffff;
+    --paper-sunken: #e4e9e1;
+    --ink: #1e2a22;
+    --ink-soft: #5b6960;
+    --ink-faint: #8a978e;
+    --line: #d6dcd1;
+    --accent-task: #1f6f5c;
+    --accent-task-soft: #dfeee9;
+    --accent-idea: #b8811f;
+    --accent-idea-soft: #f6ecd4;
+    --accent-habit: #a24870;
+    --accent-habit-soft: #f4e2ea;
+    --danger: #a24d3c;
+    --danger-soft: #f3e3de;
+    --shadow: 0 1px 2px rgba(30, 42, 34, 0.06), 0 6px 16px -8px rgba(30, 42, 34, 0.12);
+    --radius-card: 14px;
+    --radius-control: 9px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #141813;
+      --paper-raised: #1d221e;
+      --paper-sunken: #191d17;
+      --ink: #e7ece5;
+      --ink-soft: #99a69b;
+      --ink-faint: #6c766e;
+      --line: #2b3129;
+      --accent-task: #55c1a3;
+      --accent-task-soft: #1c3730;
+      --accent-idea: #e8b750;
+      --accent-idea-soft: #3a3020;
+      --accent-habit: #e592b8;
+      --accent-habit-soft: #3a2430;
+      --danger: #e08b74;
+      --danger-soft: #3a2621;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 20px -8px rgba(0, 0, 0, 0.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #141813;
+    --paper-raised: #1d221e;
+    --paper-sunken: #191d17;
+    --ink: #e7ece5;
+    --ink-soft: #99a69b;
+    --ink-faint: #6c766e;
+    --line: #2b3129;
+    --accent-task: #55c1a3;
+    --accent-task-soft: #1c3730;
+    --accent-idea: #e8b750;
+    --accent-idea-soft: #3a3020;
+    --accent-habit: #e592b8;
+    --accent-habit-soft: #3a2430;
+    --danger: #e08b74;
+    --danger-soft: #3a2621;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 20px -8px rgba(0, 0, 0, 0.5);
+  }
+  :root[data-theme="light"] {
+    --paper: #eef1ec;
+    --paper-raised: #ffffff;
+    --paper-sunken: #e4e9e1;
+    --ink: #1e2a22;
+    --ink-soft: #5b6960;
+    --ink-faint: #8a978e;
+    --line: #d6dcd1;
+    --accent-task: #1f6f5c;
+    --accent-task-soft: #dfeee9;
+    --accent-idea: #b8811f;
+    --accent-idea-soft: #f6ecd4;
+    --accent-habit: #a24870;
+    --accent-habit-soft: #f4e2ea;
+    --danger: #a24d3c;
+    --danger-soft: #f3e3de;
+    --shadow: 0 1px 2px rgba(30, 42, 34, 0.06), 0 6px 16px -8px rgba(30, 42, 34, 0.12);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    color: var(--ink);
+    background:
+      radial-gradient(circle at 1px 1px, var(--line) 1px, transparent 0) 0 0/22px 22px,
+      var(--paper);
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 20px 16px 64px;
+  }
+
+  header.top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 4px 22px;
+    flex-wrap: wrap;
+  }
+
+  header.top h1 {
+    font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+    font-weight: 600;
+    font-size: 26px;
+    letter-spacing: 0.02em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  header.top .date {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+
+  main.board {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  section.panel {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .panel-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .panel-head .tag {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 3px 7px;
+    border-radius: 5px;
+  }
+  .panel--task .tag { color: var(--accent-task); background: var(--accent-task-soft); }
+  .panel--idea .tag { color: var(--accent-idea); background: var(--accent-idea-soft); }
+  .panel--habit .tag { color: var(--accent-habit); background: var(--accent-habit-soft); }
+
+  .panel-head h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    flex: 1;
+  }
+
+  .count-chip {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+
+  .copy-all {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+  }
+  .panel--task .copy-all:hover { color: var(--accent-task); border-color: var(--accent-task); background: var(--accent-task-soft); }
+  .panel--idea .copy-all:hover { color: var(--accent-idea); border-color: var(--accent-idea); background: var(--accent-idea-soft); }
+  .panel--habit .copy-all:hover { color: var(--accent-habit); border-color: var(--accent-habit); background: var(--accent-habit-soft); }
+
+  .add-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper-sunken);
+    align-items: flex-end;
+  }
+
+  .add-row.stacked {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toolbar-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .add-row input[type="text"], .add-row textarea {
+    flex: 1 1 140px;
+    min-width: 0;
+    font: inherit;
+    font-size: 14.5px;
+    color: var(--ink);
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
+    padding: 9px 11px;
+    resize: none;
+  }
+  .add-row textarea { min-height: 40px; max-height: 120px; }
+
+  .date-input {
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
+    padding: 8px 9px;
+    width: 132px;
+    flex-shrink: 0;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) { .date-input { color-scheme: dark; } }
+  :root[data-theme="dark"] .date-input { color-scheme: dark; }
+  :root[data-theme="light"] .date-input { color-scheme: light; }
+
+  select.date-input {
+    cursor: pointer;
+    width: auto;
+    max-width: 150px;
+  }
+
+  .habit-backfill-date {
+    width: 108px;
+  }
+
+  .row-date {
+    align-self: center;
+    width: 116px;
+    padding: 5px 7px;
+    font-size: 12px;
+  }
+  .row-date.has-date {
+    color: var(--accent-task);
+    border-color: var(--accent-task);
+    background: var(--accent-task-soft);
+    font-weight: 600;
+  }
+
+  .add-row input:focus-visible,
+  .add-row select:focus-visible,
+  .add-row textarea:focus-visible,
+  button:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid var(--accent-task);
+    outline-offset: 2px;
+  }
+  .panel--idea .add-row input:focus-visible,
+  .panel--idea .add-row textarea:focus-visible { outline-color: var(--accent-idea); }
+  .panel--habit .add-row input:focus-visible,
+  .panel--habit .add-row select:focus-visible { outline-color: var(--accent-habit); }
+
+  .add-btn {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-control);
+    padding: 9px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: filter 0.15s, transform 0.05s;
+  }
+  .add-btn:active { transform: translateY(1px); }
+  .panel--task .add-btn { background: var(--accent-task); }
+  .panel--idea .add-btn { background: var(--accent-idea); }
+  .panel--habit .add-btn { background: var(--accent-habit); }
+  .add-btn:hover { filter: brightness(1.08); }
+
+  ul.item-list {
+    list-style: none;
+    margin: 0;
+    padding: 6px 8px;
+  }
+
+  li.item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 10px;
+    border-radius: 9px;
+    transition: background 0.12s;
+  }
+  li.item:hover { background: var(--paper-sunken); }
+
+  .check {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 19px;
+    height: 19px;
+    border-radius: 6px;
+    border: 1.5px solid var(--ink-faint);
+    margin-top: 2px;
+    flex-shrink: 0;
+    cursor: pointer;
+    position: relative;
+    background: var(--paper-raised);
+  }
+  .check:checked { background: var(--accent-task); border-color: var(--accent-task); }
+  .check:checked::after {
+    content: "";
+    position: absolute;
+    left: 5px; top: 1px;
+    width: 5px; height: 9px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  .item-text {
+    flex: 1;
+    font-size: 14.5px;
+    word-break: break-word;
+    white-space: pre-wrap;
+    padding-top: 1px;
+  }
+  li.item.done .item-text { color: var(--ink-faint); text-decoration: line-through; }
+
+  .idea-text {
+    flex: 1;
+    font-size: 14.5px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .idea-meta {
+    display: block;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 11px;
+    color: var(--ink-faint);
+    margin-top: 4px;
+  }
+
+  .item-actions {
+    display: flex;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+
+  .icon-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: none;
+    color: var(--ink-faint);
+    border-radius: 7px;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: color 0.15s, background 0.15s;
+  }
+  .icon-btn:hover { background: var(--paper-sunken); color: var(--ink); }
+  .icon-btn.danger:hover { color: var(--danger); background: var(--danger-soft); }
+  .icon-btn svg { width: 15px; height: 15px; }
+
+  .done-toggle {
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    border-top: 1px solid var(--line);
+    color: var(--ink-soft);
+    font-size: 12.5px;
+    padding: 9px 18px;
+    cursor: pointer;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .done-toggle:hover { color: var(--ink); }
+
+  .habit-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 10px;
+  }
+  @media (min-width: 860px) {
+    .habit-list { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  .habit-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    padding: 10px 11px;
+    border-radius: 10px;
+    background: var(--paper-sunken);
+    border: 1px solid var(--line);
+    transition: border-color 0.12s;
+  }
+  .habit-card:hover { border-color: var(--accent-habit); }
+
+  .habit-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .habit-toggle {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+    border: 1.5px solid var(--ink-faint);
+    flex-shrink: 0;
+    cursor: pointer;
+    position: relative;
+    background: var(--paper-raised);
+  }
+  .habit-toggle.checked { background: var(--accent-habit); border-color: var(--accent-habit); }
+  .habit-toggle.checked::after {
+    content: "";
+    position: absolute;
+    left: 6px; top: 2px;
+    width: 6px; height: 11px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  .habit-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 14.5px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .habit-pill {
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .habit-pill.good { color: var(--accent-task); background: var(--accent-task-soft); }
+  .habit-pill.warn { color: var(--danger); background: var(--danger-soft); }
+  .habit-pill.neutral { color: var(--ink-soft); background: var(--paper-sunken); }
+
+  .habit-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+  }
+  .habit-meta-row span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .habit-meta-row .item-actions {
+    flex-shrink: 0;
+  }
+  .habit-meta-row .icon-btn {
+    width: 22px;
+    height: 22px;
+  }
+  .habit-meta-row .icon-btn svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .empty {
+    padding: 26px 20px 30px;
+    text-align: center;
+    color: var(--ink-faint);
+    font-size: 13.5px;
+  }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 26px;
+    transform: translateX(-50%) translateY(12px);
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 9px 16px;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s, transform 0.18s;
+    z-index: 50;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>工作台</h1>
+    <span class="date" id="today"></span>
+  </header>
+
+  <main class="board">
+    <section class="panel panel--task" aria-labelledby="task-heading">
+      <div class="panel-head">
+        <span class="tag">TO-DO</span>
+        <h2 id="task-heading">待办事项</h2>
+        <span class="count-chip" id="task-count">0 项</span>
+        <button class="copy-all" id="task-copy-all">复制全部</button>
+      </div>
+      <form class="add-row" id="task-form">
+        <input type="text" id="task-input" placeholder="添加一项待办…" autocomplete="off" maxlength="240" />
+        <input type="date" id="task-date" class="date-input" aria-label="日期（可选）" />
+        <button type="submit" class="add-btn">添加</button>
+      </form>
+      <ul class="item-list" id="task-list"></ul>
+      <div class="empty" id="task-empty">还没有待办事项，从上面输入开始吧</div>
+      <button class="done-toggle" id="task-done-toggle" hidden></button>
+    </section>
+
+    <section class="panel panel--idea" aria-labelledby="idea-heading">
+      <div class="panel-head">
+        <span class="tag">SPARK</span>
+        <h2 id="idea-heading">灵感速记</h2>
+        <span class="count-chip" id="idea-count">0 条</span>
+        <button class="copy-all" id="idea-copy-all">复制全部</button>
+      </div>
+      <form class="add-row" id="idea-form">
+        <textarea id="idea-input" placeholder="随手记一笔想法…" maxlength="2000" rows="1"></textarea>
+        <button type="submit" class="add-btn">记录</button>
+      </form>
+      <ul class="item-list" id="idea-list"></ul>
+      <div class="empty" id="idea-empty">灵感还是空的，捕捉到什么就写下来</div>
+    </section>
+
+    <section class="panel panel--habit" aria-labelledby="habit-heading">
+      <div class="panel-head">
+        <span class="tag">STREAK</span>
+        <h2 id="habit-heading">小习惯</h2>
+        <span class="count-chip" id="habit-count">0 个</span>
+        <button class="copy-all" id="habit-copy-all">复制全部</button>
+      </div>
+      <div class="add-row stacked">
+        <form class="toolbar-row" id="habit-form">
+          <input type="text" id="habit-input" placeholder="添加一个小习惯…" autocomplete="off" maxlength="60" />
+          <button type="submit" class="add-btn">添加</button>
+        </form>
+        <div class="toolbar-row">
+          <select id="habit-backfill-select" class="date-input" aria-label="选择习惯"></select>
+          <input type="date" id="habit-backfill-date" class="date-input habit-backfill-date" aria-label="补录日期" />
+          <button type="button" id="habit-backfill-btn" class="add-btn">补录</button>
+        </div>
+      </div>
+      <div class="habit-list" id="habit-list"></div>
+      <div class="empty" id="habit-empty">还没有习惯，从上面输入开始记录</div>
+    </section>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const STORE_TASKS = "workbench.tasks.v1";
+  const STORE_IDEAS = "workbench.ideas.v1";
+  const STORE_HABITS = "workbench.habits.v1";
+  const HABITS_SEED_FLAG = "workbench.habits.seeded.v1";
+
+  const load = (key) => {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
+  };
+  const save = (key, data) => localStorage.setItem(key, JSON.stringify(data));
+
+  let tasks = load(STORE_TASKS);
+  let ideas = load(STORE_IDEAS);
+  let showDone = false;
+
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+  function seedHabits() {
+    return [
+      { id: uid(), name: "泥膜🫧", dates: ["2026-03-21", "2026-07-12"] },
+      { id: uid(), name: "洗头", dates: ["2026-07-06", "2026-07-12", "2026-07-18", "2026-07-24"] },
+      { id: uid(), name: "湿敷", dates: ["2026-07-10", "2026-07-16"] },
+      { id: uid(), name: "记账", dates: ["2026-07-09", "2026-07-17"] },
+      { id: uid(), name: "运动", dates: ["2026-07-08", "2026-07-09"] },
+      { id: uid(), name: "面膜", dates: ["2026-07-12", "2026-07-26"] },
+    ];
+  }
+
+  let habits = load(STORE_HABITS);
+  if (!localStorage.getItem(HABITS_SEED_FLAG)) {
+    habits = seedHabits();
+    save(STORE_HABITS, habits);
+    localStorage.setItem(HABITS_SEED_FLAG, "1");
+  }
+
+  const iconCopy = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M4 13V5a2 2 0 0 1 2-2h8" stroke-linecap="round"/></svg>';
+  const iconTrash = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h12M8 6V4.5A1.5 1.5 0 0 1 9.5 3h1A1.5 1.5 0 0 1 12 4.5V6M6 6l.6 10a1.5 1.5 0 0 0 1.5 1.4h3.8a1.5 1.5 0 0 0 1.5-1.4L14 6"/></svg>';
+
+  let toastTimer;
+  function toast(msg) {
+    const el = document.getElementById("toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove("show"), 1500);
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(() => toast("已复制")).catch(() => fallbackCopy(text));
+    } else {
+      fallbackCopy(text);
+    }
+  }
+  function fallbackCopy(text) {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); toast("已复制"); }
+    catch (e) { toast("复制失败"); }
+    document.body.removeChild(ta);
+  }
+
+  function fmtTime(ts) {
+    const d = new Date(ts);
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getMonth() + 1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  function toISO(d) {
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+  function todayISO() { return toISO(new Date()); }
+  function daysBetween(fromISO, toISOStr) {
+    const [fy, fm, fd] = fromISO.split("-").map(Number);
+    const [ty, tm, td] = toISOStr.split("-").map(Number);
+    return Math.round((Date.UTC(ty, tm - 1, td) - Date.UTC(fy, fm - 1, fd)) / 86400000);
+  }
+
+  function habitStatus(h) {
+    const dates = [...h.dates].sort();
+    if (dates.length === 0) return { text: "还没有记录", last: "-", kind: "neutral" };
+    const last = dates[dates.length - 1];
+    const daysAgo = daysBetween(last, todayISO());
+    if (daysAgo <= 0) return { text: "今天已完成", last, kind: "good" };
+    if (daysAgo >= 5) return { text: `${daysAgo} 天前`, last, kind: "warn" };
+    return { text: `${daysAgo} 天前`, last, kind: "neutral" };
+  }
+
+  function renderTasks() {
+    const list = document.getElementById("task-list");
+    const empty = document.getElementById("task-empty");
+    const doneToggle = document.getElementById("task-done-toggle");
+    const open = tasks.filter(t => !t.done);
+    const done = tasks.filter(t => t.done);
+
+    document.getElementById("task-count").textContent = `${open.length} 项`;
+    list.innerHTML = "";
+
+    if (tasks.length === 0) {
+      empty.style.display = "block";
+    } else {
+      empty.style.display = "none";
+    }
+
+    const visible = showDone ? tasks : open;
+    visible.forEach(t => list.appendChild(taskRow(t)));
+
+    if (done.length > 0) {
+      doneToggle.hidden = false;
+      doneToggle.textContent = showDone ? `隐藏已完成 (${done.length})` : `显示已完成 (${done.length})`;
+    } else {
+      doneToggle.hidden = true;
+    }
+  }
+
+  function taskRow(t) {
+    const li = document.createElement("li");
+    li.className = "item" + (t.done ? " done" : "");
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.className = "check";
+    cb.checked = t.done;
+    cb.setAttribute("aria-label", "标记完成");
+    cb.addEventListener("change", () => {
+      t.done = cb.checked;
+      save(STORE_TASKS, tasks);
+      renderTasks();
+    });
+
+    const span = document.createElement("span");
+    span.className = "item-text";
+    span.textContent = t.text;
+
+    const dateInput = document.createElement("input");
+    dateInput.type = "date";
+    dateInput.className = "date-input row-date" + (t.date ? " has-date" : "");
+    dateInput.value = t.date || "";
+    dateInput.setAttribute("aria-label", "日期（可选）");
+    dateInput.addEventListener("change", () => {
+      t.date = dateInput.value || null;
+      dateInput.classList.toggle("has-date", !!t.date);
+      save(STORE_TASKS, tasks);
+    });
+
+    const actions = document.createElement("div");
+    actions.className = "item-actions";
+
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "icon-btn";
+    copyBtn.innerHTML = iconCopy;
+    copyBtn.title = "复制这一项";
+    copyBtn.addEventListener("click", () => copyText(t.date ? `${t.date} ${t.text}` : t.text));
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "icon-btn danger";
+    delBtn.innerHTML = iconTrash;
+    delBtn.title = "删除";
+    delBtn.addEventListener("click", () => {
+      tasks = tasks.filter(x => x.id !== t.id);
+      save(STORE_TASKS, tasks);
+      renderTasks();
+    });
+
+    actions.append(copyBtn, delBtn);
+    li.append(cb, span, dateInput, actions);
+    return li;
+  }
+
+  function renderIdeas() {
+    const list = document.getElementById("idea-list");
+    const empty = document.getElementById("idea-empty");
+    document.getElementById("idea-count").textContent = `${ideas.length} 条`;
+    list.innerHTML = "";
+    empty.style.display = ideas.length === 0 ? "block" : "none";
+    ideas.forEach(i => list.appendChild(ideaRow(i)));
+  }
+
+  function ideaRow(i) {
+    const li = document.createElement("li");
+    li.className = "item";
+
+    const wrap = document.createElement("div");
+    wrap.className = "idea-text";
+    wrap.textContent = i.text;
+    const meta = document.createElement("span");
+    meta.className = "idea-meta";
+    meta.textContent = fmtTime(i.ts);
+    wrap.appendChild(meta);
+
+    const actions = document.createElement("div");
+    actions.className = "item-actions";
+
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "icon-btn";
+    copyBtn.innerHTML = iconCopy;
+    copyBtn.title = "复制这条";
+    copyBtn.addEventListener("click", () => copyText(i.text));
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "icon-btn danger";
+    delBtn.innerHTML = iconTrash;
+    delBtn.title = "删除";
+    delBtn.addEventListener("click", () => {
+      ideas = ideas.filter(x => x.id !== i.id);
+      save(STORE_IDEAS, ideas);
+      renderIdeas();
+    });
+
+    actions.append(copyBtn, delBtn);
+    li.append(wrap, actions);
+    return li;
+  }
+
+  function renderHabits() {
+    const list = document.getElementById("habit-list");
+    const empty = document.getElementById("habit-empty");
+    document.getElementById("habit-count").textContent = `${habits.length} 个`;
+    list.innerHTML = "";
+    empty.style.display = habits.length === 0 ? "block" : "none";
+    habits.forEach(h => list.appendChild(habitCard(h)));
+    renderHabitSelect();
+  }
+
+  function renderHabitSelect() {
+    const select = document.getElementById("habit-backfill-select");
+    const prev = select.value;
+    select.innerHTML = "";
+    habits.forEach(h => {
+      const opt = document.createElement("option");
+      opt.value = h.id;
+      opt.textContent = h.name;
+      select.appendChild(opt);
+    });
+    if (habits.some(h => h.id === prev)) select.value = prev;
+  }
+
+  function habitCard(h) {
+    const card = document.createElement("div");
+    card.className = "habit-card";
+
+    const top = document.createElement("div");
+    top.className = "habit-top";
+
+    const status = habitStatus(h);
+    const isTodayDone = h.dates.includes(todayISO());
+
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "habit-toggle" + (isTodayDone ? " checked" : "");
+    toggle.title = isTodayDone ? "撤销今天的打卡" : "标记今天已完成";
+    toggle.setAttribute("aria-label", toggle.title);
+    toggle.addEventListener("click", () => {
+      const t = todayISO();
+      h.dates = isTodayDone ? h.dates.filter(d => d !== t) : [...h.dates, t];
+      save(STORE_HABITS, habits);
+      renderHabits();
+    });
+
+    const name = document.createElement("span");
+    name.className = "habit-name";
+    name.textContent = h.name;
+
+    const pill = document.createElement("span");
+    pill.className = "habit-pill " + status.kind;
+    pill.textContent = status.text;
+
+    const actions = document.createElement("div");
+    actions.className = "item-actions";
+
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "icon-btn";
+    copyBtn.innerHTML = iconCopy;
+    copyBtn.title = "复制这条状态";
+    copyBtn.addEventListener("click", () => copyText(`${h.name}｜${status.text}｜上次：${status.last}`));
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "icon-btn danger";
+    delBtn.innerHTML = iconTrash;
+    delBtn.title = "删除这个习惯";
+    delBtn.addEventListener("click", () => {
+      habits = habits.filter(x => x.id !== h.id);
+      save(STORE_HABITS, habits);
+      renderHabits();
+    });
+
+    actions.append(copyBtn, delBtn);
+    top.append(toggle, name, pill);
+
+    const metaRow = document.createElement("div");
+    metaRow.className = "habit-meta-row";
+
+    const lastText = document.createElement("span");
+    lastText.textContent = `上次：${status.last}`;
+    metaRow.append(lastText, actions);
+
+    card.append(top, metaRow);
+    return card;
+  }
+
+  document.getElementById("task-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = document.getElementById("task-input");
+    const dateField = document.getElementById("task-date");
+    const text = input.value.trim();
+    if (!text) return;
+    tasks.unshift({ id: uid(), text, done: false, date: dateField.value || null, ts: Date.now() });
+    save(STORE_TASKS, tasks);
+    input.value = "";
+    dateField.value = "";
+    renderTasks();
+  });
+
+  const ideaInput = document.getElementById("idea-input");
+  ideaInput.addEventListener("input", () => {
+    ideaInput.style.height = "auto";
+    ideaInput.style.height = Math.min(ideaInput.scrollHeight, 120) + "px";
+  });
+
+  document.getElementById("idea-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const text = ideaInput.value.trim();
+    if (!text) return;
+    ideas.unshift({ id: uid(), text, ts: Date.now() });
+    save(STORE_IDEAS, ideas);
+    ideaInput.value = "";
+    ideaInput.style.height = "auto";
+    renderIdeas();
+  });
+
+  document.getElementById("task-done-toggle").addEventListener("click", () => {
+    showDone = !showDone;
+    renderTasks();
+  });
+
+  document.getElementById("task-copy-all").addEventListener("click", () => {
+    if (tasks.length === 0) return toast("没有可复制的内容");
+    const text = tasks.map(t => `- [${t.done ? "x" : " "}] ${t.date ? t.date + " " : ""}${t.text}`).join("\n");
+    copyText(text);
+  });
+
+  document.getElementById("idea-copy-all").addEventListener("click", () => {
+    if (ideas.length === 0) return toast("没有可复制的内容");
+    const text = ideas.map(i => `· ${i.text}`).join("\n");
+    copyText(text);
+  });
+
+  document.getElementById("habit-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = document.getElementById("habit-input");
+    const name = input.value.trim();
+    if (!name) return;
+    habits.push({ id: uid(), name, dates: [] });
+    save(STORE_HABITS, habits);
+    input.value = "";
+    renderHabits();
+  });
+
+  document.getElementById("habit-backfill-btn").addEventListener("click", () => {
+    const select = document.getElementById("habit-backfill-select");
+    const dateField = document.getElementById("habit-backfill-date");
+    const h = habits.find(x => x.id === select.value);
+    const d = dateField.value;
+    if (!h || !d) return;
+    if (!h.dates.includes(d)) h.dates = [...h.dates, d];
+    save(STORE_HABITS, habits);
+    dateField.value = "";
+    renderHabits();
+    toast(`已补录：${h.name} ${d}`);
+  });
+
+  document.getElementById("habit-copy-all").addEventListener("click", () => {
+    if (habits.length === 0) return toast("没有可复制的内容");
+    const text = habits.map(h => {
+      const s = habitStatus(h);
+      return `${h.name}｜${s.text}｜上次：${s.last}`;
+    }).join("\n");
+    copyText(text);
+  });
+
+  const today = new Date();
+  const weekday = ["周日","周一","周二","周三","周四","周五","周六"][today.getDay()];
+  document.getElementById("today").textContent =
+    `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日 ${weekday}`;
+
+  renderTasks();
+  renderIdeas();
+  renderHabits();
+</script>
+</body>
+</html>
