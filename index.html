@@ -207,18 +207,6 @@
     align-items: flex-end;
   }
 
-  .add-row.stacked {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .toolbar-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-  }
-
   .add-row input[type="text"], .add-row textarea {
     flex: 1 1 140px;
     min-width: 0;
@@ -415,10 +403,8 @@
 
   .habit-card {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
     min-width: 0;
-    padding: 10px 11px;
+    padding: 8px 9px;
     border-radius: 10px;
     background: var(--paper-sunken);
     border: 1px solid var(--line);
@@ -429,15 +415,37 @@
   .habit-top {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
+    min-width: 0;
+    width: 100%;
   }
+
+  .habit-top .icon-btn {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+  .habit-top .icon-btn svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  .habit-date {
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .habit-date.good { color: var(--accent-task); }
+  .habit-date.warn { color: var(--danger); }
+  .habit-date.neutral { color: var(--ink-soft); font-weight: 500; }
 
   .habit-toggle {
     appearance: none;
     -webkit-appearance: none;
-    width: 22px;
-    height: 22px;
-    border-radius: 7px;
+    width: 18px;
+    height: 18px;
+    border-radius: 6px;
     border: 1.5px solid var(--ink-faint);
     flex-shrink: 0;
     cursor: pointer;
@@ -448,8 +456,8 @@
   .habit-toggle.checked::after {
     content: "";
     position: absolute;
-    left: 6px; top: 2px;
-    width: 6px; height: 11px;
+    left: 4.5px; top: 1.5px;
+    width: 5px; height: 9px;
     border: solid white;
     border-width: 0 2px 2px 0;
     transform: rotate(45deg);
@@ -463,43 +471,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  .habit-pill {
-    font-size: 11.5px;
-    font-weight: 600;
-    padding: 3px 9px;
-    border-radius: 20px;
-    white-space: nowrap;
-  }
-  .habit-pill.good { color: var(--accent-task); background: var(--accent-task-soft); }
-  .habit-pill.warn { color: var(--danger); background: var(--danger-soft); }
-  .habit-pill.neutral { color: var(--ink-soft); background: var(--paper-sunken); }
-
-  .habit-meta-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 4px;
-    font-size: 11.5px;
-    color: var(--ink-soft);
-  }
-  .habit-meta-row span {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .habit-meta-row .item-actions {
-    flex-shrink: 0;
-  }
-  .habit-meta-row .icon-btn {
-    width: 22px;
-    height: 22px;
-  }
-  .habit-meta-row .icon-btn svg {
-    width: 12px;
-    height: 12px;
   }
 
   .empty {
@@ -580,16 +551,14 @@
         <span class="count-chip" id="habit-count">0 个</span>
         <button class="copy-all" id="habit-copy-all">复制全部</button>
       </div>
-      <div class="add-row stacked">
-        <form class="toolbar-row" id="habit-form">
+      <div class="add-row">
+        <form id="habit-form" style="display: contents;">
           <input type="text" id="habit-input" placeholder="添加一个小习惯…" autocomplete="off" maxlength="60" />
           <button type="submit" class="add-btn">添加</button>
         </form>
-        <div class="toolbar-row">
-          <select id="habit-backfill-select" class="date-input" aria-label="选择习惯"></select>
-          <input type="date" id="habit-backfill-date" class="date-input habit-backfill-date" aria-label="补录日期" />
-          <button type="button" id="habit-backfill-btn" class="add-btn">补录</button>
-        </div>
+        <select id="habit-backfill-select" class="date-input" aria-label="选择习惯"></select>
+        <input type="date" id="habit-backfill-date" class="date-input habit-backfill-date" aria-label="补录日期" />
+        <button type="button" id="habit-backfill-btn" class="add-btn">补录</button>
       </div>
       <div class="habit-list" id="habit-list"></div>
       <div class="empty" id="habit-empty">还没有习惯，从上面输入开始记录</div>
@@ -679,6 +648,11 @@
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   }
   function todayISO() { return toISO(new Date()); }
+  function fmtShortDate(iso) {
+    if (!iso || iso === "-") return "-";
+    const [, m, d] = iso.split("-");
+    return `${Number(m)}/${Number(d)}`;
+  }
   function daysBetween(fromISO, toISOStr) {
     const [fy, fm, fd] = fromISO.split("-").map(Number);
     const [ty, tm, td] = toISOStr.split("-").map(Number);
@@ -755,12 +729,6 @@
     const actions = document.createElement("div");
     actions.className = "item-actions";
 
-    const copyBtn = document.createElement("button");
-    copyBtn.className = "icon-btn";
-    copyBtn.innerHTML = iconCopy;
-    copyBtn.title = "复制这一项";
-    copyBtn.addEventListener("click", () => copyText(t.date ? `${t.date} ${t.text}` : t.text));
-
     const delBtn = document.createElement("button");
     delBtn.className = "icon-btn danger";
     delBtn.innerHTML = iconTrash;
@@ -771,7 +739,7 @@
       renderTasks();
     });
 
-    actions.append(copyBtn, delBtn);
+    actions.append(delBtn);
     li.append(cb, span, dateInput, actions);
     return li;
   }
@@ -870,18 +838,10 @@
     name.className = "habit-name";
     name.textContent = h.name;
 
-    const pill = document.createElement("span");
-    pill.className = "habit-pill " + status.kind;
-    pill.textContent = status.text;
-
-    const actions = document.createElement("div");
-    actions.className = "item-actions";
-
-    const copyBtn = document.createElement("button");
-    copyBtn.className = "icon-btn";
-    copyBtn.innerHTML = iconCopy;
-    copyBtn.title = "复制这条状态";
-    copyBtn.addEventListener("click", () => copyText(`${h.name}｜${status.text}｜上次：${status.last}`));
+    const dateText = document.createElement("span");
+    dateText.className = "habit-date " + status.kind;
+    dateText.textContent = status.kind === "good" ? "今天" : fmtShortDate(status.last);
+    dateText.title = status.last === "-" ? "还没有记录" : `上次：${status.last}（${status.text}）`;
 
     const delBtn = document.createElement("button");
     delBtn.className = "icon-btn danger";
@@ -893,17 +853,8 @@
       renderHabits();
     });
 
-    actions.append(copyBtn, delBtn);
-    top.append(toggle, name, pill);
-
-    const metaRow = document.createElement("div");
-    metaRow.className = "habit-meta-row";
-
-    const lastText = document.createElement("span");
-    lastText.textContent = `上次：${status.last}`;
-    metaRow.append(lastText, actions);
-
-    card.append(top, metaRow);
+    top.append(toggle, name, dateText, delBtn);
+    card.append(top);
     return card;
   }
 
