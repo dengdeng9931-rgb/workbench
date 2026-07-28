@@ -205,10 +205,10 @@
   .category-header .eyebrow { color: var(--accent); }
   .item-row {
     display: grid;
-    grid-template-columns: 22px 1fr 46px 58px 22px;
+    grid-template-columns: 20px 1fr 38px 48px 20px;
     align-items: center;
-    gap: 8px;
-    padding: 9px 14px;
+    gap: 6px;
+    padding: 9px 12px;
     border-bottom: 1px solid var(--border);
     background: var(--row);
     transition: background-color 0.15s ease, opacity 0.15s ease;
@@ -232,7 +232,7 @@
   }
   .item-name {
     font-family: var(--font-body);
-    font-size: 0.92rem;
+    font-size: 0.88rem;
     font-weight: 500;
     color: var(--ink);
     background: transparent;
@@ -240,8 +240,10 @@
     padding: 2px 0;
     min-width: 0;
     width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  .item-name:focus { outline: none; border-bottom: 1px dashed var(--accent); }
+  .item-name:focus { outline: none; text-overflow: clip; border-bottom: 1px dashed var(--accent); }
   .status-chip {
     font-family: var(--font-display);
     font-size: 0.62rem;
