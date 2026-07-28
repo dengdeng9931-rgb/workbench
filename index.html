@@ -193,9 +193,7 @@
     cursor: pointer;
     transition: border-color 0.15s, color 0.15s, background 0.15s;
   }
-  .panel--task .copy-all:hover { color: var(--accent-task); border-color: var(--accent-task); background: var(--accent-task-soft); }
   .panel--idea .copy-all:hover { color: var(--accent-idea); border-color: var(--accent-idea); background: var(--accent-idea-soft); }
-  .panel--habit .copy-all:hover { color: var(--accent-habit); border-color: var(--accent-habit); background: var(--accent-habit-soft); }
 
   .add-row {
     display: flex;
@@ -205,6 +203,18 @@
     border-bottom: 1px solid var(--line);
     background: var(--paper-sunken);
     align-items: flex-end;
+  }
+
+  .add-row.stacked {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toolbar-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
   }
 
   .add-row input[type="text"], .add-row textarea {
@@ -517,7 +527,6 @@
         <span class="tag">TO-DO</span>
         <h2 id="task-heading">待办事项</h2>
         <span class="count-chip" id="task-count">0 项</span>
-        <button class="copy-all" id="task-copy-all">复制全部</button>
       </div>
       <form class="add-row" id="task-form">
         <input type="text" id="task-input" placeholder="添加一项待办…" autocomplete="off" maxlength="240" />
@@ -549,16 +558,17 @@
         <span class="tag">STREAK</span>
         <h2 id="habit-heading">小习惯</h2>
         <span class="count-chip" id="habit-count">0 个</span>
-        <button class="copy-all" id="habit-copy-all">复制全部</button>
       </div>
-      <div class="add-row">
-        <form id="habit-form" style="display: contents;">
+      <div class="add-row stacked">
+        <form class="toolbar-row" id="habit-form">
           <input type="text" id="habit-input" placeholder="添加一个小习惯…" autocomplete="off" maxlength="60" />
           <button type="submit" class="add-btn">添加</button>
         </form>
-        <select id="habit-backfill-select" class="date-input" aria-label="选择习惯"></select>
-        <input type="date" id="habit-backfill-date" class="date-input habit-backfill-date" aria-label="补录日期" />
-        <button type="button" id="habit-backfill-btn" class="add-btn">补录</button>
+        <div class="toolbar-row">
+          <select id="habit-backfill-select" class="date-input" aria-label="选择习惯"></select>
+          <input type="date" id="habit-backfill-date" class="date-input habit-backfill-date" aria-label="补录日期" />
+          <button type="button" id="habit-backfill-btn" class="add-btn">补录</button>
+        </div>
       </div>
       <div class="habit-list" id="habit-list"></div>
       <div class="empty" id="habit-empty">还没有习惯，从上面输入开始记录</div>
@@ -648,11 +658,6 @@
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   }
   function todayISO() { return toISO(new Date()); }
-  function fmtShortDate(iso) {
-    if (!iso || iso === "-") return "-";
-    const [, m, d] = iso.split("-");
-    return `${Number(m)}/${Number(d)}`;
-  }
   function daysBetween(fromISO, toISOStr) {
     const [fy, fm, fd] = fromISO.split("-").map(Number);
     const [ty, tm, td] = toISOStr.split("-").map(Number);
@@ -661,12 +666,12 @@
 
   function habitStatus(h) {
     const dates = [...h.dates].sort();
-    if (dates.length === 0) return { text: "还没有记录", last: "-", kind: "neutral" };
+    if (dates.length === 0) return { text: "还没有记录", last: "-", kind: "neutral", daysAgo: null };
     const last = dates[dates.length - 1];
     const daysAgo = daysBetween(last, todayISO());
-    if (daysAgo <= 0) return { text: "今天已完成", last, kind: "good" };
-    if (daysAgo >= 5) return { text: `${daysAgo} 天前`, last, kind: "warn" };
-    return { text: `${daysAgo} 天前`, last, kind: "neutral" };
+    if (daysAgo <= 0) return { text: "今天已完成", last, kind: "good", daysAgo };
+    if (daysAgo >= 5) return { text: `${daysAgo} 天前`, last, kind: "warn", daysAgo };
+    return { text: `${daysAgo} 天前`, last, kind: "neutral", daysAgo };
   }
 
   function renderTasks() {
@@ -840,8 +845,8 @@
 
     const dateText = document.createElement("span");
     dateText.className = "habit-date " + status.kind;
-    dateText.textContent = status.kind === "good" ? "今天" : fmtShortDate(status.last);
-    dateText.title = status.last === "-" ? "还没有记录" : `上次：${status.last}（${status.text}）`;
+    dateText.textContent = status.kind === "good" ? "今天" : (status.last === "-" ? "还没有" : `${status.daysAgo}天前`);
+    dateText.title = status.last === "-" ? "还没有记录" : `上次：${status.last}`;
 
     const delBtn = document.createElement("button");
     delBtn.className = "icon-btn danger";
@@ -893,12 +898,6 @@
     renderTasks();
   });
 
-  document.getElementById("task-copy-all").addEventListener("click", () => {
-    if (tasks.length === 0) return toast("没有可复制的内容");
-    const text = tasks.map(t => `- [${t.done ? "x" : " "}] ${t.date ? t.date + " " : ""}${t.text}`).join("\n");
-    copyText(text);
-  });
-
   document.getElementById("idea-copy-all").addEventListener("click", () => {
     if (ideas.length === 0) return toast("没有可复制的内容");
     const text = ideas.map(i => `· ${i.text}`).join("\n");
@@ -927,15 +926,6 @@
     dateField.value = "";
     renderHabits();
     toast(`已补录：${h.name} ${d}`);
-  });
-
-  document.getElementById("habit-copy-all").addEventListener("click", () => {
-    if (habits.length === 0) return toast("没有可复制的内容");
-    const text = habits.map(h => {
-      const s = habitStatus(h);
-      return `${h.name}｜${s.text}｜上次：${s.last}`;
-    }).join("\n");
-    copyText(text);
   });
 
   const today = new Date();
