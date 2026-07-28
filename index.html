@@ -634,6 +634,8 @@
     accent-color: var(--accent-time);
     cursor: pointer;
   }
+  .holiday-toggle input { accent-color: var(--accent-idea); }
+  .holiday-toggle.checked { color: var(--accent-idea); font-weight: 600; }
 
   .day-times {
     display: flex;
@@ -653,6 +655,17 @@
     flex-shrink: 0;
   }
 
+  .location-input {
+    width: 100%;
+    font: inherit;
+    font-size: 13px;
+    color: var(--ink);
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
+    padding: 7px 9px;
+  }
+
   .day-computed {
     font-size: 12px;
     color: var(--ink-soft);
@@ -663,6 +676,7 @@
     font-weight: 600;
   }
   .day-computed.rest { color: var(--ink-faint); }
+  .day-computed .holiday-tag { color: var(--accent-idea); font-weight: 600; }
 
   .empty {
     padding: 26px 20px 30px;
@@ -776,6 +790,7 @@
         <button type="button" class="week-nav-btn" id="week-next" aria-label="下一周">›</button>
       </div>
       <div class="day-list" id="day-list"></div>
+      <datalist id="location-options"></datalist>
     </section>
   </main>
 </div>
@@ -1102,9 +1117,18 @@
 
   function ensureWeek(key) {
     if (!schedule[key]) {
-      schedule[key] = weekDaysOf(key).map(date => ({ date, start: "", end: "", hasBreak: false }));
+      schedule[key] = weekDaysOf(key).map(date => ({ date, start: "", end: "", hasBreak: false, location: "", isHoliday: false }));
     }
     return schedule[key];
+  }
+
+  function roundToHalfHour(hhmm) {
+    if (!hhmm) return hhmm;
+    let [h, m] = hhmm.split(":").map(Number);
+    if (m < 15) m = 0;
+    else if (m < 45) m = 30;
+    else { m = 0; h = (h + 1) % 24; }
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
   }
 
   function computeDay(entry) {
@@ -1117,12 +1141,13 @@
     let workMin = endMin - startMin;
     if (entry.hasBreak) workMin -= 30;
     workMin = Math.max(0, workMin);
-    const hours = Math.round((workMin / 60) * 10) / 10;
+    let hours = Math.round((workMin / 60) * 10) / 10;
+    if (entry.isHoliday) hours = Math.round(hours * 2 * 10) / 10;
     let wakeMin = startMin - 90;
     if (wakeMin < 0) wakeMin += 24 * 60;
     const pad = (n) => String(n).padStart(2, "0");
     const wake = `${pad(Math.floor(wakeMin / 60))}:${pad(wakeMin % 60)}`;
-    return { wake, hours, isRest: false };
+    return { wake, hours, isRest: false, isHoliday: !!entry.isHoliday };
   }
 
   function formatDayLabel(iso) {
@@ -1153,18 +1178,27 @@
     const label = document.createElement("span");
     label.className = "day-label";
     label.textContent = formatDayLabel(entry.date);
+
+    const holidayLabel = document.createElement("label");
+    holidayLabel.className = "break-toggle holiday-toggle" + (entry.isHoliday ? " checked" : "");
+    const holidayCb = document.createElement("input");
+    holidayCb.type = "checkbox";
+    holidayCb.checked = !!entry.isHoliday;
+    holidayLabel.append(holidayCb, document.createTextNode(" 公共假期·双倍"));
+
     const breakLabel = document.createElement("label");
     breakLabel.className = "break-toggle";
     const breakCb = document.createElement("input");
     breakCb.type = "checkbox";
     breakCb.checked = entry.hasBreak;
     breakLabel.append(breakCb, document.createTextNode(" 含30分钟休息"));
-    top.append(label, breakLabel);
+    top.append(label, holidayLabel, breakLabel);
 
     const times = document.createElement("div");
     times.className = "day-times";
     const startInput = document.createElement("input");
     startInput.type = "time";
+    startInput.step = "1800";
     startInput.className = "date-input time-input";
     startInput.value = entry.start;
     startInput.setAttribute("aria-label", "上班时间");
@@ -1173,10 +1207,20 @@
     sep.textContent = "–";
     const endInput = document.createElement("input");
     endInput.type = "time";
+    endInput.step = "1800";
     endInput.className = "date-input time-input";
     endInput.value = entry.end;
     endInput.setAttribute("aria-label", "下班时间");
     times.append(startInput, sep, endInput);
+
+    const locationInput = document.createElement("input");
+    locationInput.type = "text";
+    locationInput.className = "location-input";
+    locationInput.placeholder = "工作地点 / 部门（可选）";
+    locationInput.value = entry.location || "";
+    locationInput.setAttribute("list", "location-options");
+    locationInput.setAttribute("aria-label", "工作地点或部门");
+    locationInput.maxLength = 40;
 
     const computed = document.createElement("div");
     computed.className = "day-computed";
@@ -1188,25 +1232,46 @@
         computed.classList.add("rest");
       } else {
         computed.classList.remove("rest");
-        computed.innerHTML = `起床 <b>${c.wake}</b> · 预估 <b>${c.hours}</b> 小时`;
+        const holidayTag = c.isHoliday ? ' <span class="holiday-tag">（假期双倍）</span>' : "";
+        computed.innerHTML = `起床 <b>${c.wake}</b> · 预估 <b>${c.hours}</b> 小时${holidayTag}`;
       }
     }
     refreshComputed();
 
     function onChange() {
+      startInput.value = roundToHalfHour(startInput.value);
+      endInput.value = roundToHalfHour(endInput.value);
       entry.start = startInput.value;
       entry.end = endInput.value;
       entry.hasBreak = breakCb.checked;
+      entry.isHoliday = holidayCb.checked;
+      entry.location = locationInput.value.trim();
+      holidayLabel.classList.toggle("checked", entry.isHoliday);
       saveSchedule();
       refreshComputed();
       updateWeekTotal();
+      refreshLocationOptions();
     }
     startInput.addEventListener("change", onChange);
     endInput.addEventListener("change", onChange);
     breakCb.addEventListener("change", onChange);
+    holidayCb.addEventListener("change", onChange);
+    locationInput.addEventListener("change", onChange);
 
-    card.append(top, times, computed);
+    card.append(top, times, locationInput, computed);
     return card;
+  }
+
+  function refreshLocationOptions() {
+    const datalist = document.getElementById("location-options");
+    const locations = new Set();
+    Object.values(schedule).forEach(week => week.forEach(e => { if (e.location) locations.add(e.location); }));
+    datalist.innerHTML = "";
+    locations.forEach(loc => {
+      const opt = document.createElement("option");
+      opt.value = loc;
+      datalist.appendChild(opt);
+    });
   }
 
   function renderSchedule() {
@@ -1216,6 +1281,7 @@
     list.innerHTML = "";
     schedule[viewedWeekStart].forEach(entry => list.appendChild(dayCard(entry)));
     updateWeekTotal();
+    refreshLocationOptions();
   }
 
   document.getElementById("week-prev").addEventListener("click", () => {
