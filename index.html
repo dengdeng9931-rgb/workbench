@@ -332,7 +332,7 @@
 
   .row-date {
     align-self: center;
-    width: 116px;
+    width: 78px;
     padding: 5px 7px;
     font-size: 12px;
   }
@@ -342,6 +342,38 @@
     background: var(--accent-task-soft);
     font-weight: 600;
   }
+
+  .date-field {
+    position: relative;
+  }
+  .date-field-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .date-field-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  .date-field-text.placeholder { color: var(--ink-faint); }
+  .date-field:focus-within {
+    outline: 2px solid var(--accent-task);
+    outline-offset: 2px;
+  }
+
+  #task-date-field { width: 78px; }
 
   .add-row input:focus-visible,
   .add-row select:focus-visible,
@@ -442,6 +474,22 @@
     font-size: 11px;
     color: var(--ink-faint);
     margin-top: 4px;
+  }
+
+  .idea-edit-textarea {
+    flex: 1;
+    font: inherit;
+    font-size: 14.5px;
+    color: var(--ink);
+    background: var(--paper-raised);
+    border: 1px solid var(--accent-idea);
+    border-radius: var(--radius-control);
+    padding: 8px 10px;
+    resize: vertical;
+  }
+  .idea-edit-textarea:focus-visible {
+    outline: 2px solid var(--accent-idea);
+    outline-offset: 1px;
   }
 
   .item-actions {
@@ -597,24 +645,19 @@
   }
 
   .week-range {
-    font-size: 13.5px;
-    font-weight: 600;
+    font-size: 16px;
+    font-weight: 700;
     font-variant-numeric: tabular-nums;
   }
 
-  .week-total {
-    margin-top: 2px;
-  }
-  .week-total-num {
-    font-size: 20px;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    color: var(--accent-time);
-  }
-  .week-total-label {
-    font-size: 11.5px;
+  .week-total-inline {
+    font-size: 14px;
+    font-weight: 500;
     color: var(--ink-soft);
-    margin-left: 3px;
+  }
+  .week-total-inline #week-total-hours {
+    font-weight: 700;
+    color: var(--accent-time);
   }
 
   .day-list {
@@ -890,7 +933,10 @@
       </div>
       <form class="add-row" id="task-form">
         <input type="text" id="task-input" placeholder="添加一项待办…" autocomplete="off" maxlength="240" />
-        <input type="date" id="task-date" class="date-input" aria-label="日期（可选）" />
+        <span class="date-input date-field" id="task-date-field">
+          <span class="date-field-text placeholder" id="task-date-text">月/日</span>
+          <input type="date" id="task-date" class="date-field-input" aria-label="日期（可选）" />
+        </span>
         <button type="submit" class="add-btn">添加</button>
       </form>
       <ul class="item-list" id="task-list"></ul>
@@ -958,8 +1004,7 @@
       <div class="week-bar">
         <button type="button" class="week-nav-btn" id="week-prev" aria-label="上一周">‹</button>
         <div class="week-info">
-          <div class="week-range" id="week-range"></div>
-          <div class="week-total"><span class="week-total-num" id="week-total-hours">0</span><span class="week-total-label">小时 · 本周合计</span></div>
+          <div class="week-range"><span id="week-number"></span><span class="week-total-inline"> · <span id="week-total-hours">0</span> 小时</span></div>
         </div>
         <button type="button" class="week-nav-btn" id="week-next" aria-label="下一周">›</button>
       </div>
@@ -1030,6 +1075,13 @@
     return loc;
   }
 
+  function ensureLocation(name) {
+    let loc = locations.find(l => l.name === name);
+    if (!loc) loc = addLocation(name);
+    return loc;
+  }
+  const defaultLocation = ensureLocation("EL");
+
   (function migrateLegacyLocations() {
     let changed = false;
     Object.values(schedule).forEach(week => week.forEach(entry => {
@@ -1044,8 +1096,17 @@
     if (changed) saveSchedule();
   })();
 
+  (function applyDefaultLocation() {
+    let changed = false;
+    Object.values(schedule).forEach(week => week.forEach(entry => {
+      if (!entry.locationId) { entry.locationId = defaultLocation.id; changed = true; }
+    }));
+    if (changed) saveSchedule();
+  })();
+
   const iconCopy = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M4 13V5a2 2 0 0 1 2-2h8" stroke-linecap="round"/></svg>';
   const iconTrash = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h12M8 6V4.5A1.5 1.5 0 0 1 9.5 3h1A1.5 1.5 0 0 1 12 4.5V6M6 6l.6 10a1.5 1.5 0 0 0 1.5 1.4h3.8a1.5 1.5 0 0 0 1.5-1.4L14 6"/></svg>';
+  const iconEdit = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13.3 3.3a1.6 1.6 0 0 1 2.3 2.3L6.5 14.7l-3 .8.8-3 9-9z"/></svg>';
 
   let toastTimer;
   function toast(msg) {
@@ -1079,6 +1140,36 @@
     const d = new Date(ts);
     const pad = (n) => String(n).padStart(2, "0");
     return `${d.getMonth() + 1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  function fmtMonthDay(iso) {
+    const [, m, d] = iso.split("-").map(Number);
+    return `${m}/${d}`;
+  }
+  function syncDateFieldText(inputEl, textEl) {
+    if (inputEl.value) {
+      textEl.textContent = fmtMonthDay(inputEl.value);
+      textEl.classList.remove("placeholder");
+    } else {
+      textEl.textContent = "月/日";
+      textEl.classList.add("placeholder");
+    }
+  }
+  function makeCompactDateField(value, ariaLabel, extraClass) {
+    const wrap = document.createElement("span");
+    wrap.className = "date-input date-field" + (extraClass ? " " + extraClass : "");
+    const text = document.createElement("span");
+    text.className = "date-field-text";
+    const input = document.createElement("input");
+    input.type = "date";
+    input.className = "date-field-input";
+    input.value = value || "";
+    input.setAttribute("aria-label", ariaLabel);
+    wrap.append(text, input);
+    syncDateFieldText(input, text);
+    wrap.input = input;
+    wrap.textEl = text;
+    return wrap;
   }
 
   function toISO(d) {
@@ -1169,14 +1260,11 @@
     span.className = "item-text";
     span.textContent = t.text;
 
-    const dateInput = document.createElement("input");
-    dateInput.type = "date";
-    dateInput.className = "date-input row-date" + (t.date ? " has-date" : "");
-    dateInput.value = t.date || "";
-    dateInput.setAttribute("aria-label", "日期（可选）");
-    dateInput.addEventListener("change", () => {
-      t.date = dateInput.value || null;
-      dateInput.classList.toggle("has-date", !!t.date);
+    const dateField = makeCompactDateField(t.date, "日期（可选）", "row-date" + (t.date ? " has-date" : ""));
+    dateField.input.addEventListener("change", () => {
+      t.date = dateField.input.value || null;
+      dateField.classList.toggle("has-date", !!t.date);
+      syncDateFieldText(dateField.input, dateField.textEl);
       save(STORE_TASKS, tasks);
     });
 
@@ -1194,7 +1282,7 @@
     });
 
     actions.append(delBtn);
-    li.append(cb, span, dateInput, actions);
+    li.append(cb, span, dateField, actions);
     return li;
   }
 
@@ -1222,6 +1310,12 @@
     const actions = document.createElement("div");
     actions.className = "item-actions";
 
+    const editBtn = document.createElement("button");
+    editBtn.className = "icon-btn";
+    editBtn.innerHTML = iconEdit;
+    editBtn.title = "编辑";
+    editBtn.addEventListener("click", () => startEdit());
+
     const copyBtn = document.createElement("button");
     copyBtn.className = "icon-btn";
     copyBtn.innerHTML = iconCopy;
@@ -1238,8 +1332,38 @@
       renderIdeas();
     });
 
-    actions.append(copyBtn, delBtn);
+    actions.append(editBtn, copyBtn, delBtn);
     li.append(wrap, actions);
+
+    function startEdit() {
+      const textarea = document.createElement("textarea");
+      textarea.className = "idea-edit-textarea";
+      textarea.value = i.text;
+      textarea.rows = Math.min(8, Math.max(2, Math.ceil(i.text.length / 36)));
+      wrap.replaceWith(textarea);
+      textarea.focus();
+      textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+
+      let done = false;
+      function finish(shouldSave) {
+        if (done) return;
+        done = true;
+        if (shouldSave) {
+          const newText = textarea.value.trim();
+          if (newText) {
+            i.text = newText;
+            save(STORE_IDEAS, ideas);
+          }
+        }
+        renderIdeas();
+      }
+      textarea.addEventListener("blur", () => finish(true));
+      textarea.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); textarea.blur(); }
+        if (e.key === "Escape") { e.preventDefault(); finish(false); }
+      });
+    }
+
     return li;
   }
 
@@ -1316,7 +1440,7 @@
 
   function ensureWeek(key) {
     if (!schedule[key]) {
-      schedule[key] = weekDaysOf(key).map(date => ({ date, start: "", end: "", hasBreak: false, locationId: "", isHoliday: false }));
+      schedule[key] = weekDaysOf(key).map(date => ({ date, start: "", end: "", hasBreak: false, locationId: defaultLocation.id, isHoliday: false }));
     }
     return schedule[key];
   }
@@ -1353,6 +1477,17 @@
     const names = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
     const [, m, d] = iso.split("-").map(Number);
     return `${names[weekdayOfISO(iso)]} · ${m}/${d}`;
+  }
+
+  function isoWeekNumber(iso) {
+    const [y, m, d] = iso.split("-").map(Number);
+    const date = new Date(Date.UTC(y, m - 1, d));
+    const dayNum = (date.getUTCDay() + 6) % 7;
+    date.setUTCDate(date.getUTCDate() - dayNum + 3);
+    const firstThursday = new Date(Date.UTC(date.getUTCFullYear(), 0, 4));
+    const firstDayNum = (firstThursday.getUTCDay() + 6) % 7;
+    firstThursday.setUTCDate(firstThursday.getUTCDate() - firstDayNum + 3);
+    return 1 + Math.round((date - firstThursday) / (7 * 86400000));
   }
 
   function formatWeekRange(startISO) {
@@ -1506,7 +1641,7 @@
 
   function renderSchedule() {
     ensureWeek(viewedWeekStart);
-    document.getElementById("week-range").textContent = formatWeekRange(viewedWeekStart);
+    document.getElementById("week-number").textContent = `第${isoWeekNumber(viewedWeekStart)}周`;
     const list = document.getElementById("day-list");
     list.innerHTML = "";
     schedule[viewedWeekStart].forEach(entry => list.appendChild(dayCard(entry)));
@@ -1546,19 +1681,19 @@
     const container = document.getElementById("mini-cal-weeks");
     container.innerHTML = "";
     const thisMonday = mondayOfISO(todayISO());
-    const names = ["上周", "本周", "下周"];
-    [-1, 0, 1].forEach(offset => {
+    const names = ["本周", "下周"];
+    [0, 1].forEach(offset => {
       const start = addDaysISO(thisMonday, offset * 7);
       const weekEntries = schedule[start];
       const row = document.createElement("div");
       row.className = "mini-cal-week";
       const heading = document.createElement("div");
       heading.className = "mini-cal-week-label";
-      heading.textContent = `${names[offset + 1]} · ${formatWeekRange(start)}`;
+      heading.textContent = `${names[offset]} · ${formatWeekRange(start)}`;
       const daysRow = document.createElement("div");
       daysRow.className = "mini-cal-row";
       weekDaysOf(start).forEach((dateISO, i) => {
-        const entry = weekEntries ? weekEntries[i] : { date: dateISO, start: "", end: "", hasBreak: false, locationId: "", isHoliday: false };
+        const entry = weekEntries ? weekEntries[i] : { date: dateISO, start: "", end: "", hasBreak: false, locationId: defaultLocation.id, isHoliday: false };
         daysRow.appendChild(miniDayCell(dateISO, entry));
       });
       row.append(heading, daysRow);
@@ -1597,16 +1732,20 @@
     b.addEventListener("click", () => setActiveTab(b.dataset.tab));
   });
 
+  const taskDateInput = document.getElementById("task-date");
+  const taskDateText = document.getElementById("task-date-text");
+  taskDateInput.addEventListener("input", () => syncDateFieldText(taskDateInput, taskDateText));
+
   document.getElementById("task-form").addEventListener("submit", (e) => {
     e.preventDefault();
     const input = document.getElementById("task-input");
-    const dateField = document.getElementById("task-date");
     const text = input.value.trim();
     if (!text) return;
-    tasks.unshift({ id: uid(), text, done: false, date: dateField.value || null, ts: Date.now() });
+    tasks.unshift({ id: uid(), text, done: false, date: taskDateInput.value || null, ts: Date.now() });
     save(STORE_TASKS, tasks);
     input.value = "";
-    dateField.value = "";
+    taskDateInput.value = "";
+    syncDateFieldText(taskDateInput, taskDateText);
     renderTasks();
   });
 
