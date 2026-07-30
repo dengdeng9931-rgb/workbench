@@ -958,7 +958,6 @@
     padding: 9px 11px;
   }
   .location-manager input[type="text"]:focus-visible { outline: 2px solid var(--accent-time); outline-offset: 2px; }
-  .panel--storage .location-manager input[type="text"]:focus-visible { outline-color: var(--accent-purple); }
 
   .location-manager-label {
     font-size: 11.5px;
@@ -1391,14 +1390,6 @@
         <h2 id="storage-heading">储物</h2>
         <span class="count-chip" id="item-count">0 件</span>
       </div>
-      <div class="location-manager">
-        <p class="location-manager-label">标签</p>
-        <form class="toolbar-row" id="item-tag-form">
-          <input type="text" id="item-tag-input" placeholder="新增一个标签…" autocomplete="off" maxlength="20" />
-          <button type="submit" class="add-btn">添加</button>
-        </form>
-        <div class="location-chips" id="item-tag-chips"></div>
-      </div>
       <div class="add-row stacked">
         <form id="item-form">
           <div class="toolbar-row">
@@ -1416,6 +1407,10 @@
               添加照片
               <input type="file" id="item-photo-input" accept="image/*" />
             </label>
+            <button type="button" class="photo-btn" id="item-tag-add-btn">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4v12M4 10h12"/></svg>
+              添加标签
+            </button>
             <img id="item-photo-preview" class="photo-preview-thumb" hidden />
             <button type="submit" class="add-btn">添加</button>
           </div>
@@ -1598,33 +1593,24 @@
     saveItemTags();
   }
 
-  function renderItemTagManagerUI() {
-    const chips = document.getElementById("item-tag-chips");
-    chips.innerHTML = "";
-    itemTags.forEach(t => {
-      const chip = document.createElement("span");
-      chip.className = "location-chip";
-      chip.style.color = `var(--accent-${t.color})`;
-      chip.style.background = `var(--accent-${t.color}-soft)`;
-      chip.textContent = t.name;
-      const del = document.createElement("button");
-      del.type = "button";
-      del.className = "location-chip-del";
-      del.textContent = "×";
-      del.title = "删除这个标签";
-      del.addEventListener("click", () => {
-        itemTags = itemTags.filter(x => x.id !== t.id);
-        saveItemTags();
-        selectedItemTags.delete(t.name);
-        renderItemTagManagerUI();
-        renderItemTagPicker();
-      });
-      chip.appendChild(del);
-      chips.appendChild(chip);
+  let selectedItemTags = new Set();
+
+  function attachLongPress(el, onLongPress, delay) {
+    let timer = null;
+    let fired = false;
+    const start = (e) => {
+      fired = false;
+      timer = setTimeout(() => { fired = true; onLongPress(); }, delay || 550);
+    };
+    const cancel = () => { clearTimeout(timer); };
+    el.addEventListener("pointerdown", start);
+    el.addEventListener("pointerup", cancel);
+    el.addEventListener("pointercancel", cancel);
+    el.addEventListener("pointerleave", cancel);
+    el.addEventListener("click", (e) => {
+      if (fired) { e.preventDefault(); e.stopPropagation(); }
     });
   }
-
-  let selectedItemTags = new Set();
 
   function renderItemTagPicker() {
     const container = document.getElementById("item-tag-picker");
@@ -1632,7 +1618,7 @@
     if (itemTags.length === 0) {
       const hint = document.createElement("span");
       hint.className = "tag-picker-empty";
-      hint.textContent = "先在上面添加标签";
+      hint.textContent = "还没有标签，点右下角「添加标签」新增";
       container.appendChild(hint);
       return;
     }
@@ -1649,9 +1635,17 @@
         btn.style.color = `var(--accent-${t.color})`;
       }
       btn.textContent = t.name;
+      btn.title = "点击选择 · 长按删除";
       btn.addEventListener("click", () => {
         if (selectedItemTags.has(t.name)) selectedItemTags.delete(t.name);
         else selectedItemTags.add(t.name);
+        renderItemTagPicker();
+      });
+      attachLongPress(btn, () => {
+        if (!confirm(`删除标签"${t.name}"？`)) return;
+        itemTags = itemTags.filter(x => x.id !== t.id);
+        saveItemTags();
+        selectedItemTags.delete(t.name);
         renderItemTagPicker();
       });
       container.appendChild(btn);
@@ -2575,14 +2569,12 @@
     }
   });
 
-  document.getElementById("item-tag-form").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const input = document.getElementById("item-tag-input");
-    const name = input.value.trim();
+  document.getElementById("item-tag-add-btn").addEventListener("click", () => {
+    const name = prompt("新标签名称：");
     if (!name) return;
-    addItemTag(name);
-    input.value = "";
-    renderItemTagManagerUI();
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    addItemTag(trimmed);
     renderItemTagPicker();
   });
 
@@ -2776,7 +2768,6 @@
   renderIdeas();
   renderHabits();
   renderSchedule();
-  renderItemTagManagerUI();
   renderItemTagPicker();
   renderItems();
   const savedTab = localStorage.getItem(STORE_TAB);
