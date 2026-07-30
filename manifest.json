@@ -3,7 +3,7 @@
   "short_name": "工作台",
   "start_url": ".",
   "scope": ".",
-  "display": "standalone",
+  "display": "browser",
   "background_color": "#eef1ec",
   "theme_color": "#a24870",
   "icons": [
