@@ -388,6 +388,22 @@
     padding: 12px 18px;
     border-bottom: 1px solid var(--line);
   }
+
+  .tag-picker-btn {
+    font-size: 12.5px;
+    font-weight: 600;
+    border: 1px solid transparent;
+    border-radius: 20px;
+    padding: 6px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.12s, color 0.12s;
+  }
+  .tag-picker-btn:hover { filter: brightness(0.95); }
+  .tag-picker-empty {
+    font-size: 12.5px;
+    color: var(--ink-faint);
+  }
   .pri-filter-btn {
     font-size: 12px;
     font-weight: 600;
@@ -1376,20 +1392,12 @@
         <span class="count-chip" id="item-count">0 件</span>
       </div>
       <div class="location-manager">
-        <p class="location-manager-label">归属地</p>
-        <form class="toolbar-row" id="item-location-form">
-          <input type="text" id="item-location-input" placeholder="新增一个归属地…" autocomplete="off" maxlength="20" />
+        <p class="location-manager-label">标签</p>
+        <form class="toolbar-row" id="item-tag-form">
+          <input type="text" id="item-tag-input" placeholder="新增一个标签…" autocomplete="off" maxlength="20" />
           <button type="submit" class="add-btn">添加</button>
         </form>
-        <div class="location-chips" id="item-location-chips"></div>
-      </div>
-      <div class="location-manager">
-        <p class="location-manager-label">用途</p>
-        <form class="toolbar-row" id="item-category-form">
-          <input type="text" id="item-category-input" placeholder="新增一个用途…" autocomplete="off" maxlength="20" />
-          <button type="submit" class="add-btn">添加</button>
-        </form>
-        <div class="location-chips" id="item-category-chips"></div>
+        <div class="location-chips" id="item-tag-chips"></div>
       </div>
       <div class="add-row stacked">
         <form id="item-form">
@@ -1401,10 +1409,7 @@
             <input type="date" id="item-buy-date" class="date-input" aria-label="购买日期（可选）" />
             <input type="date" id="item-expiry-date" class="date-input" aria-label="过期日期（可选）" />
           </div>
-          <div class="toolbar-row">
-            <select id="item-location" class="date-input" aria-label="储存地点"></select>
-            <select id="item-category" class="date-input" aria-label="物品类型"></select>
-          </div>
+          <div class="toolbar-row tag-picker" id="item-tag-picker"></div>
           <div class="toolbar-row">
             <label class="photo-btn">
               <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="15" height="11" rx="2"/><circle cx="10" cy="10.5" r="3"/><path d="M7.5 5l1-1.8h3l1 1.8"/></svg>
@@ -1436,8 +1441,8 @@
   const STORE_ITEMS = "workbench.items.v1";
   const STORE_ITEM_LOCATIONS = "workbench.itemLocations.v1";
   const STORE_ITEM_CATEGORIES = "workbench.itemCategories.v1";
-  const ITEM_LOCATIONS_SEED_FLAG = "workbench.itemLocations.seeded.v1";
-  const ITEM_CATEGORIES_SEED_FLAG = "workbench.itemCategories.seeded.v1";
+  const STORE_ITEM_TAGS = "workbench.itemTags.v1";
+  const ITEM_TAGS_MIGRATED_FLAG = "workbench.itemTags.migrated.v1";
   const LOCATION_PALETTE = ["task", "idea", "habit", "time", "purple", "terra", "green", "pink"];
 
   const load = (key) => {
@@ -1544,109 +1549,113 @@
   let items = load(STORE_ITEMS);
   const saveItems = () => localStorage.setItem(STORE_ITEMS, JSON.stringify(items));
 
-  let itemLocations = load(STORE_ITEM_LOCATIONS);
-  if (!localStorage.getItem(ITEM_LOCATIONS_SEED_FLAG)) {
-    itemLocations = [
-      { id: uid(), name: "旅行箱", color: "terra" },
-      { id: uid(), name: "储物箱", color: "time" },
-      { id: uid(), name: "桌柜", color: "green" },
-    ];
-    save(STORE_ITEM_LOCATIONS, itemLocations);
-    localStorage.setItem(ITEM_LOCATIONS_SEED_FLAG, "1");
-  }
-  const saveItemLocations = () => save(STORE_ITEM_LOCATIONS, itemLocations);
+  let itemTags = load(STORE_ITEM_TAGS);
+  if (!localStorage.getItem(ITEM_TAGS_MIGRATED_FLAG)) {
+    const oldLocations = load(STORE_ITEM_LOCATIONS);
+    const oldCategories = load(STORE_ITEM_CATEGORIES);
+    const merged = [];
+    const seen = new Set();
+    [...oldLocations, ...oldCategories].forEach(t => {
+      if (!seen.has(t.name)) { seen.add(t.name); merged.push({ id: t.id || uid(), name: t.name, color: t.color }); }
+    });
+    if (merged.length === 0 && itemTags.length === 0) {
+      merged.push(
+        { id: uid(), name: "旅行箱", color: "terra" },
+        { id: uid(), name: "储物箱", color: "time" },
+        { id: uid(), name: "桌柜", color: "green" },
+        { id: uid(), name: "调料", color: "idea" },
+        { id: uid(), name: "日常", color: "task" },
+        { id: uid(), name: "旅行", color: "pink" },
+      );
+    }
+    itemTags = merged.length > 0 ? merged : itemTags;
+    save(STORE_ITEM_TAGS, itemTags);
 
-  let itemCategories = load(STORE_ITEM_CATEGORIES);
-  if (!localStorage.getItem(ITEM_CATEGORIES_SEED_FLAG)) {
-    itemCategories = [
-      { id: uid(), name: "调料", color: "idea" },
-      { id: uid(), name: "日常", color: "task" },
-      { id: uid(), name: "旅行", color: "pink" },
-    ];
-    save(STORE_ITEM_CATEGORIES, itemCategories);
-    localStorage.setItem(ITEM_CATEGORIES_SEED_FLAG, "1");
-  }
-  const saveItemCategories = () => save(STORE_ITEM_CATEGORIES, itemCategories);
+    items.forEach(it => {
+      if (!it.tags) {
+        const tags = [];
+        if (it.location) tags.push(it.location);
+        if (it.category && it.category !== it.location) tags.push(it.category);
+        it.tags = tags;
+        delete it.location;
+        delete it.category;
+      }
+    });
+    saveItems();
 
-  function addItemLocation(name) {
-    if (itemLocations.some(l => l.name === name)) return;
-    itemLocations.push({ id: uid(), name, color: LOCATION_PALETTE[itemLocations.length % LOCATION_PALETTE.length] });
-    saveItemLocations();
+    localStorage.setItem(ITEM_TAGS_MIGRATED_FLAG, "1");
   }
-  function addItemCategory(name) {
-    if (itemCategories.some(c => c.name === name)) return;
-    itemCategories.push({ id: uid(), name, color: LOCATION_PALETTE[itemCategories.length % LOCATION_PALETTE.length] });
-    saveItemCategories();
+  const saveItemTags = () => save(STORE_ITEM_TAGS, itemTags);
+
+  function itemTagsOf(item) {
+    if (item.tags) return item.tags;
+    return [item.location, item.category].filter(Boolean);
   }
 
-  function renderItemLocationUI() {
-    const chips = document.getElementById("item-location-chips");
+  function addItemTag(name) {
+    if (itemTags.some(t => t.name === name)) return;
+    itemTags.push({ id: uid(), name, color: LOCATION_PALETTE[itemTags.length % LOCATION_PALETTE.length] });
+    saveItemTags();
+  }
+
+  function renderItemTagManagerUI() {
+    const chips = document.getElementById("item-tag-chips");
     chips.innerHTML = "";
-    itemLocations.forEach(l => {
+    itemTags.forEach(t => {
       const chip = document.createElement("span");
       chip.className = "location-chip";
-      chip.style.color = `var(--accent-${l.color})`;
-      chip.style.background = `var(--accent-${l.color}-soft)`;
-      chip.textContent = l.name;
+      chip.style.color = `var(--accent-${t.color})`;
+      chip.style.background = `var(--accent-${t.color}-soft)`;
+      chip.textContent = t.name;
       const del = document.createElement("button");
       del.type = "button";
       del.className = "location-chip-del";
       del.textContent = "×";
-      del.title = "删除这个归属地";
+      del.title = "删除这个标签";
       del.addEventListener("click", () => {
-        itemLocations = itemLocations.filter(x => x.id !== l.id);
-        saveItemLocations();
-        renderItemLocationUI();
+        itemTags = itemTags.filter(x => x.id !== t.id);
+        saveItemTags();
+        selectedItemTags.delete(t.name);
+        renderItemTagManagerUI();
+        renderItemTagPicker();
       });
       chip.appendChild(del);
       chips.appendChild(chip);
     });
-
-    const select = document.getElementById("item-location");
-    const prev = select.value;
-    select.innerHTML = "";
-    itemLocations.forEach(l => {
-      const opt = document.createElement("option");
-      opt.value = l.name;
-      opt.textContent = l.name;
-      select.appendChild(opt);
-    });
-    if (itemLocations.some(l => l.name === prev)) select.value = prev;
   }
 
-  function renderItemCategoryUI() {
-    const chips = document.getElementById("item-category-chips");
-    chips.innerHTML = "";
-    itemCategories.forEach(c => {
-      const chip = document.createElement("span");
-      chip.className = "location-chip";
-      chip.style.color = `var(--accent-${c.color})`;
-      chip.style.background = `var(--accent-${c.color}-soft)`;
-      chip.textContent = c.name;
-      const del = document.createElement("button");
-      del.type = "button";
-      del.className = "location-chip-del";
-      del.textContent = "×";
-      del.title = "删除这个用途";
-      del.addEventListener("click", () => {
-        itemCategories = itemCategories.filter(x => x.id !== c.id);
-        saveItemCategories();
-        renderItemCategoryUI();
-      });
-      chip.appendChild(del);
-      chips.appendChild(chip);
-    });
+  let selectedItemTags = new Set();
 
-    const select = document.getElementById("item-category");
-    const prev = select.value;
-    select.innerHTML = "";
-    itemCategories.forEach(c => {
-      const opt = document.createElement("option");
-      opt.value = c.name;
-      opt.textContent = c.name;
-      select.appendChild(opt);
+  function renderItemTagPicker() {
+    const container = document.getElementById("item-tag-picker");
+    container.innerHTML = "";
+    if (itemTags.length === 0) {
+      const hint = document.createElement("span");
+      hint.className = "tag-picker-empty";
+      hint.textContent = "先在上面添加标签";
+      container.appendChild(hint);
+      return;
+    }
+    itemTags.forEach(t => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      const active = selectedItemTags.has(t.name);
+      btn.className = "tag-picker-btn";
+      if (active) {
+        btn.style.background = `var(--accent-${t.color})`;
+        btn.style.color = "#fff";
+      } else {
+        btn.style.background = `var(--accent-${t.color}-soft)`;
+        btn.style.color = `var(--accent-${t.color})`;
+      }
+      btn.textContent = t.name;
+      btn.addEventListener("click", () => {
+        if (selectedItemTags.has(t.name)) selectedItemTags.delete(t.name);
+        else selectedItemTags.add(t.name);
+        renderItemTagPicker();
+      });
+      container.appendChild(btn);
     });
-    if (itemCategories.some(c => c.name === prev)) select.value = prev;
   }
 
   function resizeImageFile(file) {
@@ -2514,20 +2523,16 @@
     });
     qtyRow.append(qtyLabel, qtyInput);
 
-    const locBadge = document.createElement("span");
-    locBadge.className = "badge";
-    const locEntry = itemLocations.find(l => l.name === item.location);
-    const locColor = locEntry ? locEntry.color : "time";
-    locBadge.style.color = `var(--accent-${locColor})`;
-    locBadge.style.background = `var(--accent-${locColor}-soft)`;
-    locBadge.textContent = item.location;
-    const catBadge = document.createElement("span");
-    catBadge.className = "badge";
-    const catEntry = itemCategories.find(c => c.name === item.category);
-    const catColor = catEntry ? catEntry.color : "purple";
-    catBadge.style.color = `var(--accent-${catColor})`;
-    catBadge.style.background = `var(--accent-${catColor}-soft)`;
-    catBadge.textContent = item.category;
+    const tagBadges = itemTagsOf(item).map(tagName => {
+      const badge = document.createElement("span");
+      badge.className = "badge";
+      const entry = itemTags.find(t => t.name === tagName);
+      const color = entry ? entry.color : "time";
+      badge.style.color = `var(--accent-${color})`;
+      badge.style.background = `var(--accent-${color}-soft)`;
+      badge.textContent = tagName;
+      return badge;
+    });
 
     const expiry = document.createElement("span");
     expiry.className = "stock-expiry " + status.kind;
@@ -2536,7 +2541,7 @@
 
     const meta = document.createElement("div");
     meta.className = "stock-meta";
-    meta.append(qtyRow, locBadge, catBadge, expiry);
+    meta.append(qtyRow, ...tagBadges, expiry);
 
     info.append(name, meta);
 
@@ -2570,24 +2575,15 @@
     }
   });
 
-  document.getElementById("item-location-form").addEventListener("submit", (e) => {
+  document.getElementById("item-tag-form").addEventListener("submit", (e) => {
     e.preventDefault();
-    const input = document.getElementById("item-location-input");
+    const input = document.getElementById("item-tag-input");
     const name = input.value.trim();
     if (!name) return;
-    addItemLocation(name);
+    addItemTag(name);
     input.value = "";
-    renderItemLocationUI();
-  });
-
-  document.getElementById("item-category-form").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const input = document.getElementById("item-category-input");
-    const name = input.value.trim();
-    if (!name) return;
-    addItemCategory(name);
-    input.value = "";
-    renderItemCategoryUI();
+    renderItemTagManagerUI();
+    renderItemTagPicker();
   });
 
   document.getElementById("item-form").addEventListener("submit", (e) => {
@@ -2598,8 +2594,6 @@
     const qtyInput = document.getElementById("item-qty");
     const buyInput = document.getElementById("item-buy-date");
     const expiryInput = document.getElementById("item-expiry-date");
-    const locationSelect = document.getElementById("item-location");
-    const categorySelect = document.getElementById("item-category");
 
     items.unshift({
       id: uid(),
@@ -2607,8 +2601,7 @@
       qty: Math.max(0, Number(qtyInput.value) || 0),
       buyDate: buyInput.value || null,
       expiryDate: expiryInput.value || null,
-      location: locationSelect.value,
-      category: categorySelect.value,
+      tags: Array.from(selectedItemTags),
       photo: pendingPhoto,
     });
     saveItems();
@@ -2620,6 +2613,8 @@
     itemPhotoInput.value = "";
     itemPhotoPreview.hidden = true;
     pendingPhoto = null;
+    selectedItemTags = new Set();
+    renderItemTagPicker();
     renderItems();
   });
 
@@ -2720,7 +2715,7 @@
 
   document.getElementById("export-btn").addEventListener("click", () => {
     const data = {
-      tasks, ideas, habits, schedule, locations, items, itemLocations, itemCategories,
+      tasks, ideas, habits, schedule, locations, items, itemTags,
       exportedAt: new Date().toISOString(),
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -2761,8 +2756,15 @@
       if (data.schedule) localStorage.setItem(STORE_SCHEDULE, JSON.stringify(data.schedule));
       if (data.locations) localStorage.setItem(STORE_LOCATIONS, JSON.stringify(data.locations));
       if (data.items) localStorage.setItem(STORE_ITEMS, JSON.stringify(data.items));
-      if (data.itemLocations) localStorage.setItem(STORE_ITEM_LOCATIONS, JSON.stringify(data.itemLocations));
-      if (data.itemCategories) localStorage.setItem(STORE_ITEM_CATEGORIES, JSON.stringify(data.itemCategories));
+      if (data.itemTags) {
+        localStorage.setItem(STORE_ITEM_TAGS, JSON.stringify(data.itemTags));
+        localStorage.setItem(ITEM_TAGS_MIGRATED_FLAG, "1");
+      } else if (data.itemLocations || data.itemCategories) {
+        if (data.itemLocations) localStorage.setItem(STORE_ITEM_LOCATIONS, JSON.stringify(data.itemLocations));
+        if (data.itemCategories) localStorage.setItem(STORE_ITEM_CATEGORIES, JSON.stringify(data.itemCategories));
+        localStorage.removeItem(ITEM_TAGS_MIGRATED_FLAG);
+        localStorage.removeItem(STORE_ITEM_TAGS);
+      }
       toast("导入成功，正在刷新…");
       input.value = "";
       setTimeout(() => location.reload(), 600);
@@ -2774,8 +2776,8 @@
   renderIdeas();
   renderHabits();
   renderSchedule();
-  renderItemLocationUI();
-  renderItemCategoryUI();
+  renderItemTagManagerUI();
+  renderItemTagPicker();
   renderItems();
   const savedTab = localStorage.getItem(STORE_TAB);
   setActiveTab(savedTab === "tasks" || !savedTab ? "todo" : savedTab);
