@@ -1412,7 +1412,8 @@
               添加标签
             </button>
             <img id="item-photo-preview" class="photo-preview-thumb" hidden />
-            <button type="submit" class="add-btn">添加</button>
+            <button type="button" class="backup-btn" id="item-cancel-edit-btn" hidden>取消编辑</button>
+            <button type="submit" class="add-btn" id="item-submit-btn">添加</button>
           </div>
         </form>
       </div>
@@ -2539,6 +2540,12 @@
 
     info.append(name, meta);
 
+    const editBtn = document.createElement("button");
+    editBtn.className = "icon-btn";
+    editBtn.innerHTML = iconEdit;
+    editBtn.title = "编辑";
+    editBtn.addEventListener("click", () => startEditItem(item));
+
     const delBtn = document.createElement("button");
     delBtn.className = "icon-btn danger";
     delBtn.innerHTML = iconTrash;
@@ -2546,12 +2553,54 @@
     delBtn.addEventListener("click", () => {
       items = items.filter(x => x.id !== item.id);
       saveItems();
+      if (editingItemId === item.id) endEditItem();
       renderItems();
     });
 
-    top.append(info, delBtn);
+    const actions = document.createElement("div");
+    actions.className = "item-actions";
+    actions.append(editBtn, delBtn);
+
+    top.append(info, actions);
     card.append(top);
     return card;
+  }
+
+  let editingItemId = null;
+
+  function startEditItem(item) {
+    editingItemId = item.id;
+    document.getElementById("item-name").value = item.name;
+    document.getElementById("item-qty").value = item.qty;
+    document.getElementById("item-buy-date").value = item.buyDate || "";
+    document.getElementById("item-expiry-date").value = item.expiryDate || "";
+    selectedItemTags = new Set(itemTagsOf(item));
+    renderItemTagPicker();
+    pendingPhoto = item.photo || null;
+    if (item.photo) {
+      itemPhotoPreview.src = item.photo;
+      itemPhotoPreview.hidden = false;
+    } else {
+      itemPhotoPreview.hidden = true;
+    }
+    document.getElementById("item-submit-btn").textContent = "保存修改";
+    document.getElementById("item-cancel-edit-btn").hidden = false;
+    document.getElementById("item-form").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function endEditItem() {
+    editingItemId = null;
+    document.getElementById("item-name").value = "";
+    document.getElementById("item-qty").value = "1";
+    document.getElementById("item-buy-date").value = "";
+    document.getElementById("item-expiry-date").value = "";
+    document.getElementById("item-photo-input").value = "";
+    itemPhotoPreview.hidden = true;
+    pendingPhoto = null;
+    selectedItemTags = new Set();
+    renderItemTagPicker();
+    document.getElementById("item-submit-btn").textContent = "添加";
+    document.getElementById("item-cancel-edit-btn").hidden = true;
   }
 
   let pendingPhoto = null;
@@ -2578,6 +2627,8 @@
     renderItemTagPicker();
   });
 
+  document.getElementById("item-cancel-edit-btn").addEventListener("click", endEditItem);
+
   document.getElementById("item-form").addEventListener("submit", (e) => {
     e.preventDefault();
     const nameInput = document.getElementById("item-name");
@@ -2586,6 +2637,22 @@
     const qtyInput = document.getElementById("item-qty");
     const buyInput = document.getElementById("item-buy-date");
     const expiryInput = document.getElementById("item-expiry-date");
+
+    if (editingItemId) {
+      const item = items.find(i => i.id === editingItemId);
+      if (item) {
+        item.name = name;
+        item.qty = Math.max(0, Number(qtyInput.value) || 0);
+        item.buyDate = buyInput.value || null;
+        item.expiryDate = expiryInput.value || null;
+        item.tags = Array.from(selectedItemTags);
+        item.photo = pendingPhoto;
+        saveItems();
+      }
+      endEditItem();
+      renderItems();
+      return;
+    }
 
     items.unshift({
       id: uid(),
