@@ -759,9 +759,18 @@
   .day-computed.rest { color: var(--ink-faint); }
   .day-computed .holiday-tag { color: var(--accent-idea); font-weight: 600; }
 
-  .location-select {
-    width: 100%;
-    max-width: none;
+  .day-bottom {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .day-bottom .location-select {
+    flex-shrink: 0;
+  }
+  .day-bottom .day-computed {
+    flex: 1;
+    min-width: 0;
   }
 
   .location-manager {
@@ -1856,7 +1865,11 @@
     holidayCb.addEventListener("change", onChange);
     locationSelect.addEventListener("change", onChange);
 
-    card.append(top, times, locationSelect, computed);
+    const bottom = document.createElement("div");
+    bottom.className = "day-bottom";
+    bottom.append(locationSelect, computed);
+
+    card.append(top, times, bottom);
     return card;
   }
 
