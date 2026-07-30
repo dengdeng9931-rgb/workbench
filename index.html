@@ -368,6 +368,69 @@
     background: var(--accent-task-soft);
     font-weight: 600;
   }
+  .row-date.today-due {
+    color: var(--accent-idea);
+    border-color: var(--accent-idea);
+    background: var(--accent-idea-soft);
+    font-weight: 700;
+  }
+  .row-date.overdue {
+    color: var(--danger);
+    border-color: var(--danger);
+    background: var(--danger-soft);
+    font-weight: 700;
+  }
+
+  .pri-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .pri-filter-btn {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    background: var(--paper-sunken);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 5px 11px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+  }
+  .pri-filter-btn:hover { border-color: var(--ink-faint); }
+  .pri-filter-btn.active { color: #fff; border-color: transparent; }
+  .pri-filter-btn.active[data-pri="all"] { background: var(--ink); }
+  .pri-filter-btn.active[data-pri="1"] { background: var(--danger); }
+  .pri-filter-btn.active[data-pri="2"] { background: var(--accent-task); }
+  .pri-filter-btn.active[data-pri="3"] { background: var(--accent-idea); }
+  .pri-filter-btn.active[data-pri="4"] { background: var(--ink-faint); }
+
+  .todo-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .todo-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  select.pri-select {
+    font-weight: 600;
+    font-size: 12px;
+    padding: 5px 8px;
+  }
+  .pri-select.pri-1 { color: var(--danger); border-color: var(--danger); background: var(--danger-soft); }
+  .pri-select.pri-2 { color: var(--accent-task); border-color: var(--accent-task); background: var(--accent-task-soft); }
+  .pri-select.pri-3 { color: var(--accent-idea); border-color: var(--accent-idea); background: var(--accent-idea-soft); }
+  .pri-select.pri-4 { color: var(--ink-faint); border-color: var(--line); background: var(--paper-sunken); }
 
   .date-field {
     position: relative;
@@ -1188,31 +1251,51 @@
   </header>
 
   <nav class="tabbar" role="tablist" aria-label="页面切换">
-    <button type="button" class="tab-btn" data-tab="tasks" role="tab">工作台</button>
+    <button type="button" class="tab-btn" data-tab="todo" role="tab">待办</button>
+    <button type="button" class="tab-btn" data-tab="notes" role="tab">记录</button>
     <button type="button" class="tab-btn" data-tab="schedule" role="tab">排班</button>
     <button type="button" class="tab-btn" data-tab="storage" role="tab">储物</button>
   </nav>
 
-  <main class="board" id="view-tasks">
+  <main class="board" id="view-todo">
     <section class="panel panel--task" aria-labelledby="task-heading">
       <div class="panel-head">
         <span class="tag">TO-DO</span>
         <h2 id="task-heading">待办事项</h2>
         <span class="count-chip" id="task-count">0 项</span>
       </div>
-      <form class="add-row" id="task-form">
-        <input type="text" id="task-input" placeholder="添加一项待办…" autocomplete="off" maxlength="240" />
-        <span class="date-input date-field" id="task-date-field">
-          <span class="date-field-text placeholder" id="task-date-text">月/日</span>
-          <input type="date" id="task-date" class="date-field-input" aria-label="日期（可选）" />
-        </span>
-        <button type="submit" class="add-btn">添加</button>
+      <form class="add-row stacked" id="task-form">
+        <div class="toolbar-row">
+          <input type="text" id="task-input" placeholder="添加一项待办…" autocomplete="off" maxlength="240" />
+        </div>
+        <div class="toolbar-row">
+          <select id="task-priority" class="date-input" aria-label="轻重缓急">
+            <option value="1">重要紧急</option>
+            <option value="2" selected>重要不紧急</option>
+            <option value="3">紧急不重要</option>
+            <option value="4">不重要不紧急</option>
+          </select>
+          <span class="date-input date-field" id="task-date-field">
+            <span class="date-field-text placeholder" id="task-date-text">月/日</span>
+            <input type="date" id="task-date" class="date-field-input" aria-label="截止日期（可选）" />
+          </span>
+          <button type="submit" class="add-btn">添加</button>
+        </div>
       </form>
+      <div class="pri-filter" id="pri-filter">
+        <button type="button" class="pri-filter-btn active" data-pri="all">全部</button>
+        <button type="button" class="pri-filter-btn" data-pri="1">重要紧急</button>
+        <button type="button" class="pri-filter-btn" data-pri="2">重要不紧急</button>
+        <button type="button" class="pri-filter-btn" data-pri="3">紧急不重要</button>
+        <button type="button" class="pri-filter-btn" data-pri="4">不重要不紧急</button>
+      </div>
       <ul class="item-list" id="task-list"></ul>
       <div class="empty" id="task-empty">还没有待办事项，从上面输入开始吧</div>
       <button class="done-toggle" id="task-done-toggle" hidden></button>
     </section>
+  </main>
 
+  <main class="board" id="view-notes" hidden>
     <section class="panel panel--idea" aria-labelledby="idea-heading">
       <div class="panel-head">
         <span class="tag">SPARK</span>
@@ -1351,9 +1434,20 @@
   };
   const save = (key, data) => localStorage.setItem(key, JSON.stringify(data));
 
+  const PRIORITY_META = {
+    "1": { label: "重要紧急", weight: 4 },
+    "2": { label: "重要不紧急", weight: 3 },
+    "3": { label: "紧急不重要", weight: 2 },
+    "4": { label: "不重要不紧急", weight: 1 },
+  };
+
   let tasks = load(STORE_TASKS);
+  let tasksMigrated = false;
+  tasks.forEach(t => { if (!PRIORITY_META[t.priority]) { t.priority = "2"; tasksMigrated = true; } });
+  if (tasksMigrated) save(STORE_TASKS, tasks);
   let ideas = load(STORE_IDEAS);
   let showDone = false;
+  let priorityFilter = "all";
 
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
@@ -1581,23 +1675,39 @@
     return { text: `${daysAgo} 天前`, last, kind: "neutral", daysAgo };
   }
 
+  function dueClass(t) {
+    if (!t.date || t.done) return t.date ? " has-date" : "";
+    const d = daysBetween(todayISO(), t.date);
+    if (d < 0) return " has-date overdue";
+    if (d === 0) return " has-date today-due";
+    return " has-date";
+  }
+
+  function sortOpenTasks(list) {
+    return [...list].sort((a, b) => {
+      const pw = PRIORITY_META[b.priority].weight - PRIORITY_META[a.priority].weight;
+      if (pw !== 0) return pw;
+      if (a.date && b.date) return a.date < b.date ? -1 : a.date > b.date ? 1 : 0;
+      if (a.date) return -1;
+      if (b.date) return 1;
+      return b.ts - a.ts;
+    });
+  }
+
   function renderTasks() {
     const list = document.getElementById("task-list");
     const empty = document.getElementById("task-empty");
     const doneToggle = document.getElementById("task-done-toggle");
-    const open = tasks.filter(t => !t.done);
-    const done = tasks.filter(t => t.done);
+    const filtered = priorityFilter === "all" ? tasks : tasks.filter(t => t.priority === priorityFilter);
+    const open = sortOpenTasks(filtered.filter(t => !t.done));
+    const done = filtered.filter(t => t.done).sort((a, b) => b.ts - a.ts);
 
     document.getElementById("task-count").textContent = `${open.length} 项`;
     list.innerHTML = "";
 
-    if (tasks.length === 0) {
-      empty.style.display = "block";
-    } else {
-      empty.style.display = "none";
-    }
+    empty.style.display = filtered.length === 0 ? "block" : "none";
 
-    const visible = showDone ? tasks : open;
+    const visible = showDone ? [...open, ...done] : open;
     visible.forEach(t => list.appendChild(taskRow(t)));
 
     if (done.length > 0) {
@@ -1623,17 +1733,41 @@
       renderTasks();
     });
 
+    const body = document.createElement("div");
+    body.className = "todo-body";
+
     const span = document.createElement("span");
     span.className = "item-text";
     span.textContent = t.text;
 
-    const dateField = makeCompactDateField(t.date, "日期（可选）", "row-date" + (t.date ? " has-date" : ""));
+    const meta = document.createElement("div");
+    meta.className = "todo-meta";
+
+    const priSelect = document.createElement("select");
+    priSelect.className = "date-input pri-select pri-" + t.priority;
+    priSelect.setAttribute("aria-label", "轻重缓急");
+    Object.entries(PRIORITY_META).forEach(([val, m]) => {
+      const opt = document.createElement("option");
+      opt.value = val;
+      opt.textContent = m.label;
+      if (val === t.priority) opt.selected = true;
+      priSelect.appendChild(opt);
+    });
+    priSelect.addEventListener("change", () => {
+      t.priority = priSelect.value;
+      save(STORE_TASKS, tasks);
+      renderTasks();
+    });
+
+    const dateField = makeCompactDateField(t.date, "截止日期（可选）", "row-date" + dueClass(t));
     dateField.input.addEventListener("change", () => {
       t.date = dateField.input.value || null;
-      dateField.classList.toggle("has-date", !!t.date);
-      syncDateFieldText(dateField.input, dateField.textEl);
       save(STORE_TASKS, tasks);
+      renderTasks();
     });
+
+    meta.append(priSelect, dateField);
+    body.append(span, meta);
 
     const actions = document.createElement("div");
     actions.className = "item-actions";
@@ -1649,7 +1783,7 @@
     });
 
     actions.append(delBtn);
-    li.append(cb, span, dateField, actions);
+    li.append(cb, body, actions);
     return li;
   }
 
@@ -2309,7 +2443,8 @@
   });
 
   function setActiveTab(tab) {
-    document.getElementById("view-tasks").hidden = tab !== "tasks";
+    document.getElementById("view-todo").hidden = tab !== "todo";
+    document.getElementById("view-notes").hidden = tab !== "notes";
     document.getElementById("view-schedule").hidden = tab !== "schedule";
     document.getElementById("view-storage").hidden = tab !== "storage";
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
@@ -2317,6 +2452,14 @@
   }
   document.querySelectorAll(".tab-btn").forEach(b => {
     b.addEventListener("click", () => setActiveTab(b.dataset.tab));
+  });
+
+  document.querySelectorAll(".pri-filter-btn").forEach(b => {
+    b.addEventListener("click", () => {
+      priorityFilter = b.dataset.pri;
+      document.querySelectorAll(".pri-filter-btn").forEach(x => x.classList.toggle("active", x === b));
+      renderTasks();
+    });
   });
 
   const taskDateInput = document.getElementById("task-date");
@@ -2328,7 +2471,8 @@
     const input = document.getElementById("task-input");
     const text = input.value.trim();
     if (!text) return;
-    tasks.unshift({ id: uid(), text, done: false, date: taskDateInput.value || null, ts: Date.now() });
+    const priority = document.getElementById("task-priority").value;
+    tasks.unshift({ id: uid(), text, done: false, date: taskDateInput.value || null, priority, ts: Date.now() });
     save(STORE_TASKS, tasks);
     input.value = "";
     taskDateInput.value = "";
@@ -2448,7 +2592,8 @@
   renderHabits();
   renderSchedule();
   renderItems();
-  setActiveTab(localStorage.getItem(STORE_TAB) || "tasks");
+  const savedTab = localStorage.getItem(STORE_TAB);
+  setActiveTab(savedTab === "tasks" || !savedTab ? "todo" : savedTab);
 </script>
 </body>
 </html>
