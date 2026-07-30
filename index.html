@@ -688,7 +688,6 @@
   .day-top {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 8px;
     flex-wrap: wrap;
   }
@@ -699,6 +698,69 @@
     font-variant-numeric: tabular-nums;
   }
   .day-card.is-today .day-label { color: var(--accent-time); }
+
+  .day-total {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .day-rest-text {
+    font-size: 12.5px;
+    color: var(--ink-faint);
+  }
+
+  .shift-block {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line);
+  }
+  .shift-block:first-of-type {
+    padding-top: 0;
+    border-top: none;
+  }
+
+  .shift-top {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .shift-label {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--accent-time);
+    flex: 1;
+    min-width: 0;
+  }
+
+  .shift-top .icon-btn {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+  .shift-top .icon-btn svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .add-shift-btn {
+    align-self: flex-start;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--accent-time);
+    background: var(--accent-time-soft);
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+  .add-shift-btn:hover { filter: brightness(0.95); }
 
   .break-toggle {
     display: flex;
@@ -1305,24 +1367,35 @@
   }
   const defaultLocation = ensureLocation("EL");
 
-  (function migrateLegacyLocations() {
+  (function migrateScheduleShape() {
     let changed = false;
-    Object.values(schedule).forEach(week => week.forEach(entry => {
-      if (entry.location && !entry.locationId) {
-        let loc = locations.find(l => l.name === entry.location);
-        if (!loc) loc = addLocation(entry.location);
-        entry.locationId = loc.id;
-        delete entry.location;
+    Object.keys(schedule).forEach(weekKey => {
+      schedule[weekKey] = schedule[weekKey].map(day => {
+        if (day.shifts) return day;
         changed = true;
-      }
-    }));
+        const hasRealShift = !!(day.start || day.end);
+        let locationId = day.locationId || "";
+        if (!locationId && day.location) locationId = ensureLocation(day.location).id;
+        const shifts = hasRealShift ? [{
+          id: uid(),
+          start: day.start || "",
+          end: day.end || "",
+          hasBreak: !!day.hasBreak,
+          isHoliday: !!day.isHoliday,
+          locationId: locationId || defaultLocation.id,
+        }] : [];
+        return { date: day.date, shifts };
+      });
+    });
     if (changed) saveSchedule();
   })();
 
   (function applyDefaultLocation() {
     let changed = false;
-    Object.values(schedule).forEach(week => week.forEach(entry => {
-      if (!entry.locationId) { entry.locationId = defaultLocation.id; changed = true; }
+    Object.values(schedule).forEach(week => week.forEach(day => {
+      (day.shifts || []).forEach(sh => {
+        if (!sh.locationId) { sh.locationId = defaultLocation.id; changed = true; }
+      });
     }));
     if (changed) saveSchedule();
   })();
@@ -1701,7 +1774,10 @@
 
   function ensureWeek(key) {
     if (!schedule[key]) {
-      schedule[key] = weekDaysOf(key).map(date => ({ date, start: "", end: "", hasBreak: false, locationId: defaultLocation.id, isHoliday: false }));
+      schedule[key] = weekDaysOf(key).map(date => ({
+        date,
+        shifts: [{ id: uid(), start: "", end: "", hasBreak: false, isHoliday: false, locationId: defaultLocation.id }],
+      }));
     }
     return schedule[key];
   }
@@ -1715,23 +1791,27 @@
     return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
   }
 
-  function computeDay(entry) {
-    if (!entry.start || !entry.end) return { wake: null, hours: 0, isRest: true };
-    const [sh, sm] = entry.start.split(":").map(Number);
-    const [eh, em] = entry.end.split(":").map(Number);
+  function computeShift(shift) {
+    if (!shift.start || !shift.end) return { wake: null, hours: 0, isRest: true, isHoliday: false };
+    const [sh, sm] = shift.start.split(":").map(Number);
+    const [eh, em] = shift.end.split(":").map(Number);
     const startMin = sh * 60 + sm;
     let endMin = eh * 60 + em;
     if (endMin <= startMin) endMin += 24 * 60;
     let workMin = endMin - startMin;
-    if (entry.hasBreak) workMin -= 30;
+    if (shift.hasBreak) workMin -= 30;
     workMin = Math.max(0, workMin);
     let hours = Math.round((workMin / 60) * 10) / 10;
-    if (entry.isHoliday) hours = Math.round(hours * 2 * 10) / 10;
+    if (shift.isHoliday) hours = Math.round(hours * 2 * 10) / 10;
     let wakeMin = startMin - 90;
     if (wakeMin < 0) wakeMin += 24 * 60;
     const pad = (n) => String(n).padStart(2, "0");
     const wake = `${pad(Math.floor(wakeMin / 60))}:${pad(wakeMin % 60)}`;
-    return { wake, hours, isRest: false, isHoliday: !!entry.isHoliday };
+    return { wake, hours, isRest: false, isHoliday: !!shift.isHoliday };
+  }
+
+  function dayTotalHours(dayEntry) {
+    return (dayEntry.shifts || []).reduce((sum, sh) => sum + computeShift(sh).hours, 0);
   }
 
   function formatDayLabel(iso) {
@@ -1760,34 +1840,46 @@
 
   function updateWeekTotal() {
     const entries = schedule[viewedWeekStart] || [];
-    const total = entries.reduce((sum, e) => sum + computeDay(e).hours, 0);
+    const total = entries.reduce((sum, day) => sum + dayTotalHours(day), 0);
     document.getElementById("week-total-hours").textContent = (Math.round(total * 10) / 10).toString();
   }
 
-  function dayCard(entry) {
-    const card = document.createElement("div");
-    card.className = "day-card" + (entry.date === todayISO() ? " is-today" : "");
+  function shiftBlock(dayEntry, shift, idx) {
+    const block = document.createElement("div");
+    block.className = "shift-block";
 
     const top = document.createElement("div");
-    top.className = "day-top";
+    top.className = "shift-top";
     const label = document.createElement("span");
-    label.className = "day-label";
-    label.textContent = formatDayLabel(entry.date);
+    label.className = "shift-label";
+    label.textContent = dayEntry.shifts.length > 1 ? `班次 ${idx + 1}` : "";
 
     const holidayLabel = document.createElement("label");
-    holidayLabel.className = "break-toggle holiday-toggle" + (entry.isHoliday ? " checked" : "");
+    holidayLabel.className = "break-toggle holiday-toggle" + (shift.isHoliday ? " checked" : "");
     const holidayCb = document.createElement("input");
     holidayCb.type = "checkbox";
-    holidayCb.checked = !!entry.isHoliday;
+    holidayCb.checked = !!shift.isHoliday;
     holidayLabel.append(holidayCb, document.createTextNode(" 公共假期·双倍"));
 
     const breakLabel = document.createElement("label");
     breakLabel.className = "break-toggle";
     const breakCb = document.createElement("input");
     breakCb.type = "checkbox";
-    breakCb.checked = entry.hasBreak;
+    breakCb.checked = shift.hasBreak;
     breakLabel.append(breakCb, document.createTextNode(" 含30分钟休息"));
-    top.append(label, holidayLabel, breakLabel);
+
+    const delBtn = document.createElement("button");
+    delBtn.type = "button";
+    delBtn.className = "icon-btn danger";
+    delBtn.innerHTML = iconTrash;
+    delBtn.title = "删除这个班次";
+    delBtn.addEventListener("click", () => {
+      dayEntry.shifts = dayEntry.shifts.filter(s => s.id !== shift.id);
+      saveSchedule();
+      renderSchedule();
+    });
+
+    top.append(label, holidayLabel, breakLabel, delBtn);
 
     const times = document.createElement("div");
     times.className = "day-times";
@@ -1795,7 +1887,7 @@
     startInput.type = "time";
     startInput.step = "1800";
     startInput.className = "date-input time-input";
-    startInput.value = entry.start;
+    startInput.value = shift.start;
     startInput.setAttribute("aria-label", "上班时间");
     const sep = document.createElement("span");
     sep.className = "time-sep";
@@ -1804,60 +1896,46 @@
     endInput.type = "time";
     endInput.step = "1800";
     endInput.className = "date-input time-input";
-    endInput.value = entry.end;
+    endInput.value = shift.end;
     endInput.setAttribute("aria-label", "下班时间");
     times.append(startInput, sep, endInput);
 
     const locationSelect = document.createElement("select");
     locationSelect.className = "date-input location-select";
     locationSelect.setAttribute("aria-label", "工作地点或部门");
-
-    function refreshLocationSelectOptions() {
-      locationSelect.innerHTML = "";
-      const emptyOpt = document.createElement("option");
-      emptyOpt.value = "";
-      emptyOpt.textContent = "无地点";
-      locationSelect.appendChild(emptyOpt);
-      locations.forEach(l => {
-        const opt = document.createElement("option");
-        opt.value = l.id;
-        opt.textContent = l.name;
-        locationSelect.appendChild(opt);
-      });
-      locationSelect.value = entry.locationId || "";
-    }
-    refreshLocationSelectOptions();
-    card._refreshLocationOptions = refreshLocationSelectOptions;
+    const emptyOpt = document.createElement("option");
+    emptyOpt.value = "";
+    emptyOpt.textContent = "无地点";
+    locationSelect.appendChild(emptyOpt);
+    locations.forEach(l => {
+      const opt = document.createElement("option");
+      opt.value = l.id;
+      opt.textContent = l.name;
+      locationSelect.appendChild(opt);
+    });
+    locationSelect.value = shift.locationId || "";
 
     const computed = document.createElement("div");
     computed.className = "day-computed";
-
-    function refreshComputed() {
-      const c = computeDay(entry);
-      if (c.isRest) {
-        computed.textContent = "休息日";
-        computed.classList.add("rest");
-      } else {
-        computed.classList.remove("rest");
-        const holidayTag = c.isHoliday ? ' <span class="holiday-tag">（假期双倍）</span>' : "";
-        computed.innerHTML = `起床 <b>${c.wake}</b> · 预估 <b>${c.hours}</b> 小时${holidayTag}`;
-      }
+    const c = computeShift(shift);
+    if (c.isRest) {
+      computed.textContent = "未设置时间";
+      computed.classList.add("rest");
+    } else {
+      const holidayTag = c.isHoliday ? ' <span class="holiday-tag">（假期双倍）</span>' : "";
+      computed.innerHTML = `起床 <b>${c.wake}</b> · 预估 <b>${c.hours}</b> 小时${holidayTag}`;
     }
-    refreshComputed();
 
     function onChange() {
       startInput.value = roundToHalfHour(startInput.value);
       endInput.value = roundToHalfHour(endInput.value);
-      entry.start = startInput.value;
-      entry.end = endInput.value;
-      entry.hasBreak = breakCb.checked;
-      entry.isHoliday = holidayCb.checked;
-      entry.locationId = locationSelect.value;
-      holidayLabel.classList.toggle("checked", entry.isHoliday);
+      shift.start = startInput.value;
+      shift.end = endInput.value;
+      shift.hasBreak = breakCb.checked;
+      shift.isHoliday = holidayCb.checked;
+      shift.locationId = locationSelect.value;
       saveSchedule();
-      refreshComputed();
-      updateWeekTotal();
-      renderMiniCal();
+      renderSchedule();
     }
     startInput.addEventListener("change", onChange);
     endInput.addEventListener("change", onChange);
@@ -1869,7 +1947,48 @@
     bottom.className = "day-bottom";
     bottom.append(locationSelect, computed);
 
-    card.append(top, times, bottom);
+    block.append(top, times, bottom);
+    return block;
+  }
+
+  function dayCard(dayEntry) {
+    const card = document.createElement("div");
+    card.className = "day-card" + (dayEntry.date === todayISO() ? " is-today" : "");
+
+    const top = document.createElement("div");
+    top.className = "day-top";
+    const label = document.createElement("span");
+    label.className = "day-label";
+    label.textContent = formatDayLabel(dayEntry.date);
+    top.append(label);
+    if (dayEntry.shifts.length >= 2) {
+      const totalEl = document.createElement("span");
+      totalEl.className = "day-total";
+      totalEl.textContent = `共 ${Math.round(dayTotalHours(dayEntry) * 10) / 10} 小时`;
+      top.append(totalEl);
+    }
+    card.append(top);
+
+    if (dayEntry.shifts.length === 0) {
+      const restText = document.createElement("div");
+      restText.className = "day-rest-text";
+      restText.textContent = "休息日";
+      card.append(restText);
+    } else {
+      dayEntry.shifts.forEach((shift, idx) => card.append(shiftBlock(dayEntry, shift, idx)));
+    }
+
+    const addBtn = document.createElement("button");
+    addBtn.type = "button";
+    addBtn.className = "add-shift-btn";
+    addBtn.textContent = "+ 添加班次";
+    addBtn.addEventListener("click", () => {
+      dayEntry.shifts.push({ id: uid(), start: "", end: "", hasBreak: false, isHoliday: false, locationId: defaultLocation.id });
+      saveSchedule();
+      renderSchedule();
+    });
+    card.append(addBtn);
+
     return card;
   }
 
@@ -1891,13 +2010,11 @@
       del.addEventListener("click", () => {
         locations = locations.filter(l => l.id !== loc.id);
         saveLocations();
-        Object.values(schedule).forEach(week => week.forEach(e => {
-          if (e.locationId === loc.id) e.locationId = "";
-        }));
+        Object.values(schedule).forEach(week => week.forEach(day => (day.shifts || []).forEach(sh => {
+          if (sh.locationId === loc.id) sh.locationId = "";
+        })));
         saveSchedule();
-        renderLocationChips();
-        document.querySelectorAll("#day-list .day-card").forEach(c => c._refreshLocationOptions && c._refreshLocationOptions());
-        renderMiniCal();
+        renderSchedule();
       });
       chip.append(name, del);
       chips.appendChild(chip);
@@ -1909,35 +2026,48 @@
     document.getElementById("week-number").textContent = `第${isoWeekNumber(viewedWeekStart)}周`;
     const list = document.getElementById("day-list");
     list.innerHTML = "";
-    schedule[viewedWeekStart].forEach(entry => list.appendChild(dayCard(entry)));
+    schedule[viewedWeekStart].forEach(dayEntry => list.appendChild(dayCard(dayEntry)));
     updateWeekTotal();
     renderLocationChips();
     renderMiniCal();
   }
 
-  function miniDayCell(dateISO, entry) {
+  function miniDayCell(dateISO, dayEntry) {
     const cell = document.createElement("div");
     const d = Number(dateISO.split("-")[2]);
     const isToday = dateISO === todayISO();
-    const c = computeDay(entry);
-    cell.className = "mini-day" + (c.isRest ? " rest" : "") + (isToday ? " today" : "");
-    const loc = locations.find(l => l.id === entry.locationId);
-    if (loc && !c.isRest) {
-      cell.style.background = `var(--accent-${loc.color}-soft)`;
-      cell.style.borderColor = `var(--accent-${loc.color})`;
+    const validShifts = (dayEntry.shifts || [])
+      .map(sh => ({ sh, c: computeShift(sh) }))
+      .filter(x => !x.c.isRest)
+      .sort((a, b) => a.sh.start.localeCompare(b.sh.start));
+    const isRestDay = validShifts.length === 0;
+    cell.className = "mini-day" + (isRestDay ? " rest" : "") + (isToday ? " today" : "");
+    if (!isRestDay) {
+      const loc = locations.find(l => l.id === validShifts[0].sh.locationId);
+      if (loc) {
+        cell.style.background = `var(--accent-${loc.color}-soft)`;
+        cell.style.borderColor = `var(--accent-${loc.color})`;
+      }
     }
     const num = document.createElement("div");
     num.className = "mini-day-num";
     num.textContent = d;
     cell.appendChild(num);
-    if (!c.isRest) {
+    if (validShifts.length === 1) {
       const wake = document.createElement("div");
       wake.className = "mini-day-line";
-      wake.textContent = c.wake;
+      wake.textContent = validShifts[0].c.wake;
       const start = document.createElement("div");
       start.className = "mini-day-line";
-      start.textContent = entry.start;
+      start.textContent = validShifts[0].sh.start;
       cell.append(wake, start);
+    } else if (validShifts.length > 1) {
+      validShifts.forEach(({ sh }) => {
+        const line = document.createElement("div");
+        line.className = "mini-day-line";
+        line.textContent = sh.start;
+        cell.appendChild(line);
+      });
     }
     return cell;
   }
@@ -1958,8 +2088,8 @@
       const daysRow = document.createElement("div");
       daysRow.className = "mini-cal-row";
       weekDaysOf(start).forEach((dateISO, i) => {
-        const entry = weekEntries ? weekEntries[i] : { date: dateISO, start: "", end: "", hasBreak: false, locationId: defaultLocation.id, isHoliday: false };
-        daysRow.appendChild(miniDayCell(dateISO, entry));
+        const dayEntry = weekEntries ? weekEntries[i] : { date: dateISO, shifts: [] };
+        daysRow.appendChild(miniDayCell(dateISO, dayEntry));
       });
       row.append(heading, daysRow);
       container.appendChild(row);
@@ -1973,9 +2103,7 @@
     if (!name) return;
     addLocation(name);
     input.value = "";
-    renderLocationChips();
-    document.querySelectorAll("#day-list .day-card").forEach(c => c._refreshLocationOptions && c._refreshLocationOptions());
-    renderMiniCal();
+    renderSchedule();
   });
 
   document.getElementById("week-prev").addEventListener("click", () => {
