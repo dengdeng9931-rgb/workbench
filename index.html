@@ -942,6 +942,7 @@
     padding: 9px 11px;
   }
   .location-manager input[type="text"]:focus-visible { outline: 2px solid var(--accent-time); outline-offset: 2px; }
+  .panel--storage .location-manager input[type="text"]:focus-visible { outline-color: var(--accent-purple); }
 
   .location-manager-label {
     font-size: 11.5px;
@@ -1296,21 +1297,6 @@
   </main>
 
   <main class="board" id="view-notes" hidden>
-    <section class="panel panel--idea" aria-labelledby="idea-heading">
-      <div class="panel-head">
-        <span class="tag">SPARK</span>
-        <h2 id="idea-heading">灵感速记</h2>
-        <span class="count-chip" id="idea-count">0 条</span>
-        <button class="copy-all" id="idea-copy-all">复制全部</button>
-      </div>
-      <form class="add-row" id="idea-form">
-        <textarea id="idea-input" placeholder="随手记一笔想法…" maxlength="2000" rows="1"></textarea>
-        <button type="submit" class="add-btn">记录</button>
-      </form>
-      <ul class="item-list" id="idea-list"></ul>
-      <div class="empty" id="idea-empty">灵感还是空的，捕捉到什么就写下来</div>
-    </section>
-
     <section class="panel panel--habit" aria-labelledby="habit-heading">
       <div class="panel-head">
         <span class="tag">STREAK</span>
@@ -1330,6 +1316,21 @@
       </div>
       <div class="habit-list" id="habit-list"></div>
       <div class="empty" id="habit-empty">还没有习惯，从上面输入开始记录</div>
+    </section>
+
+    <section class="panel panel--idea" aria-labelledby="idea-heading">
+      <div class="panel-head">
+        <span class="tag">SPARK</span>
+        <h2 id="idea-heading">灵感速记</h2>
+        <span class="count-chip" id="idea-count">0 条</span>
+        <button class="copy-all" id="idea-copy-all">复制全部</button>
+      </div>
+      <form class="add-row" id="idea-form">
+        <textarea id="idea-input" placeholder="随手记一笔想法…" maxlength="2000" rows="1"></textarea>
+        <button type="submit" class="add-btn">记录</button>
+      </form>
+      <ul class="item-list" id="idea-list"></ul>
+      <div class="empty" id="idea-empty">灵感还是空的，捕捉到什么就写下来</div>
     </section>
   </main>
 
@@ -1371,6 +1372,22 @@
         <h2 id="storage-heading">储物</h2>
         <span class="count-chip" id="item-count">0 件</span>
       </div>
+      <div class="location-manager">
+        <p class="location-manager-label">归属地</p>
+        <form class="toolbar-row" id="item-location-form">
+          <input type="text" id="item-location-input" placeholder="新增一个归属地…" autocomplete="off" maxlength="20" />
+          <button type="submit" class="add-btn">添加</button>
+        </form>
+        <div class="location-chips" id="item-location-chips"></div>
+      </div>
+      <div class="location-manager">
+        <p class="location-manager-label">用途</p>
+        <form class="toolbar-row" id="item-category-form">
+          <input type="text" id="item-category-input" placeholder="新增一个用途…" autocomplete="off" maxlength="20" />
+          <button type="submit" class="add-btn">添加</button>
+        </form>
+        <div class="location-chips" id="item-category-chips"></div>
+      </div>
       <div class="add-row stacked">
         <form id="item-form">
           <div class="toolbar-row">
@@ -1382,16 +1399,8 @@
             <input type="date" id="item-expiry-date" class="date-input" aria-label="过期日期（可选）" />
           </div>
           <div class="toolbar-row">
-            <select id="item-location" class="date-input" aria-label="储存地点">
-              <option value="旅行箱">旅行箱</option>
-              <option value="储物箱">储物箱</option>
-              <option value="桌柜">桌柜</option>
-            </select>
-            <select id="item-category" class="date-input" aria-label="物品类型">
-              <option value="调料">调料</option>
-              <option value="日常">日常</option>
-              <option value="旅行">旅行</option>
-            </select>
+            <select id="item-location" class="date-input" aria-label="储存地点"></select>
+            <select id="item-category" class="date-input" aria-label="物品类型"></select>
           </div>
           <div class="toolbar-row">
             <label class="photo-btn">
@@ -1422,8 +1431,10 @@
   const STORE_LOCATIONS = "workbench.locations.v1";
   const STORE_TAB = "workbench.activeTab.v1";
   const STORE_ITEMS = "workbench.items.v1";
-  const LOCATION_BADGE_COLOR = { "旅行箱": "terra", "储物箱": "time", "桌柜": "green" };
-  const CATEGORY_BADGE_COLOR = { "调料": "idea", "日常": "task", "旅行": "pink" };
+  const STORE_ITEM_LOCATIONS = "workbench.itemLocations.v1";
+  const STORE_ITEM_CATEGORIES = "workbench.itemCategories.v1";
+  const ITEM_LOCATIONS_SEED_FLAG = "workbench.itemLocations.seeded.v1";
+  const ITEM_CATEGORIES_SEED_FLAG = "workbench.itemCategories.seeded.v1";
   const LOCATION_PALETTE = ["task", "idea", "habit", "time", "purple", "terra", "green", "pink"];
 
   const load = (key) => {
@@ -1529,6 +1540,111 @@
 
   let items = load(STORE_ITEMS);
   const saveItems = () => localStorage.setItem(STORE_ITEMS, JSON.stringify(items));
+
+  let itemLocations = load(STORE_ITEM_LOCATIONS);
+  if (!localStorage.getItem(ITEM_LOCATIONS_SEED_FLAG)) {
+    itemLocations = [
+      { id: uid(), name: "旅行箱", color: "terra" },
+      { id: uid(), name: "储物箱", color: "time" },
+      { id: uid(), name: "桌柜", color: "green" },
+    ];
+    save(STORE_ITEM_LOCATIONS, itemLocations);
+    localStorage.setItem(ITEM_LOCATIONS_SEED_FLAG, "1");
+  }
+  const saveItemLocations = () => save(STORE_ITEM_LOCATIONS, itemLocations);
+
+  let itemCategories = load(STORE_ITEM_CATEGORIES);
+  if (!localStorage.getItem(ITEM_CATEGORIES_SEED_FLAG)) {
+    itemCategories = [
+      { id: uid(), name: "调料", color: "idea" },
+      { id: uid(), name: "日常", color: "task" },
+      { id: uid(), name: "旅行", color: "pink" },
+    ];
+    save(STORE_ITEM_CATEGORIES, itemCategories);
+    localStorage.setItem(ITEM_CATEGORIES_SEED_FLAG, "1");
+  }
+  const saveItemCategories = () => save(STORE_ITEM_CATEGORIES, itemCategories);
+
+  function addItemLocation(name) {
+    if (itemLocations.some(l => l.name === name)) return;
+    itemLocations.push({ id: uid(), name, color: LOCATION_PALETTE[itemLocations.length % LOCATION_PALETTE.length] });
+    saveItemLocations();
+  }
+  function addItemCategory(name) {
+    if (itemCategories.some(c => c.name === name)) return;
+    itemCategories.push({ id: uid(), name, color: LOCATION_PALETTE[itemCategories.length % LOCATION_PALETTE.length] });
+    saveItemCategories();
+  }
+
+  function renderItemLocationUI() {
+    const chips = document.getElementById("item-location-chips");
+    chips.innerHTML = "";
+    itemLocations.forEach(l => {
+      const chip = document.createElement("span");
+      chip.className = "location-chip";
+      chip.style.color = `var(--accent-${l.color})`;
+      chip.style.background = `var(--accent-${l.color}-soft)`;
+      chip.textContent = l.name;
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "location-chip-del";
+      del.textContent = "×";
+      del.title = "删除这个归属地";
+      del.addEventListener("click", () => {
+        itemLocations = itemLocations.filter(x => x.id !== l.id);
+        saveItemLocations();
+        renderItemLocationUI();
+      });
+      chip.appendChild(del);
+      chips.appendChild(chip);
+    });
+
+    const select = document.getElementById("item-location");
+    const prev = select.value;
+    select.innerHTML = "";
+    itemLocations.forEach(l => {
+      const opt = document.createElement("option");
+      opt.value = l.name;
+      opt.textContent = l.name;
+      select.appendChild(opt);
+    });
+    if (itemLocations.some(l => l.name === prev)) select.value = prev;
+  }
+
+  function renderItemCategoryUI() {
+    const chips = document.getElementById("item-category-chips");
+    chips.innerHTML = "";
+    itemCategories.forEach(c => {
+      const chip = document.createElement("span");
+      chip.className = "location-chip";
+      chip.style.color = `var(--accent-${c.color})`;
+      chip.style.background = `var(--accent-${c.color}-soft)`;
+      chip.textContent = c.name;
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "location-chip-del";
+      del.textContent = "×";
+      del.title = "删除这个用途";
+      del.addEventListener("click", () => {
+        itemCategories = itemCategories.filter(x => x.id !== c.id);
+        saveItemCategories();
+        renderItemCategoryUI();
+      });
+      chip.appendChild(del);
+      chips.appendChild(chip);
+    });
+
+    const select = document.getElementById("item-category");
+    const prev = select.value;
+    select.innerHTML = "";
+    itemCategories.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c.name;
+      opt.textContent = c.name;
+      select.appendChild(opt);
+    });
+    if (itemCategories.some(c => c.name === prev)) select.value = prev;
+  }
 
   function resizeImageFile(file) {
     return new Promise((resolve, reject) => {
@@ -1949,15 +2065,6 @@
     return schedule[key];
   }
 
-  function roundToHalfHour(hhmm) {
-    if (!hhmm) return hhmm;
-    let [h, m] = hhmm.split(":").map(Number);
-    if (m < 15) m = 0;
-    else if (m < 45) m = 30;
-    else { m = 0; h = (h + 1) % 24; }
-    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-  }
-
   function computeShift(shift) {
     if (!shift.start || !shift.end) return { wake: null, hours: 0, isRest: true, isHoliday: false };
     const [sh, sm] = shift.start.split(":").map(Number);
@@ -2052,7 +2159,6 @@
     times.className = "day-times";
     const startInput = document.createElement("input");
     startInput.type = "time";
-    startInput.step = "1800";
     startInput.className = "date-input time-input";
     startInput.value = shift.start;
     startInput.setAttribute("aria-label", "上班时间");
@@ -2061,7 +2167,6 @@
     sep.textContent = "–";
     const endInput = document.createElement("input");
     endInput.type = "time";
-    endInput.step = "1800";
     endInput.className = "date-input time-input";
     endInput.value = shift.end;
     endInput.setAttribute("aria-label", "下班时间");
@@ -2094,8 +2199,6 @@
     }
 
     function onChange() {
-      startInput.value = roundToHalfHour(startInput.value);
-      endInput.value = roundToHalfHour(endInput.value);
       shift.start = startInput.value;
       shift.end = endInput.value;
       shift.hasBreak = breakCb.checked;
@@ -2373,13 +2476,15 @@
     badges.className = "stock-badges";
     const locBadge = document.createElement("span");
     locBadge.className = "badge";
-    const locColor = LOCATION_BADGE_COLOR[item.location] || "time";
+    const locEntry = itemLocations.find(l => l.name === item.location);
+    const locColor = locEntry ? locEntry.color : "time";
     locBadge.style.color = `var(--accent-${locColor})`;
     locBadge.style.background = `var(--accent-${locColor}-soft)`;
     locBadge.textContent = item.location;
     const catBadge = document.createElement("span");
     catBadge.className = "badge";
-    const catColor = CATEGORY_BADGE_COLOR[item.category] || "purple";
+    const catEntry = itemCategories.find(c => c.name === item.category);
+    const catColor = catEntry ? catEntry.color : "purple";
     catBadge.style.color = `var(--accent-${catColor})`;
     catBadge.style.background = `var(--accent-${catColor}-soft)`;
     catBadge.textContent = item.category;
@@ -2407,6 +2512,26 @@
     } catch (e) {
       toast("图片处理失败");
     }
+  });
+
+  document.getElementById("item-location-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = document.getElementById("item-location-input");
+    const name = input.value.trim();
+    if (!name) return;
+    addItemLocation(name);
+    input.value = "";
+    renderItemLocationUI();
+  });
+
+  document.getElementById("item-category-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = document.getElementById("item-category-input");
+    const name = input.value.trim();
+    if (!name) return;
+    addItemCategory(name);
+    input.value = "";
+    renderItemCategoryUI();
   });
 
   document.getElementById("item-form").addEventListener("submit", (e) => {
@@ -2539,7 +2664,7 @@
 
   document.getElementById("export-btn").addEventListener("click", () => {
     const data = {
-      tasks, ideas, habits, schedule, locations, items,
+      tasks, ideas, habits, schedule, locations, items, itemLocations, itemCategories,
       exportedAt: new Date().toISOString(),
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -2580,6 +2705,8 @@
       if (data.schedule) localStorage.setItem(STORE_SCHEDULE, JSON.stringify(data.schedule));
       if (data.locations) localStorage.setItem(STORE_LOCATIONS, JSON.stringify(data.locations));
       if (data.items) localStorage.setItem(STORE_ITEMS, JSON.stringify(data.items));
+      if (data.itemLocations) localStorage.setItem(STORE_ITEM_LOCATIONS, JSON.stringify(data.itemLocations));
+      if (data.itemCategories) localStorage.setItem(STORE_ITEM_CATEGORIES, JSON.stringify(data.itemCategories));
       toast("导入成功，正在刷新…");
       input.value = "";
       setTimeout(() => location.reload(), 600);
@@ -2591,6 +2718,8 @@
   renderIdeas();
   renderHabits();
   renderSchedule();
+  renderItemLocationUI();
+  renderItemCategoryUI();
   renderItems();
   const savedTab = localStorage.getItem(STORE_TAB);
   setActiveTab(savedTab === "tasks" || !savedTab ? "todo" : savedTab);
