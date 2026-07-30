@@ -1140,18 +1140,18 @@
   }
 
   .stock-thumb {
-    width: 44px;
-    height: 44px;
-    border-radius: 9px;
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
     object-fit: cover;
     background: var(--paper-raised);
     border: 1px solid var(--line);
     flex-shrink: 0;
   }
   .stock-thumb-placeholder {
-    width: 44px;
-    height: 44px;
-    border-radius: 9px;
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
     background: var(--paper-raised);
     border: 1px dashed var(--line);
     flex-shrink: 0;
@@ -1159,7 +1159,7 @@
     place-items: center;
     color: var(--ink-faint);
   }
-  .stock-thumb-placeholder svg { width: 18px; height: 18px; }
+  .stock-thumb-placeholder svg { width: 22px; height: 22px; }
 
   .stock-info {
     flex: 1;
@@ -1167,6 +1167,7 @@
     display: flex;
     flex-direction: column;
     gap: 5px;
+    justify-content: center;
   }
   .stock-name {
     font-size: 14.5px;
@@ -1174,6 +1175,12 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .stock-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
   }
   .stock-qty-row {
     display: flex;
@@ -1184,11 +1191,6 @@
     white-space: nowrap;
   }
 
-  .stock-badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-  }
   .badge {
     font-size: 11px;
     font-weight: 600;
@@ -1200,6 +1202,7 @@
   .stock-expiry {
     font-size: 12px;
     font-weight: 600;
+    white-space: nowrap;
   }
   .stock-expiry.fresh { color: var(--accent-task); }
   .stock-expiry.soon { color: var(--accent-idea); }
@@ -2511,8 +2514,6 @@
     });
     qtyRow.append(qtyLabel, qtyInput);
 
-    const badges = document.createElement("div");
-    badges.className = "stock-badges";
     const locBadge = document.createElement("span");
     locBadge.className = "badge";
     const locEntry = itemLocations.find(l => l.name === item.location);
@@ -2527,14 +2528,17 @@
     catBadge.style.color = `var(--accent-${catColor})`;
     catBadge.style.background = `var(--accent-${catColor}-soft)`;
     catBadge.textContent = item.category;
-    badges.append(locBadge, catBadge);
 
-    const expiry = document.createElement("div");
+    const expiry = document.createElement("span");
     expiry.className = "stock-expiry " + status.kind;
     expiry.textContent = status.text;
     if (item.buyDate) expiry.title = `购买于：${item.buyDate}`;
 
-    info.append(name, qtyRow, badges, expiry);
+    const meta = document.createElement("div");
+    meta.className = "stock-meta";
+    meta.append(qtyRow, locBadge, catBadge, expiry);
+
+    info.append(name, meta);
 
     const delBtn = document.createElement("button");
     delBtn.className = "icon-btn danger";
