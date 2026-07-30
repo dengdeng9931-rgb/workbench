@@ -1684,6 +1684,7 @@
   const iconCopy = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M4 13V5a2 2 0 0 1 2-2h8" stroke-linecap="round"/></svg>';
   const iconTrash = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h12M8 6V4.5A1.5 1.5 0 0 1 9.5 3h1A1.5 1.5 0 0 1 12 4.5V6M6 6l.6 10a1.5 1.5 0 0 0 1.5 1.4h3.8a1.5 1.5 0 0 0 1.5-1.4L14 6"/></svg>';
   const iconEdit = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13.3 3.3a1.6 1.6 0 0 1 2.3 2.3L6.5 14.7l-3 .8.8-3 9-9z"/></svg>';
+  const iconPaste = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="10" height="13" rx="1.5"/><path d="M8 4V3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1"/><path d="M8 9.5h4M8 12.5h4"/></svg>';
 
   let toastTimer;
   function toast(msg) {
@@ -2054,6 +2055,13 @@
   }
 
   let viewedWeekStart = mondayOfISO(todayISO());
+  const STORE_SHIFT_CLIPBOARD = "workbench.shiftClipboard.v1";
+  let shiftClipboard = (() => {
+    try {
+      const raw = localStorage.getItem(STORE_SHIFT_CLIPBOARD);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  })();
 
   function ensureWeek(key) {
     if (!schedule[key]) {
@@ -2142,6 +2150,33 @@
     breakCb.checked = shift.hasBreak;
     breakLabel.append(breakCb, document.createTextNode(" 含30分钟休息"));
 
+    const copyBtn = document.createElement("button");
+    copyBtn.type = "button";
+    copyBtn.className = "icon-btn";
+    copyBtn.innerHTML = iconCopy;
+    copyBtn.title = "复制这个班次的时间";
+    copyBtn.addEventListener("click", () => {
+      shiftClipboard = { start: shift.start, end: shift.end, hasBreak: shift.hasBreak, isHoliday: shift.isHoliday, locationId: shift.locationId };
+      localStorage.setItem(STORE_SHIFT_CLIPBOARD, JSON.stringify(shiftClipboard));
+      toast("已复制班次时间");
+    });
+
+    const pasteBtn = document.createElement("button");
+    pasteBtn.type = "button";
+    pasteBtn.className = "icon-btn";
+    pasteBtn.innerHTML = iconPaste;
+    pasteBtn.title = "粘贴班次时间";
+    pasteBtn.addEventListener("click", () => {
+      if (!shiftClipboard) { toast("还没有复制的班次"); return; }
+      startInput.value = shiftClipboard.start || "";
+      endInput.value = shiftClipboard.end || "";
+      breakCb.checked = !!shiftClipboard.hasBreak;
+      holidayCb.checked = !!shiftClipboard.isHoliday;
+      locationSelect.value = shiftClipboard.locationId || "";
+      onChange();
+      toast("已粘贴班次时间");
+    });
+
     const delBtn = document.createElement("button");
     delBtn.type = "button";
     delBtn.className = "icon-btn danger";
@@ -2153,7 +2188,7 @@
       renderSchedule();
     });
 
-    top.append(label, holidayLabel, breakLabel, delBtn);
+    top.append(label, holidayLabel, breakLabel, copyBtn, pasteBtn, delBtn);
 
     const times = document.createElement("div");
     times.className = "day-times";
@@ -2205,7 +2240,24 @@
       shift.isHoliday = holidayCb.checked;
       shift.locationId = locationSelect.value;
       saveSchedule();
-      renderSchedule();
+
+      holidayLabel.classList.toggle("checked", !!shift.isHoliday);
+
+      const c = computeShift(shift);
+      if (c.isRest) {
+        computed.textContent = "未设置时间";
+        computed.classList.add("rest");
+      } else {
+        computed.classList.remove("rest");
+        const holidayTag = c.isHoliday ? ' <span class="holiday-tag">（假期双倍）</span>' : "";
+        computed.innerHTML = `起床 <b>${c.wake}</b> · 预估 <b>${c.hours}</b> 小时${holidayTag}`;
+      }
+
+      const dayTotalEl = block.closest(".day-card")?.querySelector(".day-total");
+      if (dayTotalEl) dayTotalEl.textContent = `共 ${Math.round(dayTotalHours(dayEntry) * 10) / 10} 小时`;
+
+      updateWeekTotal();
+      renderMiniCal();
     }
     startInput.addEventListener("change", onChange);
     endInput.addEventListener("change", onChange);
