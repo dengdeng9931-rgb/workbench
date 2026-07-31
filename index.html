@@ -389,21 +389,6 @@
     border-bottom: 1px solid var(--line);
   }
 
-  .tag-picker-btn {
-    font-size: 12.5px;
-    font-weight: 600;
-    border: 1px solid transparent;
-    border-radius: 20px;
-    padding: 6px 12px;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background 0.12s, color 0.12s;
-  }
-  .tag-picker-btn:hover { filter: brightness(0.95); }
-  .tag-picker-empty {
-    font-size: 12.5px;
-    color: var(--ink-faint);
-  }
   .pri-filter-btn {
     font-size: 12px;
     font-weight: 600;
@@ -423,6 +408,25 @@
   .pri-filter-btn.active[data-pri="2"] { background: var(--accent-task); }
   .pri-filter-btn.active[data-pri="3"] { background: var(--accent-idea); }
   .pri-filter-btn.active[data-pri="4"] { background: var(--ink-faint); }
+
+  .pri-pick-btn {
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid transparent;
+    border-radius: 20px;
+    padding: 7px 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.12s, color 0.12s;
+  }
+  .pri-pick-btn.pri-1 { color: var(--danger); background: var(--danger-soft); }
+  .pri-pick-btn.pri-2 { color: var(--accent-task); background: var(--accent-task-soft); }
+  .pri-pick-btn.pri-3 { color: var(--accent-idea); background: var(--accent-idea-soft); }
+  .pri-pick-btn.pri-4 { color: var(--ink-faint); background: var(--paper-sunken); border-color: var(--line); }
+  .pri-pick-btn.pri-1.active { background: var(--danger); color: #fff; }
+  .pri-pick-btn.pri-2.active { background: var(--accent-task); color: #fff; }
+  .pri-pick-btn.pri-3.active { background: var(--accent-idea); color: #fff; }
+  .pri-pick-btn.pri-4.active { background: var(--ink-faint); color: #fff; border-color: transparent; }
 
   .todo-body {
     flex: 1;
@@ -1061,169 +1065,6 @@
     line-height: 1.3;
   }
 
-  .panel--storage .tag { color: var(--accent-purple); background: var(--accent-purple-soft); }
-  .panel--storage .add-btn { background: var(--accent-purple); }
-  .panel--storage .add-row input:focus-visible,
-  .panel--storage .add-row select:focus-visible { outline-color: var(--accent-purple); }
-
-  .stock-alert {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 18px;
-    background: var(--danger-soft);
-    color: var(--danger);
-    font-size: 12.5px;
-    font-weight: 600;
-    border-bottom: 1px solid var(--line);
-  }
-  .stock-alert[hidden] { display: none; }
-
-  .stock-num-input {
-    width: 56px;
-    font: inherit;
-    font-variant-numeric: tabular-nums;
-    font-size: 13px;
-    text-align: center;
-    color: var(--ink);
-    background: var(--paper-raised);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-control);
-    padding: 6px 4px;
-  }
-
-  .photo-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--ink-soft);
-    background: var(--paper-raised);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-control);
-    padding: 9px 12px;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-  .photo-btn:hover { border-color: var(--accent-purple); color: var(--accent-purple); }
-  .photo-btn input[type="file"] {
-    position: absolute;
-    width: 1px; height: 1px;
-    opacity: 0;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-  }
-  .photo-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
-
-  .photo-preview-thumb {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    object-fit: cover;
-    border: 1px solid var(--line);
-    flex-shrink: 0;
-  }
-
-  .stock-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
-    padding: 10px;
-  }
-  @media (min-width: 560px) {
-    .stock-grid { grid-template-columns: repeat(2, 1fr); }
-  }
-  @media (min-width: 860px) {
-    .stock-grid { grid-template-columns: repeat(3, 1fr); }
-  }
-
-  .stock-card {
-    display: flex;
-    flex-direction: column;
-    padding: 11px 12px;
-    border-radius: 11px;
-    background: var(--paper-sunken);
-    border: 1px solid var(--line);
-  }
-  .stock-card.expired { border-color: var(--danger); }
-
-  .stock-card-top {
-    display: flex;
-    align-items: flex-start;
-    gap: 9px;
-  }
-
-  .stock-thumb {
-    width: 60px;
-    height: 60px;
-    border-radius: 10px;
-    object-fit: cover;
-    background: var(--paper-raised);
-    border: 1px solid var(--line);
-    flex-shrink: 0;
-  }
-  .stock-thumb-placeholder {
-    width: 60px;
-    height: 60px;
-    border-radius: 10px;
-    background: var(--paper-raised);
-    border: 1px dashed var(--line);
-    flex-shrink: 0;
-    display: grid;
-    place-items: center;
-    color: var(--ink-faint);
-  }
-  .stock-thumb-placeholder svg { width: 22px; height: 22px; }
-
-  .stock-info {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    justify-content: center;
-  }
-  .stock-name {
-    font-size: 14.5px;
-    font-weight: 600;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .stock-meta {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  .stock-qty-row {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 11.5px;
-    color: var(--ink-soft);
-    white-space: nowrap;
-  }
-
-  .badge {
-    font-size: 11px;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 20px;
-    white-space: nowrap;
-  }
-
-  .stock-expiry {
-    font-size: 12px;
-    font-weight: 600;
-    white-space: nowrap;
-  }
-  .stock-expiry.fresh { color: var(--accent-task); }
-  .stock-expiry.soon { color: var(--accent-idea); }
-  .stock-expiry.expired { color: var(--danger); }
-  .stock-expiry.neutral { color: var(--ink-faint); font-weight: 500; }
-
   .empty {
     padding: 26px 20px 30px;
     text-align: center;
@@ -1273,7 +1114,6 @@
     <button type="button" class="tab-btn" data-tab="todo" role="tab">待办</button>
     <button type="button" class="tab-btn" data-tab="notes" role="tab">记录</button>
     <button type="button" class="tab-btn" data-tab="schedule" role="tab">排班</button>
-    <button type="button" class="tab-btn" data-tab="storage" role="tab">储物</button>
   </nav>
 
   <main class="board" id="view-todo">
@@ -1287,13 +1127,13 @@
         <div class="toolbar-row">
           <input type="text" id="task-input" placeholder="添加一项待办…" autocomplete="off" maxlength="240" />
         </div>
+        <div class="toolbar-row pri-pick" id="task-priority-picker" role="radiogroup" aria-label="轻重缓急">
+          <button type="button" class="pri-pick-btn pri-1" data-pri="1">重要紧急</button>
+          <button type="button" class="pri-pick-btn pri-2 active" data-pri="2">重要不紧急</button>
+          <button type="button" class="pri-pick-btn pri-3" data-pri="3">紧急不重要</button>
+          <button type="button" class="pri-pick-btn pri-4" data-pri="4">不重要不紧急</button>
+        </div>
         <div class="toolbar-row">
-          <select id="task-priority" class="date-input" aria-label="轻重缓急">
-            <option value="1">重要紧急</option>
-            <option value="2" selected>重要不紧急</option>
-            <option value="3">紧急不重要</option>
-            <option value="4">不重要不紧急</option>
-          </select>
           <span class="date-input date-field" id="task-date-field">
             <span class="date-field-text placeholder" id="task-date-text">月/日</span>
             <input type="date" id="task-date" class="date-field-input" aria-label="截止日期（可选）" />
@@ -1383,45 +1223,6 @@
     </section>
   </main>
 
-  <main class="board" id="view-storage" hidden>
-    <section class="panel panel--storage" aria-labelledby="storage-heading">
-      <div class="panel-head">
-        <span class="tag">STOCK</span>
-        <h2 id="storage-heading">储物</h2>
-        <span class="count-chip" id="item-count">0 件</span>
-      </div>
-      <div class="add-row stacked">
-        <form id="item-form">
-          <div class="toolbar-row">
-            <input type="text" id="item-name" placeholder="物品名称…" autocomplete="off" maxlength="40" />
-            <input type="number" id="item-qty" class="stock-num-input" min="0" step="1" value="1" aria-label="数量" />
-          </div>
-          <div class="toolbar-row">
-            <input type="date" id="item-buy-date" class="date-input" aria-label="购买日期（可选）" />
-            <input type="date" id="item-expiry-date" class="date-input" aria-label="过期日期（可选）" />
-          </div>
-          <div class="toolbar-row tag-picker" id="item-tag-picker"></div>
-          <div class="toolbar-row">
-            <label class="photo-btn">
-              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="15" height="11" rx="2"/><circle cx="10" cy="10.5" r="3"/><path d="M7.5 5l1-1.8h3l1 1.8"/></svg>
-              添加照片
-              <input type="file" id="item-photo-input" accept="image/*" />
-            </label>
-            <button type="button" class="photo-btn" id="item-tag-add-btn">
-              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4v12M4 10h12"/></svg>
-              添加标签
-            </button>
-            <img id="item-photo-preview" class="photo-preview-thumb" hidden />
-            <button type="button" class="backup-btn" id="item-cancel-edit-btn" hidden>取消编辑</button>
-            <button type="submit" class="add-btn" id="item-submit-btn">添加</button>
-          </div>
-        </form>
-      </div>
-      <div class="stock-alert" id="stock-alert" hidden></div>
-      <div class="stock-grid" id="stock-grid"></div>
-      <div class="empty" id="item-empty">还没有储存物品，从上面添加开始记录</div>
-    </section>
-  </main>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -1434,11 +1235,6 @@
   const STORE_SCHEDULE = "workbench.schedule.v1";
   const STORE_LOCATIONS = "workbench.locations.v1";
   const STORE_TAB = "workbench.activeTab.v1";
-  const STORE_ITEMS = "workbench.items.v1";
-  const STORE_ITEM_LOCATIONS = "workbench.itemLocations.v1";
-  const STORE_ITEM_CATEGORIES = "workbench.itemCategories.v1";
-  const STORE_ITEM_TAGS = "workbench.itemTags.v1";
-  const ITEM_TAGS_MIGRATED_FLAG = "workbench.itemTags.migrated.v1";
   const LOCATION_PALETTE = ["task", "idea", "habit", "time", "purple", "terra", "green", "pink"];
 
   const load = (key) => {
@@ -1542,151 +1338,6 @@
     if (changed) saveSchedule();
   })();
 
-  let items = load(STORE_ITEMS);
-  const saveItems = () => localStorage.setItem(STORE_ITEMS, JSON.stringify(items));
-
-  let itemTags = load(STORE_ITEM_TAGS);
-  if (!localStorage.getItem(ITEM_TAGS_MIGRATED_FLAG)) {
-    const oldLocations = load(STORE_ITEM_LOCATIONS);
-    const oldCategories = load(STORE_ITEM_CATEGORIES);
-    const merged = [];
-    const seen = new Set();
-    [...oldLocations, ...oldCategories].forEach(t => {
-      if (!seen.has(t.name)) { seen.add(t.name); merged.push({ id: t.id || uid(), name: t.name, color: t.color }); }
-    });
-    if (merged.length === 0 && itemTags.length === 0) {
-      merged.push(
-        { id: uid(), name: "旅行箱", color: "terra" },
-        { id: uid(), name: "储物箱", color: "time" },
-        { id: uid(), name: "桌柜", color: "green" },
-        { id: uid(), name: "调料", color: "idea" },
-        { id: uid(), name: "日常", color: "task" },
-        { id: uid(), name: "旅行", color: "pink" },
-      );
-    }
-    itemTags = merged.length > 0 ? merged : itemTags;
-    save(STORE_ITEM_TAGS, itemTags);
-
-    items.forEach(it => {
-      if (!it.tags) {
-        const tags = [];
-        if (it.location) tags.push(it.location);
-        if (it.category && it.category !== it.location) tags.push(it.category);
-        it.tags = tags;
-        delete it.location;
-        delete it.category;
-      }
-    });
-    saveItems();
-
-    localStorage.setItem(ITEM_TAGS_MIGRATED_FLAG, "1");
-  }
-  const saveItemTags = () => save(STORE_ITEM_TAGS, itemTags);
-
-  function itemTagsOf(item) {
-    if (item.tags) return item.tags;
-    return [item.location, item.category].filter(Boolean);
-  }
-
-  function addItemTag(name) {
-    if (itemTags.some(t => t.name === name)) return;
-    itemTags.push({ id: uid(), name, color: LOCATION_PALETTE[itemTags.length % LOCATION_PALETTE.length] });
-    saveItemTags();
-  }
-
-  let selectedItemTags = new Set();
-
-  function attachLongPress(el, onLongPress, delay) {
-    let timer = null;
-    let fired = false;
-    const start = (e) => {
-      fired = false;
-      timer = setTimeout(() => { fired = true; onLongPress(); }, delay || 550);
-    };
-    const cancel = () => { clearTimeout(timer); };
-    el.addEventListener("pointerdown", start);
-    el.addEventListener("pointerup", cancel);
-    el.addEventListener("pointercancel", cancel);
-    el.addEventListener("pointerleave", cancel);
-    el.addEventListener("click", (e) => {
-      if (fired) { e.preventDefault(); e.stopPropagation(); }
-    });
-  }
-
-  function renderItemTagPicker() {
-    const container = document.getElementById("item-tag-picker");
-    container.innerHTML = "";
-    if (itemTags.length === 0) {
-      const hint = document.createElement("span");
-      hint.className = "tag-picker-empty";
-      hint.textContent = "还没有标签，点右下角「添加标签」新增";
-      container.appendChild(hint);
-      return;
-    }
-    itemTags.forEach(t => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      const active = selectedItemTags.has(t.name);
-      btn.className = "tag-picker-btn";
-      if (active) {
-        btn.style.background = `var(--accent-${t.color})`;
-        btn.style.color = "#fff";
-      } else {
-        btn.style.background = `var(--accent-${t.color}-soft)`;
-        btn.style.color = `var(--accent-${t.color})`;
-      }
-      btn.textContent = t.name;
-      btn.title = "点击选择 · 长按删除";
-      btn.addEventListener("click", () => {
-        if (selectedItemTags.has(t.name)) selectedItemTags.delete(t.name);
-        else selectedItemTags.add(t.name);
-        renderItemTagPicker();
-      });
-      attachLongPress(btn, () => {
-        if (!confirm(`删除标签"${t.name}"？`)) return;
-        itemTags = itemTags.filter(x => x.id !== t.id);
-        saveItemTags();
-        selectedItemTags.delete(t.name);
-        renderItemTagPicker();
-      });
-      container.appendChild(btn);
-    });
-  }
-
-  function resizeImageFile(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const maxDim = 480;
-          let { width, height } = img;
-          if (width > maxDim || height > maxDim) {
-            if (width >= height) { height = Math.round(height * maxDim / width); width = maxDim; }
-            else { width = Math.round(width * maxDim / height); height = maxDim; }
-          }
-          const canvas = document.createElement("canvas");
-          canvas.width = width;
-          canvas.height = height;
-          canvas.getContext("2d").drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL("image/jpeg", 0.72));
-        };
-        img.onerror = reject;
-        img.src = e.target.result;
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  }
-
-  function itemExpiryStatus(item) {
-    if (!item.expiryDate) return { text: "无过期日期", kind: "neutral" };
-    const daysLeft = daysBetween(todayISO(), item.expiryDate);
-    if (daysLeft < 0) return { text: `已过期 ${-daysLeft} 天`, kind: "expired" };
-    if (daysLeft === 0) return { text: "今天过期", kind: "soon" };
-    if (daysLeft <= 7) return { text: `还有 ${daysLeft} 天过期`, kind: "soon" };
-    return { text: `还有 ${daysLeft} 天过期`, kind: "fresh" };
-  }
 
   const iconCopy = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M4 13V5a2 2 0 0 1 2-2h8" stroke-linecap="round"/></svg>';
   const iconTrash = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h12M8 6V4.5A1.5 1.5 0 0 1 9.5 3h1A1.5 1.5 0 0 1 12 4.5V6M6 6l.6 10a1.5 1.5 0 0 0 1.5 1.4h3.8a1.5 1.5 0 0 0 1.5-1.4L14 6"/></svg>';
@@ -2444,244 +2095,10 @@
     renderSchedule();
   });
 
-  const iconPhoto = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="15" height="11" rx="2"/><circle cx="10" cy="10.5" r="3"/></svg>';
-
-  function renderItems() {
-    const grid = document.getElementById("stock-grid");
-    const empty = document.getElementById("item-empty");
-    const alertBox = document.getElementById("stock-alert");
-    document.getElementById("item-count").textContent = `${items.length} 件`;
-    grid.innerHTML = "";
-    empty.style.display = items.length === 0 ? "block" : "none";
-
-    const sorted = [...items].sort((a, b) => {
-      const ea = a.expiryDate || "9999-99-99";
-      const eb = b.expiryDate || "9999-99-99";
-      return ea < eb ? -1 : ea > eb ? 1 : 0;
-    });
-    sorted.forEach(item => grid.appendChild(itemCard(item)));
-
-    const expiredCount = items.filter(i => i.expiryDate && itemExpiryStatus(i).kind === "expired").length;
-    const soonCount = items.filter(i => i.expiryDate && itemExpiryStatus(i).kind === "soon").length;
-    if (expiredCount > 0 || soonCount > 0) {
-      const parts = [];
-      if (expiredCount > 0) parts.push(`${expiredCount} 件已过期`);
-      if (soonCount > 0) parts.push(`${soonCount} 件即将过期`);
-      alertBox.textContent = parts.join(" · ");
-      alertBox.hidden = false;
-    } else {
-      alertBox.hidden = true;
-    }
-  }
-
-  function itemCard(item) {
-    const status = itemExpiryStatus(item);
-    const card = document.createElement("div");
-    card.className = "stock-card" + (status.kind === "expired" ? " expired" : "");
-
-    const top = document.createElement("div");
-    top.className = "stock-card-top";
-
-    if (item.photo) {
-      const img = document.createElement("img");
-      img.className = "stock-thumb";
-      img.src = item.photo;
-      img.alt = item.name;
-      top.appendChild(img);
-    } else {
-      const ph = document.createElement("div");
-      ph.className = "stock-thumb-placeholder";
-      ph.innerHTML = iconPhoto;
-      top.appendChild(ph);
-    }
-
-    const info = document.createElement("div");
-    info.className = "stock-info";
-    const name = document.createElement("div");
-    name.className = "stock-name";
-    name.textContent = item.name;
-    const qtyRow = document.createElement("div");
-    qtyRow.className = "stock-qty-row";
-    const qtyLabel = document.createElement("span");
-    qtyLabel.textContent = "数量";
-    const qtyInput = document.createElement("input");
-    qtyInput.type = "number";
-    qtyInput.className = "stock-num-input";
-    qtyInput.min = "0";
-    qtyInput.step = "1";
-    qtyInput.value = item.qty;
-    qtyInput.setAttribute("aria-label", `${item.name} 数量`);
-    qtyInput.addEventListener("change", () => {
-      item.qty = Math.max(0, Number(qtyInput.value) || 0);
-      qtyInput.value = item.qty;
-      saveItems();
-    });
-    qtyRow.append(qtyLabel, qtyInput);
-
-    const tagBadges = itemTagsOf(item).map(tagName => {
-      const badge = document.createElement("span");
-      badge.className = "badge";
-      const entry = itemTags.find(t => t.name === tagName);
-      const color = entry ? entry.color : "time";
-      badge.style.color = `var(--accent-${color})`;
-      badge.style.background = `var(--accent-${color}-soft)`;
-      badge.textContent = tagName;
-      return badge;
-    });
-
-    const expiry = document.createElement("span");
-    expiry.className = "stock-expiry " + status.kind;
-    expiry.textContent = status.text;
-    if (item.buyDate) expiry.title = `购买于：${item.buyDate}`;
-
-    const meta = document.createElement("div");
-    meta.className = "stock-meta";
-    meta.append(qtyRow, ...tagBadges, expiry);
-
-    info.append(name, meta);
-
-    const editBtn = document.createElement("button");
-    editBtn.className = "icon-btn";
-    editBtn.innerHTML = iconEdit;
-    editBtn.title = "编辑";
-    editBtn.addEventListener("click", () => startEditItem(item));
-
-    const delBtn = document.createElement("button");
-    delBtn.className = "icon-btn danger";
-    delBtn.innerHTML = iconTrash;
-    delBtn.title = "删除";
-    delBtn.addEventListener("click", () => {
-      items = items.filter(x => x.id !== item.id);
-      saveItems();
-      if (editingItemId === item.id) endEditItem();
-      renderItems();
-    });
-
-    const actions = document.createElement("div");
-    actions.className = "item-actions";
-    actions.append(editBtn, delBtn);
-
-    top.append(info, actions);
-    card.append(top);
-    return card;
-  }
-
-  let editingItemId = null;
-
-  function startEditItem(item) {
-    editingItemId = item.id;
-    document.getElementById("item-name").value = item.name;
-    document.getElementById("item-qty").value = item.qty;
-    document.getElementById("item-buy-date").value = item.buyDate || "";
-    document.getElementById("item-expiry-date").value = item.expiryDate || "";
-    selectedItemTags = new Set(itemTagsOf(item));
-    renderItemTagPicker();
-    pendingPhoto = item.photo || null;
-    if (item.photo) {
-      itemPhotoPreview.src = item.photo;
-      itemPhotoPreview.hidden = false;
-    } else {
-      itemPhotoPreview.hidden = true;
-    }
-    document.getElementById("item-submit-btn").textContent = "保存修改";
-    document.getElementById("item-cancel-edit-btn").hidden = false;
-    document.getElementById("item-form").scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  function endEditItem() {
-    editingItemId = null;
-    document.getElementById("item-name").value = "";
-    document.getElementById("item-qty").value = "1";
-    document.getElementById("item-buy-date").value = "";
-    document.getElementById("item-expiry-date").value = "";
-    document.getElementById("item-photo-input").value = "";
-    itemPhotoPreview.hidden = true;
-    pendingPhoto = null;
-    selectedItemTags = new Set();
-    renderItemTagPicker();
-    document.getElementById("item-submit-btn").textContent = "添加";
-    document.getElementById("item-cancel-edit-btn").hidden = true;
-  }
-
-  let pendingPhoto = null;
-  const itemPhotoInput = document.getElementById("item-photo-input");
-  const itemPhotoPreview = document.getElementById("item-photo-preview");
-  itemPhotoInput.addEventListener("change", async () => {
-    const file = itemPhotoInput.files[0];
-    if (!file) return;
-    try {
-      pendingPhoto = await resizeImageFile(file);
-      itemPhotoPreview.src = pendingPhoto;
-      itemPhotoPreview.hidden = false;
-    } catch (e) {
-      toast("图片处理失败");
-    }
-  });
-
-  document.getElementById("item-tag-add-btn").addEventListener("click", () => {
-    const name = prompt("新标签名称：");
-    if (!name) return;
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    addItemTag(trimmed);
-    renderItemTagPicker();
-  });
-
-  document.getElementById("item-cancel-edit-btn").addEventListener("click", endEditItem);
-
-  document.getElementById("item-form").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const nameInput = document.getElementById("item-name");
-    const name = nameInput.value.trim();
-    if (!name) return;
-    const qtyInput = document.getElementById("item-qty");
-    const buyInput = document.getElementById("item-buy-date");
-    const expiryInput = document.getElementById("item-expiry-date");
-
-    if (editingItemId) {
-      const item = items.find(i => i.id === editingItemId);
-      if (item) {
-        item.name = name;
-        item.qty = Math.max(0, Number(qtyInput.value) || 0);
-        item.buyDate = buyInput.value || null;
-        item.expiryDate = expiryInput.value || null;
-        item.tags = Array.from(selectedItemTags);
-        item.photo = pendingPhoto;
-        saveItems();
-      }
-      endEditItem();
-      renderItems();
-      return;
-    }
-
-    items.unshift({
-      id: uid(),
-      name,
-      qty: Math.max(0, Number(qtyInput.value) || 0),
-      buyDate: buyInput.value || null,
-      expiryDate: expiryInput.value || null,
-      tags: Array.from(selectedItemTags),
-      photo: pendingPhoto,
-    });
-    saveItems();
-
-    nameInput.value = "";
-    qtyInput.value = "1";
-    buyInput.value = "";
-    expiryInput.value = "";
-    itemPhotoInput.value = "";
-    itemPhotoPreview.hidden = true;
-    pendingPhoto = null;
-    selectedItemTags = new Set();
-    renderItemTagPicker();
-    renderItems();
-  });
-
   function setActiveTab(tab) {
     document.getElementById("view-todo").hidden = tab !== "todo";
     document.getElementById("view-notes").hidden = tab !== "notes";
     document.getElementById("view-schedule").hidden = tab !== "schedule";
-    document.getElementById("view-storage").hidden = tab !== "storage";
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
     localStorage.setItem(STORE_TAB, tab);
   }
@@ -2701,13 +2118,20 @@
   const taskDateText = document.getElementById("task-date-text");
   taskDateInput.addEventListener("input", () => syncDateFieldText(taskDateInput, taskDateText));
 
+  let newTaskPriority = "2";
+  document.querySelectorAll("#task-priority-picker .pri-pick-btn").forEach(b => {
+    b.addEventListener("click", () => {
+      newTaskPriority = b.dataset.pri;
+      document.querySelectorAll("#task-priority-picker .pri-pick-btn").forEach(x => x.classList.toggle("active", x === b));
+    });
+  });
+
   document.getElementById("task-form").addEventListener("submit", (e) => {
     e.preventDefault();
     const input = document.getElementById("task-input");
     const text = input.value.trim();
     if (!text) return;
-    const priority = document.getElementById("task-priority").value;
-    tasks.unshift({ id: uid(), text, done: false, date: taskDateInput.value || null, priority, ts: Date.now() });
+    tasks.unshift({ id: uid(), text, done: false, date: taskDateInput.value || null, priority: newTaskPriority, ts: Date.now() });
     save(STORE_TASKS, tasks);
     input.value = "";
     taskDateInput.value = "";
@@ -2774,7 +2198,7 @@
 
   document.getElementById("export-btn").addEventListener("click", () => {
     const data = {
-      tasks, ideas, habits, schedule, locations, items, itemTags,
+      tasks, ideas, habits, schedule, locations,
       exportedAt: new Date().toISOString(),
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -2814,16 +2238,6 @@
       if (data.habits) save(STORE_HABITS, data.habits);
       if (data.schedule) localStorage.setItem(STORE_SCHEDULE, JSON.stringify(data.schedule));
       if (data.locations) localStorage.setItem(STORE_LOCATIONS, JSON.stringify(data.locations));
-      if (data.items) localStorage.setItem(STORE_ITEMS, JSON.stringify(data.items));
-      if (data.itemTags) {
-        localStorage.setItem(STORE_ITEM_TAGS, JSON.stringify(data.itemTags));
-        localStorage.setItem(ITEM_TAGS_MIGRATED_FLAG, "1");
-      } else if (data.itemLocations || data.itemCategories) {
-        if (data.itemLocations) localStorage.setItem(STORE_ITEM_LOCATIONS, JSON.stringify(data.itemLocations));
-        if (data.itemCategories) localStorage.setItem(STORE_ITEM_CATEGORIES, JSON.stringify(data.itemCategories));
-        localStorage.removeItem(ITEM_TAGS_MIGRATED_FLAG);
-        localStorage.removeItem(STORE_ITEM_TAGS);
-      }
       toast("导入成功，正在刷新…");
       input.value = "";
       setTimeout(() => location.reload(), 600);
@@ -2835,10 +2249,9 @@
   renderIdeas();
   renderHabits();
   renderSchedule();
-  renderItemTagPicker();
-  renderItems();
   const savedTab = localStorage.getItem(STORE_TAB);
-  setActiveTab(savedTab === "tasks" || !savedTab ? "todo" : savedTab);
+  const validTabs = ["todo", "notes", "schedule"];
+  setActiveTab(validTabs.includes(savedTab) ? savedTab : "todo");
 </script>
 </body>
 </html>
