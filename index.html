@@ -1339,7 +1339,7 @@
         <h2 id="interest-heading">兴趣洞察</h2>
         <span class="count-chip" id="interest-count">0 条</span>
       </div>
-      <p class="panel-hint">具体内容在 Obsidian「未来兴趣库」里自己搜就行，这里只看方向和延伸建议。手机上想到什么就写进 Obsidian「800灵光一现/兴趣速记收件箱」，电脑上跟 Claude 说一句"处理一下兴趣收件箱"就会更新这里。</p>
+      <p class="panel-hint">具体内容在 Obsidian「未来兴趣库」里自己搜就行，这里只看方向和延伸建议。手机上想到什么就直接在 Obsidian「800灵光一现」文件夹里新建一条笔记，电脑上跟 Claude 说一句"处理一下灵光一现"就会更新这里。</p>
       <div class="interest-section">
         <h3>你的关键词库</h3>
         <div class="interest-cloud" id="interestKwCloud"></div>
@@ -2575,7 +2575,7 @@
     reader.readAsText(file);
   });
 
-  // 兴趣洞察：数据来自 Obsidian「未来兴趣库」，每次处理完「兴趣速记收件箱」后由 Claude 重新生成这两个常量
+  // 兴趣洞察：数据来自 Obsidian「未来兴趣库」，每次 Claude 处理完「800灵光一现」文件夹里的新笔记后重新生成这些常量
   const INTEREST_TOTAL = 125;
   const INTEREST_LAST_UPDATED = "2026-08-01";
   const INTEREST_THEMES = [
