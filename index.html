@@ -734,8 +734,38 @@
   .panel--xiaoshi .copy-all:hover { color: var(--accent-terra); border-color: var(--accent-terra); background: var(--accent-terra-soft); }
   .panel--tixing .copy-all:hover { color: var(--accent-purple); border-color: var(--accent-purple); background: var(--accent-purple-soft); }
   .panel-hint { font-size: 12.5px; color: var(--ink-faint); margin: -4px 0 10px; line-height: 1.5; }
-  .tixing-trigger { font-weight: 700; color: var(--accent-purple); margin-bottom: 4px; }
-  .tixing-text { white-space: pre-wrap; }
+
+  .tixing-trigger-input {
+    max-width: 220px;
+    align-self: flex-start;
+  }
+
+  .tixing-card {
+    flex: 1;
+    min-width: 0;
+    cursor: pointer;
+  }
+  .tixing-trigger-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .tixing-trigger { font-weight: 700; color: var(--accent-purple); }
+  .tixing-chevron {
+    color: var(--ink-faint);
+    font-size: 13px;
+    flex-shrink: 0;
+    transition: transform 0.15s;
+  }
+  .item.tixing-item.expanded .tixing-chevron { transform: rotate(180deg); }
+  .tixing-text {
+    display: none;
+    white-space: pre-wrap;
+    color: var(--ink-soft);
+    margin-top: 8px;
+  }
+  .item.tixing-item.expanded .tixing-text { display: block; }
 
   .week-bar {
     display: flex;
@@ -1263,7 +1293,7 @@
       </div>
       <p class="panel-hint">不用整篇看，找最像现在这个状态的那一条就行。</p>
       <form class="add-row stacked" id="tixing-form">
-        <input type="text" id="tixing-trigger-input" placeholder="什么情况下（比如：怕犯错）…" maxlength="60" autocomplete="off" />
+        <input type="text" id="tixing-trigger-input" class="tixing-trigger-input" placeholder="什么情况下（比如：怕犯错）…" maxlength="60" autocomplete="off" />
         <textarea id="tixing-input" placeholder="想对自己说的话…" maxlength="400" rows="2"></textarea>
         <button type="submit" class="add-btn">添加</button>
       </form>
@@ -1817,16 +1847,35 @@
 
   function tixingRow(i) {
     const li = document.createElement("li");
-    li.className = "item";
+    li.className = "item tixing-item";
 
     const wrap = document.createElement("div");
-    const trigger = document.createElement("div");
+    wrap.className = "tixing-card";
+    wrap.setAttribute("role", "button");
+    wrap.setAttribute("tabindex", "0");
+
+    const triggerRow = document.createElement("div");
+    triggerRow.className = "tixing-trigger-row";
+    const trigger = document.createElement("span");
     trigger.className = "tixing-trigger";
     trigger.textContent = i.trigger;
+    const chevron = document.createElement("span");
+    chevron.className = "tixing-chevron";
+    chevron.textContent = "⌄";
+    chevron.setAttribute("aria-hidden", "true");
+    triggerRow.append(trigger, chevron);
+
     const body = document.createElement("div");
     body.className = "tixing-text";
     body.textContent = i.text;
-    wrap.append(trigger, body);
+
+    wrap.append(triggerRow, body);
+
+    function toggle() { li.classList.toggle("expanded"); }
+    wrap.addEventListener("click", toggle);
+    wrap.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
+    });
 
     const actions = document.createElement("div");
     actions.className = "item-actions";
