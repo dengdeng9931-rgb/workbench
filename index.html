@@ -202,23 +202,27 @@
 
   .tabbar {
     display: flex;
-    gap: 4px;
+    gap: 3px;
     width: fit-content;
+    max-width: 100%;
     padding: 4px;
     margin: 0 0 20px;
     background: var(--paper-sunken);
     border: 1px solid var(--line);
     border-radius: 12px;
+    overflow-x: auto;
   }
 
   .tab-btn {
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--ink-soft);
     background: none;
     border: none;
-    border-radius: 9px;
-    padding: 8px 18px;
+    border-radius: 8px;
+    padding: 7px 10px;
+    white-space: nowrap;
+    flex: 0 0 auto;
     cursor: pointer;
     transition: background 0.15s, color 0.15s;
   }
