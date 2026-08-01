@@ -413,12 +413,17 @@
   .pri-filter-btn.active[data-pri="3"] { background: var(--accent-idea); }
   .pri-filter-btn.active[data-pri="4"] { background: var(--ink-faint); }
 
+  .pri-pick {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 4px;
+  }
   .pri-pick-btn {
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 600;
     border: 1px solid transparent;
-    border-radius: 20px;
-    padding: 7px 13px;
+    border-radius: 14px;
+    padding: 5px 7px;
     cursor: pointer;
     white-space: nowrap;
     transition: background 0.12s, color 0.12s;
@@ -753,6 +758,18 @@
     background: var(--paper-sunken);
   }
   .kw-pill b { color: var(--accent-green); font-weight: 700; }
+  .suggest-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .suggest-check {
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    accent-color: var(--accent-terra);
+    cursor: pointer;
+  }
   .suggest-pill {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 12px;
@@ -764,6 +781,12 @@
     cursor: pointer;
   }
   .suggest-pill:hover { background: var(--accent-terra-soft); }
+  .suggest-pill.searched {
+    color: var(--ink-faint);
+    border-color: var(--line);
+    text-decoration: line-through;
+    background: var(--paper-sunken);
+  }
   .interest-updated { font-size: 11px; color: var(--ink-faint); }
 
   .add-row input.tixing-trigger-input {
@@ -1205,13 +1228,13 @@
         <div class="toolbar-row">
           <input type="text" id="task-input" placeholder="添加一项待办…" autocomplete="off" maxlength="240" />
         </div>
-        <div class="toolbar-row pri-pick" id="task-priority-picker" role="radiogroup" aria-label="轻重缓急">
-          <button type="button" class="pri-pick-btn pri-1" data-pri="1">重要紧急</button>
-          <button type="button" class="pri-pick-btn pri-2 active" data-pri="2">重要不紧急</button>
-          <button type="button" class="pri-pick-btn pri-3" data-pri="3">紧急不重要</button>
-          <button type="button" class="pri-pick-btn pri-4" data-pri="4">不重要不紧急</button>
-        </div>
         <div class="toolbar-row">
+          <div class="pri-pick" id="task-priority-picker" role="radiogroup" aria-label="轻重缓急">
+            <button type="button" class="pri-pick-btn pri-1" data-pri="1">重要紧急</button>
+            <button type="button" class="pri-pick-btn pri-2 active" data-pri="2">重要不紧急</button>
+            <button type="button" class="pri-pick-btn pri-3" data-pri="3">紧急不重要</button>
+            <button type="button" class="pri-pick-btn pri-4" data-pri="4">不重要不紧急</button>
+          </div>
           <span class="date-input date-field" id="task-date-field">
             <span class="date-field-text placeholder" id="task-date-text">月/日</span>
             <input type="date" id="task-date" class="date-field-input" aria-label="截止日期（可选）" />
@@ -2602,12 +2625,35 @@
     "Rome2Rio交通规划", "Nomad List数字游民城市评分"
   ];
 
+  const STORE_INTEREST_SEARCHED = "workbench.interestSearched.v1";
+  function loadSearchedSet() {
+    try { return new Set(JSON.parse(localStorage.getItem(STORE_INTEREST_SEARCHED) || "[]")); }
+    catch (e) { return new Set(); }
+  }
+  function saveSearchedSet(set) {
+    localStorage.setItem(STORE_INTEREST_SEARCHED, JSON.stringify([...set]));
+  }
+
   function renderInterest() {
     document.getElementById("interest-count").textContent = INTEREST_TOTAL + " 条";
     document.getElementById("interestKwCloud").innerHTML = INTEREST_THEMES
       .map(([k, c]) => `<span class="kw-pill">${k} <b>×${c}</b></span>`).join("");
+    const searched = loadSearchedSet();
     const sugWrap = document.getElementById("interestSuggestCloud");
-    sugWrap.innerHTML = INTEREST_SUGGESTIONS.map(k => `<span class="suggest-pill">${k}</span>`).join("");
+    sugWrap.innerHTML = INTEREST_SUGGESTIONS.map(k => `
+      <span class="suggest-item">
+        <input type="checkbox" class="suggest-check" data-kw="${k}" ${searched.has(k) ? "checked" : ""} aria-label="标记已搜索：${k}">
+        <span class="suggest-pill${searched.has(k) ? " searched" : ""}">${k}</span>
+      </span>
+    `).join("");
+    sugWrap.querySelectorAll(".suggest-check").forEach(cb => {
+      cb.addEventListener("change", () => {
+        const set = loadSearchedSet();
+        if (cb.checked) set.add(cb.dataset.kw); else set.delete(cb.dataset.kw);
+        saveSearchedSet(set);
+        cb.nextElementSibling.classList.toggle("searched", cb.checked);
+      });
+    });
     sugWrap.querySelectorAll(".suggest-pill").forEach(p => {
       p.addEventListener("click", () => copyText(p.textContent));
     });
