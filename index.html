@@ -735,6 +735,33 @@
   .panel--tixing .copy-all:hover { color: var(--accent-purple); border-color: var(--accent-purple); background: var(--accent-purple-soft); }
   .panel-hint { font-size: 12.5px; color: var(--ink-faint); margin: -4px 0 10px; line-height: 1.5; }
 
+  .panel--interest .tag { color: var(--accent-green); background: var(--accent-green-soft); }
+  .interest-section { padding: 0 18px 16px; }
+  .interest-section h3 { font-size: 12px; font-weight: 600; color: var(--ink-soft); margin: 0 0 8px; }
+  .interest-cloud { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; }
+  .kw-pill {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 7px;
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    background: var(--paper-sunken);
+  }
+  .kw-pill b { color: var(--accent-green); font-weight: 700; }
+  .suggest-pill {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 7px;
+    border: 1px dashed var(--accent-terra);
+    color: var(--accent-terra);
+    background: var(--paper);
+    cursor: pointer;
+  }
+  .suggest-pill:hover { background: var(--accent-terra-soft); }
+  .interest-updated { font-size: 11px; color: var(--ink-faint); }
+
   .add-row input.tixing-trigger-input {
     flex: 0 0 auto;
     width: 180px;
@@ -1160,6 +1187,7 @@
     <button type="button" class="tab-btn" data-tab="schedule" role="tab">排班</button>
     <button type="button" class="tab-btn" data-tab="xiaoshi" role="tab">小事</button>
     <button type="button" class="tab-btn" data-tab="tixing" role="tab">提醒</button>
+    <button type="button" class="tab-btn" data-tab="interest" role="tab">兴趣</button>
   </nav>
 
   <main class="board" id="view-todo">
@@ -1301,6 +1329,24 @@
       </form>
       <ul class="item-list" id="tixing-list"></ul>
       <div class="empty" id="tixing-empty">还没有记录，从上面输入开始</div>
+    </section>
+  </main>
+
+  <main class="board" id="view-interest" hidden>
+    <section class="panel panel--interest" aria-labelledby="interest-heading">
+      <div class="panel-head">
+        <span class="tag">ARCHIVE</span>
+        <h2 id="interest-heading">兴趣洞察</h2>
+        <span class="count-chip" id="interest-count">0 条</span>
+      </div>
+      <p class="panel-hint">具体内容在 Obsidian「未来兴趣库」里自己搜就行，这里只看方向和延伸建议。手机上想到什么就写进 Obsidian「800灵光一现/兴趣速记收件箱」，电脑上跟 Claude 说一句"处理一下兴趣收件箱"就会更新这里。</p>
+      <div class="interest-section">
+        <h3>你的关键词库</h3>
+        <div class="interest-cloud" id="interestKwCloud"></div>
+        <h3>可能感兴趣词库</h3>
+        <div class="interest-cloud" id="interestSuggestCloud"></div>
+        <div class="interest-updated" id="interestUpdated"></div>
+      </div>
     </section>
   </main>
 
@@ -2355,6 +2401,7 @@
     document.getElementById("view-schedule").hidden = tab !== "schedule";
     document.getElementById("view-xiaoshi").hidden = tab !== "xiaoshi";
     document.getElementById("view-tixing").hidden = tab !== "tixing";
+    document.getElementById("view-interest").hidden = tab !== "interest";
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
     localStorage.setItem(STORE_TAB, tab);
   }
@@ -2528,14 +2575,50 @@
     reader.readAsText(file);
   });
 
+  // 兴趣洞察：数据来自 Obsidian「未来兴趣库」，每次处理完「兴趣速记收件箱」后由 Claude 重新生成这两个常量
+  const INTEREST_TOTAL = 125;
+  const INTEREST_LAST_UPDATED = "2026-08-01";
+  const INTEREST_THEMES = [
+    ["移民与职业规划", 14], ["自我认知与成长", 10], ["悉尼本地探店", 7], ["悉尼徒步与自然", 7],
+    ["政治与社会思考", 6], ["中国国内旅行", 6], ["旅行工具与平台", 6], ["数字工具与效率", 5],
+    ["旅行灵感来源", 5], ["欧洲旅行", 5], ["悉尼周边小镇", 5], ["原生家庭与性别议题", 4],
+    ["生活实用技巧", 4], ["东亚旅行", 4], ["塔州旅行", 4], ["东南亚旅行", 4],
+    ["历史自学", 3], ["自我关怀与情绪", 3], ["历史纪录片", 3], ["娱乐消遣内容", 3], ["太平洋岛国旅行", 3]
+  ];
+  const INTEREST_SUGGESTIONS = [
+    "新西兰打工度假签证", "葡萄牙数字游民签证D8", "爱尔兰工作假期签证",
+    "依恋类型理论(焦虑/回避/安全型)", "《非暴力沟通》马歇尔·卢森堡", "内在小孩疗愈",
+    "Royal National Park徒步", "Blue Mountains Grand Canyon Track", "Jervis Bay一日游",
+    "Southern Highlands小镇", "葡萄牙里斯本波尔图", "斯洛文尼亚Lake Bled",
+    "《第二性》波伏娃", "《人类简史》赫拉利",
+    "Notion数据库模板", "Readwise读书笔记工具",
+    "新疆独库公路", "甘肃敦煌", "贵州侗寨",
+    "Netflix《王朝》纪录片", "《人类群星闪耀时》茨威格",
+    "帕劳深潜", "老挝琅勃拉邦",
+    "Rome2Rio交通规划", "Nomad List数字游民城市评分"
+  ];
+
+  function renderInterest() {
+    document.getElementById("interest-count").textContent = INTEREST_TOTAL + " 条";
+    document.getElementById("interestKwCloud").innerHTML = INTEREST_THEMES
+      .map(([k, c]) => `<span class="kw-pill">${k} <b>×${c}</b></span>`).join("");
+    const sugWrap = document.getElementById("interestSuggestCloud");
+    sugWrap.innerHTML = INTEREST_SUGGESTIONS.map(k => `<span class="suggest-pill">${k}</span>`).join("");
+    sugWrap.querySelectorAll(".suggest-pill").forEach(p => {
+      p.addEventListener("click", () => copyText(p.textContent));
+    });
+    document.getElementById("interestUpdated").textContent = "最近更新：" + INTEREST_LAST_UPDATED;
+  }
+
   renderTasks();
   renderIdeas();
   renderHabits();
   renderSchedule();
   renderXiaoshi();
   renderTixing();
+  renderInterest();
   const savedTab = localStorage.getItem(STORE_TAB);
-  const validTabs = ["todo", "notes", "schedule", "xiaoshi", "tixing"];
+  const validTabs = ["todo", "notes", "schedule", "xiaoshi", "tixing", "interest"];
   setActiveTab(validTabs.includes(savedTab) ? savedTab : "todo");
 </script>
 </body>
