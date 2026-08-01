@@ -724,6 +724,18 @@
   }
 
   .panel--schedule .tag { color: var(--accent-time); background: var(--accent-time-soft); }
+  .panel--xiaoshi .tag { color: var(--accent-terra); background: var(--accent-terra-soft); }
+  .panel--tixing .tag { color: var(--accent-purple); background: var(--accent-purple-soft); }
+  .panel--xiaoshi .add-btn { background: var(--accent-terra); }
+  .panel--tixing .add-btn { background: var(--accent-purple); }
+  .panel--xiaoshi .add-row textarea:focus-visible { outline-color: var(--accent-terra); }
+  .panel--tixing .add-row input:focus-visible,
+  .panel--tixing .add-row textarea:focus-visible { outline-color: var(--accent-purple); }
+  .panel--xiaoshi .copy-all:hover { color: var(--accent-terra); border-color: var(--accent-terra); background: var(--accent-terra-soft); }
+  .panel--tixing .copy-all:hover { color: var(--accent-purple); border-color: var(--accent-purple); background: var(--accent-purple-soft); }
+  .panel-hint { font-size: 12.5px; color: var(--ink-faint); margin: -4px 0 10px; line-height: 1.5; }
+  .tixing-trigger { font-weight: 700; color: var(--accent-purple); margin-bottom: 4px; }
+  .tixing-text { white-space: pre-wrap; }
 
   .week-bar {
     display: flex;
@@ -1103,7 +1115,6 @@
     <div class="header-right">
       <span class="date" id="today"></span>
       <div class="backup-bar">
-        <a class="backup-btn" href="./reminders.html">🌿 提醒</a>
         <button type="button" class="backup-btn" id="export-btn">导出备份</button>
         <label class="backup-btn" for="import-input">导入备份</label>
         <input type="file" id="import-input" accept="application/json" hidden />
@@ -1115,6 +1126,8 @@
     <button type="button" class="tab-btn" data-tab="todo" role="tab">待办</button>
     <button type="button" class="tab-btn" data-tab="notes" role="tab">记录</button>
     <button type="button" class="tab-btn" data-tab="schedule" role="tab">排班</button>
+    <button type="button" class="tab-btn" data-tab="xiaoshi" role="tab">小事</button>
+    <button type="button" class="tab-btn" data-tab="tixing" role="tab">提醒</button>
   </nav>
 
   <main class="board" id="view-todo">
@@ -1224,6 +1237,41 @@
     </section>
   </main>
 
+  <main class="board" id="view-xiaoshi" hidden>
+    <section class="panel panel--xiaoshi" aria-labelledby="xiaoshi-heading">
+      <div class="panel-head">
+        <span class="tag">SMALL JOY</span>
+        <h2 id="xiaoshi-heading">纯粹的小事</h2>
+        <span class="count-chip" id="xiaoshi-count">0 条</span>
+      </div>
+      <p class="panel-hint">每周找一件事，纯粹因为现在想要、跟以后有没有用完全无关。做过的可以直接删掉。</p>
+      <form class="add-row" id="xiaoshi-form">
+        <textarea id="xiaoshi-input" placeholder="想到一件新的小事就记下来…" maxlength="200" rows="1"></textarea>
+        <button type="submit" class="add-btn">添加</button>
+      </form>
+      <ul class="item-list" id="xiaoshi-list"></ul>
+      <div class="empty" id="xiaoshi-empty">还没有记录，从上面输入开始</div>
+    </section>
+  </main>
+
+  <main class="board" id="view-tixing" hidden>
+    <section class="panel panel--tixing" aria-labelledby="tixing-heading">
+      <div class="panel-head">
+        <span class="tag">RESET</span>
+        <h2 id="tixing-heading">不高兴的时候，看这个</h2>
+        <span class="count-chip" id="tixing-count">0 条</span>
+      </div>
+      <p class="panel-hint">不用整篇看，找最像现在这个状态的那一条就行。</p>
+      <form class="add-row stacked" id="tixing-form">
+        <input type="text" id="tixing-trigger-input" placeholder="什么情况下（比如：怕犯错）…" maxlength="60" autocomplete="off" />
+        <textarea id="tixing-input" placeholder="想对自己说的话…" maxlength="400" rows="2"></textarea>
+        <button type="submit" class="add-btn">添加</button>
+      </form>
+      <ul class="item-list" id="tixing-list"></ul>
+      <div class="empty" id="tixing-empty">还没有记录，从上面输入开始</div>
+    </section>
+  </main>
+
 </div>
 
 <div class="toast" id="toast"></div>
@@ -1235,6 +1283,10 @@
   const HABITS_SEED_FLAG = "workbench.habits.seeded.v1";
   const STORE_SCHEDULE = "workbench.schedule.v1";
   const STORE_LOCATIONS = "workbench.locations.v1";
+  const STORE_XIAOSHI = "workbench.xiaoshi.v1";
+  const XIAOSHI_SEED_FLAG = "workbench.xiaoshi.seeded.v1";
+  const STORE_TIXING = "workbench.tixing.v1";
+  const TIXING_SEED_FLAG = "workbench.tixing.seeded.v1";
   const STORE_TAB = "workbench.activeTab.v1";
   const LOCATION_PALETTE = ["task", "idea", "habit", "time", "purple", "terra", "green", "pink"];
 
@@ -1279,6 +1331,49 @@
     habits = seedHabits();
     save(STORE_HABITS, habits);
     localStorage.setItem(HABITS_SEED_FLAG, "1");
+  }
+
+  function seedXiaoshi() {
+    return [
+      "盖上厚被子，什么都不干，就窝着 15-20 分钟，手机也不刷（5分钟内・不花钱）",
+      "放一首你喜欢的 R&B/爵士歌，整首听完，中途不干别的事（5分钟内・不花钱）",
+      "在脑子里编一小段喜欢的恋爱小故事情节，不用写下来，纯过瘾就行（5分钟内・不花钱）",
+      "给自己买一杯抹茶，找个地方坐下来慢慢喝完，不是外带边走边喝（花点小钱）",
+      "买一块 carrot cake，专门吃它，不搭配任何“顺便办点事”的行程（花点小钱）",
+      "买一份你一直想吃但觉得“没必要”的小零食/甜品（花点小钱）",
+      "手机随手拍几张照片，不用是“摄影”，拍完不用挑、不用发、甚至可以不看（花点时间）",
+      "收拾一小块地方（抽屉/书桌一角），纯粹因为收拾完那种安心感（花点时间）",
+      "找一部纯粹想看、不是为了学英语/不是为了跟朋友有话题的剧，看一集就停（花点时间）",
+      "做一次比平时更厚重的面膜/护肤流程，不赶时间地做完（感官类）",
+      "去一家没去过的小店逛 5 分钟，不用买东西，也不用拍照发出去（感官类）",
+    ].map(text => ({ id: uid(), text, ts: Date.now() }));
+  }
+
+  let xiaoshi = load(STORE_XIAOSHI);
+  if (!localStorage.getItem(XIAOSHI_SEED_FLAG)) {
+    xiaoshi = seedXiaoshi();
+    save(STORE_XIAOSHI, xiaoshi);
+    localStorage.setItem(XIAOSHI_SEED_FLAG, "1");
+  }
+
+  function seedTixing() {
+    return [
+      { trigger: "怕犯错、怕让人失望", text: "恐惧的大小是跟“我摸没摸清这个人”挂钩的，不是跟错误本身挂钩。不熟的人，脑子默认脑补最坏结果，这不是真相，是信息不够。把事情说清楚，比自己在心里演最坏结局快得多。" },
+      { trigger: "遇到一个只会挑错、从不认可的人", text: "这种人的评价不是“关于我”的数据，是噪音，不用照单全收。在意他，不如去在意那种“大家互相兜底”的人怎么看你。" },
+      { trigger: "觉得没人真的支持自己、什么都得靠自己扛", text: "被无条件爱着的感觉，是真实发生过的，不是幻觉。现在找不到，是因为拿“小孩和长辈之间天生的单向爱”去量成年人之间“天生该双向”的关系，量错了尺子，不是这个世界上没有人能给你支持。" },
+      { trigger: "事情堆成山，脑子一团乱", text: "让子弹飞一会儿。别急着做，先写下来要做的事，排个顺序，只挑最急的那一件动手，剩下的先放着。" },
+      { trigger: "学不下去、想放弃", text: "你是需要被哄的人，不是没有毅力的人。前面卡住是正常的，撑过去之后手感会回来，别在卡壳的那一刻就判自己死刑。" },
+      { trigger: "为一件自己改变不了的大事焦虑（政策、大环境、别人的选择）", text: "先问自己：这件事是“我能改的”还是“我只能扛的”。能改的才值得花力气，只能扛的，接受它、调整自己的策略就够了，不需要因为改不了而自责。" },
+      { trigger: "觉得自己还不够好，不配拥有想要的东西", text: "这是旧脚本，不是事实。你已经在没等自己“先够格”的情况下，主动做过对的事。值得被善待，不是需要提前挣来的资格。" },
+      { trigger: "觉得自己没有变化、一直在原地", text: "以前你写过“我到底能有啥用”，后来你写的是“我自己一个人走到这里，也挺厉害的”。这条线是真的在往前走的，不是错觉。" },
+    ].map(item => ({ id: uid(), trigger: item.trigger, text: item.text, ts: Date.now() }));
+  }
+
+  let tixing = load(STORE_TIXING);
+  if (!localStorage.getItem(TIXING_SEED_FLAG)) {
+    tixing = seedTixing();
+    save(STORE_TIXING, tixing);
+    localStorage.setItem(TIXING_SEED_FLAG, "1");
   }
 
   let schedule = (() => {
@@ -1641,6 +1736,113 @@
       });
     }
 
+    return li;
+  }
+
+  function renderXiaoshi() {
+    const list = document.getElementById("xiaoshi-list");
+    const empty = document.getElementById("xiaoshi-empty");
+    document.getElementById("xiaoshi-count").textContent = `${xiaoshi.length} 条`;
+    list.innerHTML = "";
+    empty.style.display = xiaoshi.length === 0 ? "block" : "none";
+    xiaoshi.forEach(i => list.appendChild(xiaoshiRow(i)));
+  }
+
+  function xiaoshiRow(i) {
+    const li = document.createElement("li");
+    li.className = "item";
+
+    const wrap = document.createElement("div");
+    wrap.className = "idea-text";
+    wrap.textContent = i.text;
+
+    const actions = document.createElement("div");
+    actions.className = "item-actions";
+
+    const editBtn = document.createElement("button");
+    editBtn.className = "icon-btn";
+    editBtn.innerHTML = iconEdit;
+    editBtn.title = "编辑";
+    editBtn.addEventListener("click", () => startEdit());
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "icon-btn danger";
+    delBtn.innerHTML = iconTrash;
+    delBtn.title = "删除（比如已经做过了）";
+    delBtn.addEventListener("click", () => {
+      xiaoshi = xiaoshi.filter(x => x.id !== i.id);
+      save(STORE_XIAOSHI, xiaoshi);
+      renderXiaoshi();
+    });
+
+    actions.append(editBtn, delBtn);
+    li.append(wrap, actions);
+
+    function startEdit() {
+      const textarea = document.createElement("textarea");
+      textarea.className = "idea-edit-textarea";
+      textarea.value = i.text;
+      textarea.rows = Math.min(8, Math.max(2, Math.ceil(i.text.length / 36)));
+      wrap.replaceWith(textarea);
+      textarea.focus();
+      textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+      let done = false;
+      function finish(shouldSave) {
+        if (done) return;
+        done = true;
+        if (shouldSave) {
+          const newText = textarea.value.trim();
+          if (newText) { i.text = newText; save(STORE_XIAOSHI, xiaoshi); }
+        }
+        renderXiaoshi();
+      }
+      textarea.addEventListener("blur", () => finish(true));
+      textarea.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); textarea.blur(); }
+        if (e.key === "Escape") { e.preventDefault(); finish(false); }
+      });
+    }
+
+    return li;
+  }
+
+  function renderTixing() {
+    const list = document.getElementById("tixing-list");
+    const empty = document.getElementById("tixing-empty");
+    document.getElementById("tixing-count").textContent = `${tixing.length} 条`;
+    list.innerHTML = "";
+    empty.style.display = tixing.length === 0 ? "block" : "none";
+    tixing.forEach(i => list.appendChild(tixingRow(i)));
+  }
+
+  function tixingRow(i) {
+    const li = document.createElement("li");
+    li.className = "item";
+
+    const wrap = document.createElement("div");
+    const trigger = document.createElement("div");
+    trigger.className = "tixing-trigger";
+    trigger.textContent = i.trigger;
+    const body = document.createElement("div");
+    body.className = "tixing-text";
+    body.textContent = i.text;
+    wrap.append(trigger, body);
+
+    const actions = document.createElement("div");
+    actions.className = "item-actions";
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "icon-btn danger";
+    delBtn.innerHTML = iconTrash;
+    delBtn.title = "删除";
+    delBtn.addEventListener("click", () => {
+      tixing = tixing.filter(x => x.id !== i.id);
+      save(STORE_TIXING, tixing);
+      renderTixing();
+    });
+
+    actions.append(delBtn);
+    li.append(wrap, actions);
     return li;
   }
 
@@ -2100,6 +2302,8 @@
     document.getElementById("view-todo").hidden = tab !== "todo";
     document.getElementById("view-notes").hidden = tab !== "notes";
     document.getElementById("view-schedule").hidden = tab !== "schedule";
+    document.getElementById("view-xiaoshi").hidden = tab !== "xiaoshi";
+    document.getElementById("view-tixing").hidden = tab !== "tixing";
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
     localStorage.setItem(STORE_TAB, tab);
   }
@@ -2157,6 +2361,31 @@
     renderIdeas();
   });
 
+  document.getElementById("xiaoshi-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = document.getElementById("xiaoshi-input");
+    const text = input.value.trim();
+    if (!text) return;
+    xiaoshi.unshift({ id: uid(), text, ts: Date.now() });
+    save(STORE_XIAOSHI, xiaoshi);
+    input.value = "";
+    renderXiaoshi();
+  });
+
+  document.getElementById("tixing-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const triggerInput = document.getElementById("tixing-trigger-input");
+    const textInput = document.getElementById("tixing-input");
+    const trigger = triggerInput.value.trim();
+    const text = textInput.value.trim();
+    if (!trigger || !text) return;
+    tixing.unshift({ id: uid(), trigger, text, ts: Date.now() });
+    save(STORE_TIXING, tixing);
+    triggerInput.value = "";
+    textInput.value = "";
+    renderTixing();
+  });
+
   document.getElementById("task-done-toggle").addEventListener("click", () => {
     showDone = !showDone;
     renderTasks();
@@ -2199,7 +2428,7 @@
 
   document.getElementById("export-btn").addEventListener("click", () => {
     const data = {
-      tasks, ideas, habits, schedule, locations,
+      tasks, ideas, habits, schedule, locations, xiaoshi, tixing,
       exportedAt: new Date().toISOString(),
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -2239,6 +2468,8 @@
       if (data.habits) save(STORE_HABITS, data.habits);
       if (data.schedule) localStorage.setItem(STORE_SCHEDULE, JSON.stringify(data.schedule));
       if (data.locations) localStorage.setItem(STORE_LOCATIONS, JSON.stringify(data.locations));
+      if (data.xiaoshi) save(STORE_XIAOSHI, data.xiaoshi);
+      if (data.tixing) save(STORE_TIXING, data.tixing);
       toast("导入成功，正在刷新…");
       input.value = "";
       setTimeout(() => location.reload(), 600);
@@ -2250,8 +2481,10 @@
   renderIdeas();
   renderHabits();
   renderSchedule();
+  renderXiaoshi();
+  renderTixing();
   const savedTab = localStorage.getItem(STORE_TAB);
-  const validTabs = ["todo", "notes", "schedule"];
+  const validTabs = ["todo", "notes", "schedule", "xiaoshi", "tixing"];
   setActiveTab(validTabs.includes(savedTab) ? savedTab : "todo");
 </script>
 </body>
