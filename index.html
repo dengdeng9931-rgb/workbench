@@ -1195,6 +1195,14 @@
   }
   .mini-shift-box + .mini-shift-box { margin-top: 2px; }
 
+  .mini-day-total {
+    font-size: 10.5px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    margin-top: 3px;
+  }
+
   .empty {
     padding: 26px 20px 30px;
     text-align: center;
@@ -2390,7 +2398,7 @@
     validShifts.forEach(({ sh }) => {
       const box = document.createElement("div");
       box.className = "mini-shift-box";
-      box.textContent = `${sh.start}-${sh.end}`;
+      box.textContent = sh.start;
       const loc = locations.find(l => l.id === sh.locationId);
       if (loc) {
         box.style.background = `var(--accent-${loc.color}-soft)`;
@@ -2398,6 +2406,12 @@
       }
       cell.appendChild(box);
     });
+    if (!isRestDay) {
+      const total = document.createElement("div");
+      total.className = "mini-day-total";
+      total.textContent = Math.round(dayTotalHours(dayEntry) * 10) / 10;
+      cell.appendChild(total);
+    }
     return cell;
   }
 
@@ -2405,22 +2419,18 @@
     const container = document.getElementById("mini-cal-weeks");
     container.innerHTML = "";
     const thisMonday = mondayOfISO(todayISO());
-    const names = ["本周", "下周"];
     [0, 1].forEach(offset => {
       const start = addDaysISO(thisMonday, offset * 7);
       const weekEntries = schedule[start];
       const row = document.createElement("div");
       row.className = "mini-cal-week";
-      const heading = document.createElement("div");
-      heading.className = "mini-cal-week-label";
-      heading.textContent = `${names[offset]} · ${formatWeekRange(start)}`;
       const daysRow = document.createElement("div");
       daysRow.className = "mini-cal-row";
       weekDaysOf(start).forEach((dateISO, i) => {
         const dayEntry = weekEntries ? weekEntries[i] : { date: dateISO, shifts: [] };
         daysRow.appendChild(miniDayCell(dateISO, dayEntry));
       });
-      row.append(heading, daysRow);
+      row.append(daysRow);
       container.appendChild(row);
     });
   }
