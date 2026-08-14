@@ -267,7 +267,6 @@
     border-radius: 5px;
   }
   .panel--task .tag { color: var(--accent-task); background: var(--accent-task-soft); }
-  .panel--idea .tag { color: var(--accent-idea); background: var(--accent-idea-soft); }
   .panel--habit .tag { color: var(--accent-habit); background: var(--accent-habit-soft); }
   .panel--english .tag { color: var(--accent-pink); background: var(--accent-pink-soft); }
 
@@ -284,19 +283,6 @@
     font-size: 12px;
     color: var(--ink-soft);
   }
-
-  .copy-all {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--ink-soft);
-    background: none;
-    border: 1px solid var(--line);
-    border-radius: 7px;
-    padding: 5px 10px;
-    cursor: pointer;
-    transition: border-color 0.15s, color 0.15s, background 0.15s;
-  }
-  .panel--idea .copy-all:hover { color: var(--accent-idea); border-color: var(--accent-idea); background: var(--accent-idea-soft); }
 
   .add-row {
     display: flex;
@@ -413,6 +399,7 @@
   .pri-filter-btn.active[data-pri="2"] { background: var(--accent-task); }
   .pri-filter-btn.active[data-pri="3"] { background: var(--accent-idea); }
   .pri-filter-btn.active[data-pri="4"] { background: var(--ink-faint); }
+  .pri-filter-btn.active[data-pri="5"] { background: var(--accent-purple); }
 
   .pri-pick {
     display: flex;
@@ -437,6 +424,8 @@
   .pri-pick-btn.pri-2.active { background: var(--accent-task); color: #fff; }
   .pri-pick-btn.pri-3.active { background: var(--accent-idea); color: #fff; }
   .pri-pick-btn.pri-4.active { background: var(--ink-faint); color: #fff; border-color: transparent; }
+  .pri-pick-btn.pri-5 { color: var(--accent-purple); background: var(--accent-purple-soft); }
+  .pri-pick-btn.pri-5.active { background: var(--accent-purple); color: #fff; }
 
   .todo-body {
     flex: 1;
@@ -461,6 +450,7 @@
   .pri-select.pri-2 { color: var(--accent-task); border-color: var(--accent-task); background: var(--accent-task-soft); }
   .pri-select.pri-3 { color: var(--accent-idea); border-color: var(--accent-idea); background: var(--accent-idea-soft); }
   .pri-select.pri-4 { color: var(--ink-faint); border-color: var(--line); background: var(--paper-sunken); }
+  .pri-select.pri-5 { color: var(--accent-purple); border-color: var(--accent-purple); background: var(--accent-purple-soft); }
 
   .date-field {
     position: relative;
@@ -502,8 +492,6 @@
     outline: 2px solid var(--accent-task);
     outline-offset: 2px;
   }
-  .panel--idea .add-row input:focus-visible,
-  .panel--idea .add-row textarea:focus-visible { outline-color: var(--accent-idea); }
   .panel--habit .add-row input:focus-visible,
   .panel--habit .add-row select:focus-visible { outline-color: var(--accent-habit); }
   .day-card input:focus-visible,
@@ -526,7 +514,6 @@
   }
   .add-btn:active { transform: translateY(1px); }
   .panel--task .add-btn { background: var(--accent-task); }
-  .panel--idea .add-btn { background: var(--accent-idea); }
   .panel--habit .add-btn { background: var(--accent-habit); }
   .panel--schedule .add-btn { background: var(--accent-time); }
   .panel--english .add-btn { background: var(--accent-pink); }
@@ -631,45 +618,10 @@
   }
   li.item.done .item-text { color: var(--ink-faint); text-decoration: line-through; }
 
-  .idea-text {
-    flex: 1;
-    font-size: 14.5px;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-  .idea-meta {
-    display: block;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-variant-numeric: tabular-nums;
-    font-size: 11px;
-    color: var(--ink-faint);
-    margin-top: 4px;
-  }
-
-  .idea-edit-textarea {
-    flex: 1;
-    font: inherit;
-    font-size: 14.5px;
-    color: var(--ink);
-    background: var(--paper-raised);
-    border: 1px solid var(--accent-idea);
-    border-radius: var(--radius-control);
-    padding: 8px 10px;
-    resize: vertical;
-  }
-  .idea-edit-textarea:focus-visible {
-    outline: 2px solid var(--accent-idea);
-    outline-offset: 1px;
-  }
-
   .item-actions {
     display: flex;
     gap: 2px;
     flex-shrink: 0;
-  }
-  .panel--idea .item-actions {
-    flex-direction: column;
-    gap: 4px;
   }
 
   .icon-btn {
@@ -785,15 +737,10 @@
   }
 
   .panel--schedule .tag { color: var(--accent-time); background: var(--accent-time-soft); }
-  .panel--xiaoshi .tag { color: var(--accent-terra); background: var(--accent-terra-soft); }
   .panel--tixing .tag { color: var(--accent-purple); background: var(--accent-purple-soft); }
-  .panel--xiaoshi .add-btn { background: var(--accent-terra); }
   .panel--tixing .add-btn { background: var(--accent-purple); }
-  .panel--xiaoshi .add-row textarea:focus-visible { outline-color: var(--accent-terra); }
   .panel--tixing .add-row input:focus-visible,
   .panel--tixing .add-row textarea:focus-visible { outline-color: var(--accent-purple); }
-  .panel--xiaoshi .copy-all:hover { color: var(--accent-terra); border-color: var(--accent-terra); background: var(--accent-terra-soft); }
-  .panel--tixing .copy-all:hover { color: var(--accent-purple); border-color: var(--accent-purple); background: var(--accent-purple-soft); }
   .panel-hint { font-size: 12.5px; color: var(--ink-faint); margin: 12px 0 10px; padding: 0 18px; line-height: 1.5; }
 
   .panel--interest .tag { color: var(--accent-green); background: var(--accent-green-soft); }
@@ -899,6 +846,88 @@
     margin-top: 8px;
   }
   .item.tixing-item.expanded .tixing-text { display: block; }
+
+  .type-pick {
+    display: flex;
+    gap: 6px;
+  }
+  .type-pick-btn {
+    font-size: 12.5px;
+    font-weight: 600;
+    border: 1px solid transparent;
+    border-radius: 16px;
+    padding: 6px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    color: var(--ink-soft);
+    background: var(--paper-sunken);
+    transition: background 0.12s, color 0.12s;
+  }
+  .type-pick-btn.active[data-type="tixing"] { background: var(--accent-purple); color: #fff; }
+  .type-pick-btn.active[data-type="xiaoshi"] { background: var(--accent-terra); color: #fff; }
+
+  .panel-subhead {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 18px 0;
+    margin-top: 6px;
+    border-top: 1px solid var(--line);
+  }
+  .panel-subhead h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+    flex: 1;
+    color: var(--accent-terra);
+  }
+
+  .xiaoshi-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 10px 18px 16px;
+  }
+  @media (min-width: 860px) {
+    .xiaoshi-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  .xiaoshi-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 11px;
+    border-radius: 10px;
+    background: var(--paper-sunken);
+    border: 1px solid var(--line);
+    transition: border-color 0.12s;
+  }
+  .xiaoshi-card:hover { border-color: var(--accent-terra); }
+  .xiaoshi-card-text {
+    flex: 1;
+    font-size: 13.5px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .xiaoshi-card-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 2px;
+  }
+  .xiaoshi-edit-textarea {
+    flex: 1;
+    font: inherit;
+    font-size: 13.5px;
+    color: var(--ink);
+    background: var(--paper-raised);
+    border: 1px solid var(--accent-terra);
+    border-radius: var(--radius-control);
+    padding: 6px 8px;
+    resize: vertical;
+  }
+  .xiaoshi-edit-textarea:focus-visible {
+    outline: 2px solid var(--accent-terra);
+    outline-offset: 1px;
+  }
 
   .week-bar {
     display: flex;
@@ -1304,7 +1333,6 @@
     <button type="button" class="tab-btn" data-tab="todo" role="tab">待办</button>
     <button type="button" class="tab-btn" data-tab="notes" role="tab">记录</button>
     <button type="button" class="tab-btn" data-tab="schedule" role="tab">排班</button>
-    <button type="button" class="tab-btn" data-tab="xiaoshi" role="tab">小事</button>
     <button type="button" class="tab-btn" data-tab="tixing" role="tab">提醒</button>
     <button type="button" class="tab-btn" data-tab="interest" role="tab">兴趣</button>
   </nav>
@@ -1326,6 +1354,7 @@
             <button type="button" class="pri-pick-btn pri-2 active" data-pri="2">重要不紧急</button>
             <button type="button" class="pri-pick-btn pri-3" data-pri="3">紧急不重要</button>
             <button type="button" class="pri-pick-btn pri-4" data-pri="4">不重要不紧急</button>
+            <button type="button" class="pri-pick-btn pri-5" data-pri="5">灵感</button>
           </div>
           <span class="date-input date-field" id="task-date-field">
             <span class="date-field-text placeholder" id="task-date-text">月/日</span>
@@ -1340,6 +1369,7 @@
         <button type="button" class="pri-filter-btn" data-pri="2">重要不紧急</button>
         <button type="button" class="pri-filter-btn" data-pri="3">紧急不重要</button>
         <button type="button" class="pri-filter-btn" data-pri="4">不重要不紧急</button>
+        <button type="button" class="pri-filter-btn" data-pri="5">灵感</button>
       </div>
       <ul class="item-list" id="task-list"></ul>
       <div class="empty" id="task-empty">还没有待办事项，从上面输入开始吧</div>
@@ -1367,21 +1397,6 @@
       </div>
       <div class="habit-list" id="habit-list"></div>
       <div class="empty" id="habit-empty">还没有习惯，从上面输入开始记录</div>
-    </section>
-
-    <section class="panel panel--idea" aria-labelledby="idea-heading">
-      <div class="panel-head">
-        <span class="tag">SPARK</span>
-        <h2 id="idea-heading">灵感速记</h2>
-        <span class="count-chip" id="idea-count">0 条</span>
-        <button class="copy-all" id="idea-copy-all">复制全部</button>
-      </div>
-      <form class="add-row" id="idea-form">
-        <textarea id="idea-input" placeholder="随手记一笔想法…" maxlength="2000" rows="1"></textarea>
-        <button type="submit" class="add-btn">记录</button>
-      </form>
-      <ul class="item-list" id="idea-list"></ul>
-      <div class="empty" id="idea-empty">灵感还是空的，捕捉到什么就写下来</div>
     </section>
 
     <section class="panel panel--english" aria-labelledby="english-heading">
@@ -1426,23 +1441,6 @@
     </section>
   </main>
 
-  <main class="board" id="view-xiaoshi" hidden>
-    <section class="panel panel--xiaoshi" aria-labelledby="xiaoshi-heading">
-      <div class="panel-head">
-        <span class="tag">SMALL JOY</span>
-        <h2 id="xiaoshi-heading">纯粹的小事</h2>
-        <span class="count-chip" id="xiaoshi-count">0 条</span>
-      </div>
-      <p class="panel-hint">每周找一件事，纯粹因为现在想要、跟以后有没有用完全无关。做过的可以直接删掉。</p>
-      <form class="add-row" id="xiaoshi-form">
-        <textarea id="xiaoshi-input" placeholder="想到一件新的小事就记下来…" maxlength="200" rows="1"></textarea>
-        <button type="submit" class="add-btn">添加</button>
-      </form>
-      <ul class="item-list" id="xiaoshi-list"></ul>
-      <div class="empty" id="xiaoshi-empty">还没有记录，从上面输入开始</div>
-    </section>
-  </main>
-
   <main class="board" id="view-tixing" hidden>
     <section class="panel panel--tixing" aria-labelledby="tixing-heading">
       <div class="panel-head">
@@ -1452,12 +1450,24 @@
       </div>
       <p class="panel-hint">不用整篇看，找最像现在这个状态的那一条就行。</p>
       <form class="add-row stacked" id="tixing-form">
+        <div class="toolbar-row type-pick" id="tixing-type-picker" role="radiogroup" aria-label="记到提醒还是小事">
+          <button type="button" class="type-pick-btn active" data-type="tixing">提醒</button>
+          <button type="button" class="type-pick-btn" data-type="xiaoshi">小事</button>
+        </div>
         <input type="text" id="tixing-trigger-input" class="tixing-trigger-input" placeholder="什么情况下（比如：怕犯错）…" maxlength="60" autocomplete="off" />
         <textarea id="tixing-input" placeholder="想对自己说的话…" maxlength="400" rows="2"></textarea>
         <button type="submit" class="add-btn">添加</button>
       </form>
       <ul class="item-list" id="tixing-list"></ul>
       <div class="empty" id="tixing-empty">还没有记录，从上面输入开始</div>
+
+      <div class="panel-subhead">
+        <h3>纯粹的小事</h3>
+        <span class="count-chip" id="xiaoshi-count">0 条</span>
+      </div>
+      <p class="panel-hint">每周找一件事，纯粹因为现在想要、跟以后有没有用完全无关。做过的可以直接删掉。</p>
+      <div class="xiaoshi-grid" id="xiaoshi-list"></div>
+      <div class="empty" id="xiaoshi-empty">还没有记录，从上面添加开始</div>
     </section>
   </main>
 
@@ -1512,13 +1522,22 @@
     "2": { label: "重要不紧急", weight: 3 },
     "3": { label: "紧急不重要", weight: 2 },
     "4": { label: "不重要不紧急", weight: 1 },
+    "5": { label: "灵感", weight: 0 },
   };
+  const IDEAS_MIGRATED_FLAG = "workbench.ideasMigratedToTasks.v1";
 
   let tasks = load(STORE_TASKS);
   let tasksMigrated = false;
   tasks.forEach(t => { if (!PRIORITY_META[t.priority]) { t.priority = "2"; tasksMigrated = true; } });
+  if (!localStorage.getItem(IDEAS_MIGRATED_FLAG)) {
+    const oldIdeas = load(STORE_IDEAS);
+    oldIdeas.forEach(i => {
+      tasks.push({ id: i.id, text: i.text, done: false, date: null, priority: "5", ts: i.ts || Date.now() });
+    });
+    if (oldIdeas.length > 0) tasksMigrated = true;
+    localStorage.setItem(IDEAS_MIGRATED_FLAG, "1");
+  }
   if (tasksMigrated) save(STORE_TASKS, tasks);
-  let ideas = load(STORE_IDEAS);
   let showDone = false;
   let priorityFilter = "all";
 
@@ -1867,106 +1886,25 @@
     return li;
   }
 
-  function renderIdeas() {
-    const list = document.getElementById("idea-list");
-    const empty = document.getElementById("idea-empty");
-    document.getElementById("idea-count").textContent = `${ideas.length} 条`;
-    list.innerHTML = "";
-    empty.style.display = ideas.length === 0 ? "block" : "none";
-    ideas.forEach(i => list.appendChild(ideaRow(i)));
-  }
-
-  function ideaRow(i) {
-    const li = document.createElement("li");
-    li.className = "item";
-
-    const wrap = document.createElement("div");
-    wrap.className = "idea-text";
-    wrap.textContent = i.text;
-    const meta = document.createElement("span");
-    meta.className = "idea-meta";
-    meta.textContent = fmtTime(i.ts);
-    wrap.appendChild(meta);
-
-    const actions = document.createElement("div");
-    actions.className = "item-actions";
-
-    const editBtn = document.createElement("button");
-    editBtn.className = "icon-btn";
-    editBtn.innerHTML = iconEdit;
-    editBtn.title = "编辑";
-    editBtn.addEventListener("click", () => startEdit());
-
-    const copyBtn = document.createElement("button");
-    copyBtn.className = "icon-btn";
-    copyBtn.innerHTML = iconCopy;
-    copyBtn.title = "复制这条";
-    copyBtn.addEventListener("click", () => copyText(i.text));
-
-    const delBtn = document.createElement("button");
-    delBtn.className = "icon-btn danger";
-    delBtn.innerHTML = iconTrash;
-    delBtn.title = "删除";
-    delBtn.addEventListener("click", () => {
-      ideas = ideas.filter(x => x.id !== i.id);
-      save(STORE_IDEAS, ideas);
-      renderIdeas();
-    });
-
-    actions.append(editBtn, copyBtn, delBtn);
-    li.append(wrap, actions);
-
-    function startEdit() {
-      const textarea = document.createElement("textarea");
-      textarea.className = "idea-edit-textarea";
-      textarea.value = i.text;
-      textarea.rows = Math.min(8, Math.max(2, Math.ceil(i.text.length / 36)));
-      wrap.replaceWith(textarea);
-      textarea.focus();
-      textarea.setSelectionRange(textarea.value.length, textarea.value.length);
-
-      let done = false;
-      function finish(shouldSave) {
-        if (done) return;
-        done = true;
-        if (shouldSave) {
-          const newText = textarea.value.trim();
-          if (newText) {
-            i.text = newText;
-            save(STORE_IDEAS, ideas);
-          }
-        }
-        renderIdeas();
-      }
-      textarea.addEventListener("blur", () => finish(true));
-      textarea.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); textarea.blur(); }
-        if (e.key === "Escape") { e.preventDefault(); finish(false); }
-      });
-    }
-
-    return li;
-  }
-
   function renderXiaoshi() {
     const list = document.getElementById("xiaoshi-list");
     const empty = document.getElementById("xiaoshi-empty");
     document.getElementById("xiaoshi-count").textContent = `${xiaoshi.length} 条`;
     list.innerHTML = "";
     empty.style.display = xiaoshi.length === 0 ? "block" : "none";
-    xiaoshi.forEach(i => list.appendChild(xiaoshiRow(i)));
+    xiaoshi.forEach(i => list.appendChild(xiaoshiCard(i)));
   }
 
-  function xiaoshiRow(i) {
-    const li = document.createElement("li");
-    li.className = "item";
+  function xiaoshiCard(i) {
+    const card = document.createElement("div");
+    card.className = "xiaoshi-card";
 
-    const wrap = document.createElement("div");
-    wrap.className = "idea-text";
-    wrap.textContent = i.text;
+    const text = document.createElement("div");
+    text.className = "xiaoshi-card-text";
+    text.textContent = i.text;
 
     const actions = document.createElement("div");
-    actions.className = "item-actions";
+    actions.className = "xiaoshi-card-actions";
 
     const editBtn = document.createElement("button");
     editBtn.className = "icon-btn";
@@ -1985,14 +1923,14 @@
     });
 
     actions.append(editBtn, delBtn);
-    li.append(wrap, actions);
+    card.append(text, actions);
 
     function startEdit() {
       const textarea = document.createElement("textarea");
-      textarea.className = "idea-edit-textarea";
+      textarea.className = "xiaoshi-edit-textarea";
       textarea.value = i.text;
-      textarea.rows = Math.min(8, Math.max(2, Math.ceil(i.text.length / 36)));
-      wrap.replaceWith(textarea);
+      textarea.rows = Math.min(6, Math.max(2, Math.ceil(i.text.length / 20)));
+      text.replaceWith(textarea);
       textarea.focus();
       textarea.setSelectionRange(textarea.value.length, textarea.value.length);
       let done = false;
@@ -2012,7 +1950,7 @@
       });
     }
 
-    return li;
+    return card;
   }
 
   function renderTixing() {
@@ -2624,7 +2562,6 @@
     document.getElementById("view-todo").hidden = tab !== "todo";
     document.getElementById("view-notes").hidden = tab !== "notes";
     document.getElementById("view-schedule").hidden = tab !== "schedule";
-    document.getElementById("view-xiaoshi").hidden = tab !== "xiaoshi";
     document.getElementById("view-tixing").hidden = tab !== "tixing";
     document.getElementById("view-interest").hidden = tab !== "interest";
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
@@ -2667,57 +2604,54 @@
     renderTasks();
   });
 
-  const ideaInput = document.getElementById("idea-input");
-  ideaInput.addEventListener("input", () => {
-    ideaInput.style.height = "auto";
-    ideaInput.style.height = Math.min(ideaInput.scrollHeight, 120) + "px";
-  });
+  let tixingEntryType = "tixing";
+  const tixingTypeBtns = document.querySelectorAll("#tixing-type-picker .type-pick-btn");
+  const tixingTriggerInput = document.getElementById("tixing-trigger-input");
+  const tixingTextInput = document.getElementById("tixing-input");
 
-  document.getElementById("idea-form").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const text = ideaInput.value.trim();
-    if (!text) return;
-    ideas.unshift({ id: uid(), text, ts: Date.now() });
-    save(STORE_IDEAS, ideas);
-    ideaInput.value = "";
-    ideaInput.style.height = "auto";
-    renderIdeas();
+  function applyTixingType() {
+    if (tixingEntryType === "xiaoshi") {
+      tixingTriggerInput.hidden = true;
+      tixingTextInput.placeholder = "想到一件新的小事就记下来…";
+      tixingTextInput.maxLength = 200;
+    } else {
+      tixingTriggerInput.hidden = false;
+      tixingTextInput.placeholder = "想对自己说的话…";
+      tixingTextInput.maxLength = 400;
+    }
+  }
+  tixingTypeBtns.forEach(b => {
+    b.addEventListener("click", () => {
+      tixingEntryType = b.dataset.type;
+      tixingTypeBtns.forEach(x => x.classList.toggle("active", x === b));
+      applyTixingType();
+    });
   });
-
-  document.getElementById("xiaoshi-form").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const input = document.getElementById("xiaoshi-input");
-    const text = input.value.trim();
-    if (!text) return;
-    xiaoshi.unshift({ id: uid(), text, ts: Date.now() });
-    save(STORE_XIAOSHI, xiaoshi);
-    input.value = "";
-    renderXiaoshi();
-  });
+  applyTixingType();
 
   document.getElementById("tixing-form").addEventListener("submit", (e) => {
     e.preventDefault();
-    const triggerInput = document.getElementById("tixing-trigger-input");
-    const textInput = document.getElementById("tixing-input");
-    const trigger = triggerInput.value.trim();
-    const text = textInput.value.trim();
-    if (!trigger || !text) return;
-    tixing.unshift({ id: uid(), trigger, text, ts: Date.now() });
-    save(STORE_TIXING, tixing);
-    triggerInput.value = "";
-    textInput.value = "";
-    renderTixing();
+    const text = tixingTextInput.value.trim();
+    if (!text) return;
+    if (tixingEntryType === "xiaoshi") {
+      xiaoshi.unshift({ id: uid(), text, ts: Date.now() });
+      save(STORE_XIAOSHI, xiaoshi);
+      tixingTextInput.value = "";
+      renderXiaoshi();
+    } else {
+      const trigger = tixingTriggerInput.value.trim();
+      if (!trigger) return;
+      tixing.unshift({ id: uid(), trigger, text, ts: Date.now() });
+      save(STORE_TIXING, tixing);
+      tixingTriggerInput.value = "";
+      tixingTextInput.value = "";
+      renderTixing();
+    }
   });
 
   document.getElementById("task-done-toggle").addEventListener("click", () => {
     showDone = !showDone;
     renderTasks();
-  });
-
-  document.getElementById("idea-copy-all").addEventListener("click", () => {
-    if (ideas.length === 0) return toast("没有可复制的内容");
-    const text = ideas.map(i => `· ${i.text}`).join("\n");
-    copyText(text);
   });
 
   document.getElementById("habit-form").addEventListener("submit", (e) => {
@@ -2751,7 +2685,7 @@
 
   document.getElementById("export-btn").addEventListener("click", () => {
     const data = {
-      tasks, ideas, habits, schedule, locations, xiaoshi, tixing,
+      tasks, habits, schedule, locations, xiaoshi, tixing,
       exportedAt: new Date().toISOString(),
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -2787,7 +2721,10 @@
         return;
       }
       if (data.tasks) save(STORE_TASKS, data.tasks);
-      if (data.ideas) save(STORE_IDEAS, data.ideas);
+      if (data.ideas) {
+        save(STORE_IDEAS, data.ideas);
+        localStorage.removeItem(IDEAS_MIGRATED_FLAG);
+      }
       if (data.habits) save(STORE_HABITS, data.habits);
       if (data.schedule) localStorage.setItem(STORE_SCHEDULE, JSON.stringify(data.schedule));
       if (data.locations) localStorage.setItem(STORE_LOCATIONS, JSON.stringify(data.locations));
@@ -2885,7 +2822,6 @@
   }
 
   renderTasks();
-  renderIdeas();
   renderHabits();
   renderEnglish();
   renderSchedule();
@@ -2893,8 +2829,8 @@
   renderTixing();
   renderInterest();
   const savedTab = localStorage.getItem(STORE_TAB);
-  const validTabs = ["todo", "notes", "schedule", "xiaoshi", "tixing", "interest"];
-  setActiveTab(validTabs.includes(savedTab) ? savedTab : "todo");
+  const validTabs = ["todo", "notes", "schedule", "tixing", "interest"];
+  setActiveTab(validTabs.includes(savedTab) ? savedTab : (savedTab === "xiaoshi" ? "tixing" : "todo"));
 </script>
 </body>
 </html>
