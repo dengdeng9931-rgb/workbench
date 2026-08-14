@@ -2118,14 +2118,14 @@
     row1.className = "english-today-row";
     const label1 = document.createElement("span");
     label1.className = "english-today-label";
-    label1.textContent = "Grammar in Use";
+    label1.textContent = "Phrasal Verbs in Use";
     const value1 = document.createElement("button");
     value1.type = "button";
     value1.className = "english-today-value english-unit-edit";
     value1.title = "点击可以手动修改课程数（比如误点了下一课想改回去）";
     value1.textContent = `Unit ${english.currentUnit}`;
     value1.addEventListener("click", () => {
-      const input = prompt("设置当前在第几课（Grammar in Use Unit）：", String(english.currentUnit));
+      const input = prompt("设置当前在第几课（Phrasal Verbs in Use Unit）：", String(english.currentUnit));
       if (input === null) return;
       const n = parseInt(input, 10);
       if (!Number.isFinite(n) || n < 1) { toast("请输入一个大于0的数字"); return; }
@@ -2146,6 +2146,17 @@
     });
     row1.append(label1, value1, nextBtn);
 
+    const row1b = document.createElement("div");
+    row1b.className = "english-today-row";
+    const pvLink = document.createElement("a");
+    pvLink.className = "add-btn english-next-btn";
+    pvLink.href = "https://claude.ai/code/artifact/e437265f-9075-47e9-a9cc-c74fc761b08e";
+    pvLink.target = "_blank";
+    pvLink.rel = "noopener";
+    pvLink.textContent = "打开 Phrasal Verbs in Use 工作台 →";
+    pvLink.style.marginLeft = "0";
+    row1b.append(pvLink);
+
     const row2 = document.createElement("div");
     row2.className = "english-today-row";
     const label2 = document.createElement("span");
@@ -2165,18 +2176,7 @@
     dictLink.style.marginLeft = "0";
     row3.append(dictLink);
 
-    const row4 = document.createElement("div");
-    row4.className = "english-today-row";
-    const pvLink = document.createElement("a");
-    pvLink.className = "add-btn english-next-btn";
-    pvLink.href = "https://claude.ai/code/artifact/e437265f-9075-47e9-a9cc-c74fc761b08e";
-    pvLink.target = "_blank";
-    pvLink.rel = "noopener";
-    pvLink.textContent = "打开 Phrasal Verbs in Use 工作台 →";
-    pvLink.style.marginLeft = "0";
-    row4.append(pvLink);
-
-    todayBox.append(row1, row2, row3, row4);
+    todayBox.append(row1, row1b, row2, row3);
 
     const list = document.getElementById("english-checklist");
     list.innerHTML = "";
