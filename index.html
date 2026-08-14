@@ -559,7 +559,28 @@
     flex: 1;
   }
   .english-next-btn { margin-left: auto; padding: 6px 12px; font-size: 12.5px; }
-  #english-checklist { padding: 10px 18px 16px; }
+  .english-unit-edit {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: underline dotted;
+    text-underline-offset: 3px;
+    font: inherit;
+  }
+  .english-checklist-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 18px 16px;
+  }
+  .english-checklist-list .habit-card { width: 100%; }
+  .english-checklist-list .habit-name {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    line-height: 1.4;
+  }
 
   ul.item-list {
     list-style: none;
@@ -1370,7 +1391,7 @@
         <span class="count-chip" id="english-day-chip">第1天</span>
       </div>
       <div class="english-today" id="english-today"></div>
-      <div class="habit-list" id="english-checklist"></div>
+      <div class="english-checklist-list" id="english-checklist"></div>
     </section>
   </main>
 
@@ -2125,11 +2146,10 @@
   // ---- 英语学习：今日任务面板（Grammar in Use 进度 + 精听/泛读轮换 + 每日checklist，全部本地计算，不需要每天手动更新内容） ----
   const STORE_ENGLISH = "workbench.english.v1";
   const ENGLISH_CHECKLIST_ITEMS = [
-    { id: "commute_go", label: "去程：跟读巩固昨天内容" },
-    { id: "commute_back", label: "回程：刷到期卡片" },
-    { id: "block1", label: "Block1：Grammar in Use 新Unit" },
-    { id: "block2", label: "Block2：精听/泛读（见上方今天该做哪个）" },
-    { id: "block3", label: "Block3：新增今天的表达卡片" },
+    { id: "commute_go", label: "去程通勤：跟读巩固昨天的 Grammar in Use 例句 + 精听内容" },
+    { id: "commute_back", label: "回程通勤：刷 Obsidian 里到期的表达卡片" },
+    { id: "block2", label: "在家：精听 Coach Shane 或泛读 English News in Levels（今天做哪个见上方）" },
+    { id: "block3", label: "在家：把今天新收集的表达发给 Claude，整理进表达卡片" },
   ];
 
   function loadEnglish() {
@@ -2161,9 +2181,21 @@
     const label1 = document.createElement("span");
     label1.className = "english-today-label";
     label1.textContent = "Grammar in Use";
-    const value1 = document.createElement("span");
-    value1.className = "english-today-value";
+    const value1 = document.createElement("button");
+    value1.type = "button";
+    value1.className = "english-today-value english-unit-edit";
+    value1.title = "点击可以手动修改课程数（比如误点了下一课想改回去）";
     value1.textContent = `Unit ${english.currentUnit}`;
+    value1.addEventListener("click", () => {
+      const input = prompt("设置当前在第几课（Grammar in Use Unit）：", String(english.currentUnit));
+      if (input === null) return;
+      const n = parseInt(input, 10);
+      if (!Number.isFinite(n) || n < 1) { toast("请输入一个大于0的数字"); return; }
+      english.currentUnit = n;
+      saveEnglish();
+      renderEnglish();
+      toast(`已设为 Unit ${n}`);
+    });
     const nextBtn = document.createElement("button");
     nextBtn.type = "button";
     nextBtn.className = "add-btn english-next-btn";
@@ -2180,7 +2212,7 @@
     row2.className = "english-today-row";
     const label2 = document.createElement("span");
     label2.className = "english-today-label";
-    label2.textContent = "今天 Block2";
+    label2.textContent = "今天精听/泛读";
     const value2 = document.createElement("span");
     value2.className = "english-today-value";
     value2.textContent = rotation;
