@@ -2114,6 +2114,38 @@
     const todayBox = document.getElementById("english-today");
     todayBox.innerHTML = "";
 
+    const row1 = document.createElement("div");
+    row1.className = "english-today-row";
+    const label1 = document.createElement("span");
+    label1.className = "english-today-label";
+    label1.textContent = "Phrasal Verbs in Use";
+    const value1 = document.createElement("button");
+    value1.type = "button";
+    value1.className = "english-today-value english-unit-edit";
+    value1.title = "点击可以手动修改课程数（比如误点了下一课想改回去）";
+    value1.textContent = `Unit ${english.currentUnit}`;
+    value1.addEventListener("click", () => {
+      const input = prompt("设置当前在第几课（Phrasal Verbs in Use Unit）：", String(english.currentUnit));
+      if (input === null) return;
+      const n = parseInt(input, 10);
+      if (!Number.isFinite(n) || n < 1) { toast("请输入一个大于0的数字"); return; }
+      english.currentUnit = n;
+      saveEnglish();
+      renderEnglish();
+      toast(`已设为 Unit ${n}`);
+    });
+    const nextBtn = document.createElement("button");
+    nextBtn.type = "button";
+    nextBtn.className = "add-btn english-next-btn";
+    nextBtn.textContent = "完成，下一课";
+    nextBtn.addEventListener("click", () => {
+      english.currentUnit += 1;
+      saveEnglish();
+      renderEnglish();
+      toast(`已进入 Unit ${english.currentUnit}`);
+    });
+    row1.append(label1, value1, nextBtn);
+
     const row2 = document.createElement("div");
     row2.className = "english-today-row";
     const label2 = document.createElement("span");
@@ -2133,7 +2165,7 @@
     dictLink.style.marginLeft = "0";
     row3.append(dictLink);
 
-    todayBox.append(row2, row3);
+    todayBox.append(row1, row2, row3);
 
     const list = document.getElementById("english-checklist");
     list.innerHTML = "";
