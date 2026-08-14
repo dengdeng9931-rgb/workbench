@@ -555,6 +555,43 @@
     text-underline-offset: 3px;
     font: inherit;
   }
+  .english-review {
+    padding: 0 18px 4px;
+  }
+  .english-review-empty {
+    font-size: 12px;
+    color: var(--ink-faint);
+    padding: 6px 0 10px;
+  }
+  .english-review-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    border-radius: 10px;
+    background: var(--paper-sunken);
+  }
+  .english-review-row .unit-label {
+    font-weight: 700;
+    font-size: 13.5px;
+    font-variant-numeric: tabular-nums;
+  }
+  .english-review-row .rate-mini-row {
+    display: flex;
+    gap: 5px;
+    margin-left: auto;
+  }
+  .english-review-row .rate-mini {
+    font-size: 15px;
+    padding: 4px 7px;
+    border-radius: 7px;
+    border: 1px solid var(--line);
+    background: var(--paper-raised);
+    cursor: pointer;
+  }
+  .english-review-row .rate-mini:hover { border-color: var(--accent-pink); }
   .english-checklist-list {
     display: flex;
     flex-direction: column;
@@ -1406,6 +1443,7 @@
         <span class="count-chip" id="english-day-chip">第1天</span>
       </div>
       <div class="english-today" id="english-today"></div>
+      <div class="english-review" id="english-review"></div>
       <div class="english-checklist-list" id="english-checklist"></div>
     </section>
   </main>
@@ -2095,11 +2133,35 @@
       const raw = localStorage.getItem(STORE_ENGLISH);
       if (raw) return JSON.parse(raw);
     } catch (e) { /* fall through */ }
-    return { startDate: todayISO(), currentUnit: 1, checklistDate: todayISO(), checklistDone: {} };
+    return { startDate: todayISO(), currentUnit: 1, checklistDate: todayISO(), checklistDone: {}, reviewState: {} };
   }
   function saveEnglish() { localStorage.setItem(STORE_ENGLISH, JSON.stringify(english)); }
 
   let english = loadEnglish();
+  if (!english.reviewState || typeof english.reviewState !== "object") english.reviewState = {};
+
+  // Unit 间隔重复排期，跟 dictation.html 的听写打卡同一套逻辑（也是 Obsidian Spaced Repetition 插件那套思路）
+  function scheduleUnitReview(unit, rate) {
+    const st = english.reviewState[unit] || { interval: 0, reps: 0 };
+    let interval;
+    if (rate === "hard") {
+      interval = 1;
+      st.reps = 0;
+    } else if (rate === "ok") {
+      interval = st.interval > 0 ? Math.round(st.interval * 1.6) : 3;
+      st.reps += 1;
+    } else {
+      interval = st.interval > 0 ? Math.round(st.interval * 2.3) : 5;
+      st.reps += 1;
+    }
+    interval = Math.max(1, interval);
+    st.interval = interval;
+    st.due = addDaysISO(todayISO(), interval);
+    english.reviewState[unit] = st;
+    saveEnglish();
+    renderEnglish();
+  }
+
   if (english.checklistDate !== todayISO()) {
     english.checklistDate = todayISO();
     english.checklistDone = {};
@@ -2146,6 +2208,26 @@
     });
     row1.append(label1, value1, nextBtn);
 
+    const row1b = document.createElement("div");
+    row1b.className = "english-today-row";
+    const rateLabel = document.createElement("span");
+    rateLabel.className = "english-today-label";
+    rateLabel.textContent = "这课学得怎样";
+    const rateWrap1 = document.createElement("div");
+    rateWrap1.className = "rate-mini-row";
+    [["easy", "😌"], ["ok", "🙂"], ["hard", "😣"]].forEach(([r, emo]) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "rate-mini";
+      b.textContent = emo;
+      b.addEventListener("click", () => {
+        scheduleUnitReview(english.currentUnit, r);
+        toast("已记录，加油");
+      });
+      rateWrap1.appendChild(b);
+    });
+    row1b.append(rateLabel, rateWrap1);
+
     const row2 = document.createElement("div");
     row2.className = "english-today-row";
     const label2 = document.createElement("span");
@@ -2165,7 +2247,45 @@
     dictLink.style.marginLeft = "0";
     row3.append(dictLink);
 
-    todayBox.append(row1, row2, row3);
+    todayBox.append(row1, row1b, row2, row3);
+
+    const todayStr2 = todayISO();
+    const dueUnits = Object.keys(english.reviewState)
+      .map(Number)
+      .filter(n => english.reviewState[n].due <= todayStr2)
+      .sort((a, b) => a - b);
+    const reviewBox = document.getElementById("english-review");
+    reviewBox.innerHTML = "";
+    if (dueUnits.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "english-review-empty";
+      empty.textContent = "今天没有到期要复习的 Unit——评价过的课会按打分自动排期";
+      reviewBox.appendChild(empty);
+    } else {
+      const hdr = document.createElement("div");
+      hdr.className = "english-review-empty";
+      hdr.textContent = `今天该复习：${dueUnits.map(u => `Unit ${u}`).join("、")}`;
+      reviewBox.appendChild(hdr);
+      dueUnits.forEach(u => {
+        const row = document.createElement("div");
+        row.className = "english-review-row";
+        const label = document.createElement("span");
+        label.className = "unit-label";
+        label.textContent = `Unit ${u}`;
+        const rateWrap = document.createElement("div");
+        rateWrap.className = "rate-mini-row";
+        [["easy", "😌"], ["ok", "🙂"], ["hard", "😣"]].forEach(([r, emo]) => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "rate-mini";
+          b.textContent = emo;
+          b.addEventListener("click", () => scheduleUnitReview(u, r));
+          rateWrap.appendChild(b);
+        });
+        row.append(label, rateWrap);
+        reviewBox.appendChild(row);
+      });
+    }
 
     const list = document.getElementById("english-checklist");
     list.innerHTML = "";

@@ -99,6 +99,27 @@
     color: var(--accent); background: var(--accent-soft);
   }
   .panel-head h2 { font-size: 15.5px; font-weight: 600; margin: 0; flex: 1; }
+  .count-chip {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-variant-numeric: tabular-nums; font-size: 12px; color: var(--ink-soft);
+  }
+
+  .review-list { padding: 10px 18px 6px; display: flex; flex-direction: column; gap: 8px; }
+  .review-row {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 8px 10px; border-radius: 10px; background: var(--paper-sunken);
+  }
+  .review-row .ep { font-weight: 700; font-variant-numeric: tabular-nums; font-size: 13.5px; }
+  .review-row .go-mini {
+    font-size: 12px; color: var(--accent); text-decoration: none; font-weight: 600;
+  }
+  .review-row .rate-mini-row { display: flex; gap: 5px; margin-left: auto; }
+  .review-row .rate-mini {
+    font-size: 15px; padding: 4px 7px; border-radius: 7px;
+    border: 1px solid var(--line); background: var(--paper-raised); cursor: pointer;
+  }
+  .review-row .rate-mini:hover { border-color: var(--accent); }
+  .review-empty { padding: 16px 18px 20px; text-align: center; color: var(--ink-faint); font-size: 12.5px; line-height: 1.6; }
 
   .panel-body { padding: 16px 18px 18px; }
 
@@ -205,6 +226,16 @@
 
   <section class="panel">
     <div class="panel-head">
+      <span class="tag">REVIEW</span>
+      <h2>今日该复习</h2>
+      <span class="count-chip" id="review-count">0 集</span>
+    </div>
+    <div class="review-list" id="review-list"></div>
+    <div class="review-empty" id="review-empty">今天没有到期要复习的——评价过的集数会按你打的分自动排期，到期了会出现在这里</div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
       <span class="tag">PROGRESS</span>
       <h2>整体进度</h2>
     </div>
@@ -249,18 +280,54 @@
     const [ty, tm, td] = toISOStr.split("-").map(Number);
     return Math.round((Date.UTC(ty, tm - 1, td) - Date.UTC(fy, fm - 1, fd)) / 86400000);
   }
+  function addDaysISO(iso, n) {
+    const [y, m, d] = iso.split("-").map(Number);
+    const dt = new Date(y, m - 1, d);
+    dt.setDate(dt.getDate() + n);
+    return toISO(dt);
+  }
 
   function load() {
     try {
       const raw = localStorage.getItem(STORE);
       if (raw) return JSON.parse(raw);
     } catch (e) { /* fall through */ }
-    return { currentEpisode: 1, history: [] }; // history: [{episode, rate, date}], newest last
+    return { currentEpisode: 1, history: [], reviewState: {} }; // history: [{episode, rate, date}], newest last； reviewState: { [episode]: {interval, due, reps} }
   }
   function save() { localStorage.setItem(STORE, JSON.stringify(data)); }
 
   let data = load();
   if (!Array.isArray(data.history)) data.history = [];
+  if (!data.reviewState || typeof data.reviewState !== "object") data.reviewState = {};
+
+  // 间隔重复排期：跟 Obsidian 里 Spaced Repetition 插件同一套思路——
+  // 吃力=明天再来；还行/轻松=按上次间隔乘一个系数往后拉，评过的次数越多、拉得越远
+  function scheduleNext(ep, rate) {
+    const st = data.reviewState[ep] || { interval: 0, reps: 0 };
+    let interval;
+    if (rate === "hard") {
+      interval = 1;
+      st.reps = 0;
+    } else if (rate === "ok") {
+      interval = st.interval > 0 ? Math.round(st.interval * 1.6) : 3;
+      st.reps += 1;
+    } else {
+      interval = st.interval > 0 ? Math.round(st.interval * 2.3) : 5;
+      st.reps += 1;
+    }
+    interval = Math.max(1, interval);
+    st.interval = interval;
+    st.due = addDaysISO(todayISO(), interval);
+    data.reviewState[ep] = st;
+  }
+
+  function rateEpisode(ep, rate) {
+    data.history.push({ episode: ep, rate, date: todayISO() });
+    scheduleNext(ep, rate);
+    save();
+    render();
+    toast("已记录，加油");
+  }
 
   function toast(msg) {
     let el = document.getElementById("toast-el");
@@ -300,6 +367,44 @@
     }
     document.getElementById("stat-streak").textContent = streak;
 
+    // 今日该复习：reviewState 里 due <= 今天 的集数，按集数升序
+    const todayStr = todayISO();
+    const dueEps = Object.keys(data.reviewState)
+      .map(Number)
+      .filter(n => data.reviewState[n].due <= todayStr)
+      .sort((a, b) => a - b);
+    document.getElementById("review-count").textContent = `${dueEps.length} 集`;
+    const reviewList = document.getElementById("review-list");
+    const reviewEmpty = document.getElementById("review-empty");
+    reviewEmpty.style.display = dueEps.length ? "none" : "block";
+    reviewList.innerHTML = "";
+    dueEps.forEach(dueEp => {
+      const row = document.createElement("div");
+      row.className = "review-row";
+      const epSpan = document.createElement("span");
+      epSpan.className = "ep";
+      epSpan.textContent = `第 ${dueEp} 集`;
+      const goLink = document.createElement("a");
+      goLink.className = "go-mini";
+      goLink.href = BASE_URL + dueEp;
+      goLink.target = "_blank";
+      goLink.rel = "noopener";
+      goLink.textContent = "去听 →";
+      const rateWrap = document.createElement("div");
+      rateWrap.className = "rate-mini-row";
+      Object.keys(RATE_META).forEach(r => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "rate-mini";
+        b.textContent = RATE_META[r].emo;
+        b.title = RATE_META[r].label;
+        b.addEventListener("click", () => rateEpisode(dueEp, r));
+        rateWrap.appendChild(b);
+      });
+      row.append(epSpan, goLink, rateWrap);
+      reviewList.appendChild(row);
+    });
+
     // history list（最近10条，倒序）
     const list = document.getElementById("hist-list");
     const empty = document.getElementById("hist-empty");
@@ -327,12 +432,7 @@
   });
 
   document.querySelectorAll(".rate-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      data.history.push({ episode: data.currentEpisode, rate: btn.dataset.rate, date: todayISO() });
-      save();
-      render();
-      toast("已记录，加油");
-    });
+    btn.addEventListener("click", () => rateEpisode(data.currentEpisode, btn.dataset.rate));
   });
 
   document.getElementById("next-btn").addEventListener("click", () => {
