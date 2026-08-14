@@ -269,6 +269,7 @@
   .panel--task .tag { color: var(--accent-task); background: var(--accent-task-soft); }
   .panel--idea .tag { color: var(--accent-idea); background: var(--accent-idea-soft); }
   .panel--habit .tag { color: var(--accent-habit); background: var(--accent-habit-soft); }
+  .panel--english .tag { color: var(--accent-pink); background: var(--accent-pink-soft); }
 
   .panel-head h2 {
     font-size: 16px;
@@ -528,7 +529,37 @@
   .panel--idea .add-btn { background: var(--accent-idea); }
   .panel--habit .add-btn { background: var(--accent-habit); }
   .panel--schedule .add-btn { background: var(--accent-time); }
+  .panel--english .add-btn { background: var(--accent-pink); }
   .add-btn:hover { filter: brightness(1.08); }
+
+  .english-today {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .english-today-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .english-today-label {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    font-weight: 600;
+    flex-shrink: 0;
+    min-width: 96px;
+  }
+  .english-today-value {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--accent-pink);
+    flex: 1;
+  }
+  .english-next-btn { margin-left: auto; padding: 6px 12px; font-size: 12.5px; }
+  #english-checklist { padding: 10px 18px 16px; }
 
   ul.item-list {
     list-style: none;
@@ -1331,6 +1362,16 @@
       <ul class="item-list" id="idea-list"></ul>
       <div class="empty" id="idea-empty">灵感还是空的，捕捉到什么就写下来</div>
     </section>
+
+    <section class="panel panel--english" aria-labelledby="english-heading">
+      <div class="panel-head">
+        <span class="tag">TODAY</span>
+        <h2 id="english-heading">英语学习</h2>
+        <span class="count-chip" id="english-day-chip">第1天</span>
+      </div>
+      <div class="english-today" id="english-today"></div>
+      <div class="habit-list" id="english-checklist"></div>
+    </section>
   </main>
 
   <main class="board" id="view-schedule" hidden>
@@ -2081,6 +2122,99 @@
     return card;
   }
 
+  // ---- 英语学习：今日任务面板（Grammar in Use 进度 + 精听/泛读轮换 + 每日checklist，全部本地计算，不需要每天手动更新内容） ----
+  const STORE_ENGLISH = "workbench.english.v1";
+  const ENGLISH_CHECKLIST_ITEMS = [
+    { id: "commute_go", label: "去程：跟读巩固昨天内容" },
+    { id: "commute_back", label: "回程：刷到期卡片" },
+    { id: "block1", label: "Block1：Grammar in Use 新Unit" },
+    { id: "block2", label: "Block2：精听/泛读（见上方今天该做哪个）" },
+    { id: "block3", label: "Block3：新增今天的表达卡片" },
+  ];
+
+  function loadEnglish() {
+    try {
+      const raw = localStorage.getItem(STORE_ENGLISH);
+      if (raw) return JSON.parse(raw);
+    } catch (e) { /* fall through */ }
+    return { startDate: todayISO(), currentUnit: 1, checklistDate: todayISO(), checklistDone: {} };
+  }
+  function saveEnglish() { localStorage.setItem(STORE_ENGLISH, JSON.stringify(english)); }
+
+  let english = loadEnglish();
+  if (english.checklistDate !== todayISO()) {
+    english.checklistDate = todayISO();
+    english.checklistDone = {};
+    saveEnglish();
+  }
+
+  function renderEnglish() {
+    const dayIndex = daysBetween(english.startDate, todayISO()); // 第一天 = 0
+    document.getElementById("english-day-chip").textContent = `第 ${dayIndex + 1} 天`;
+    const rotation = dayIndex % 2 === 0 ? "精听 Daily Dictation" : "泛读 English News in Levels";
+
+    const todayBox = document.getElementById("english-today");
+    todayBox.innerHTML = "";
+
+    const row1 = document.createElement("div");
+    row1.className = "english-today-row";
+    const label1 = document.createElement("span");
+    label1.className = "english-today-label";
+    label1.textContent = "Grammar in Use";
+    const value1 = document.createElement("span");
+    value1.className = "english-today-value";
+    value1.textContent = `Unit ${english.currentUnit}`;
+    const nextBtn = document.createElement("button");
+    nextBtn.type = "button";
+    nextBtn.className = "add-btn english-next-btn";
+    nextBtn.textContent = "完成，下一课";
+    nextBtn.addEventListener("click", () => {
+      english.currentUnit += 1;
+      saveEnglish();
+      renderEnglish();
+      toast(`已进入 Unit ${english.currentUnit}`);
+    });
+    row1.append(label1, value1, nextBtn);
+
+    const row2 = document.createElement("div");
+    row2.className = "english-today-row";
+    const label2 = document.createElement("span");
+    label2.className = "english-today-label";
+    label2.textContent = "今天 Block2";
+    const value2 = document.createElement("span");
+    value2.className = "english-today-value";
+    value2.textContent = rotation;
+    row2.append(label2, value2);
+
+    todayBox.append(row1, row2);
+
+    const list = document.getElementById("english-checklist");
+    list.innerHTML = "";
+    ENGLISH_CHECKLIST_ITEMS.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "habit-card";
+      const top = document.createElement("div");
+      top.className = "habit-top";
+      const done = !!english.checklistDone[item.id];
+      const toggle = document.createElement("button");
+      toggle.type = "button";
+      toggle.className = "habit-toggle" + (done ? " checked" : "");
+      toggle.title = done ? "取消勾选" : "标记完成";
+      toggle.setAttribute("aria-label", toggle.title);
+      toggle.addEventListener("click", () => {
+        english.checklistDone[item.id] = !english.checklistDone[item.id];
+        saveEnglish();
+        renderEnglish();
+      });
+      const name = document.createElement("span");
+      name.className = "habit-name";
+      name.textContent = item.label;
+      top.append(toggle, name);
+      card.appendChild(top);
+      list.appendChild(card);
+    });
+  }
+
   let viewedWeekStart = mondayOfISO(todayISO());
   const STORE_SHIFT_CLIPBOARD = "workbench.shiftClipboard.v1";
   let shiftClipboard = (() => {
@@ -2721,6 +2855,7 @@
   renderTasks();
   renderIdeas();
   renderHabits();
+  renderEnglish();
   renderSchedule();
   renderXiaoshi();
   renderTixing();
