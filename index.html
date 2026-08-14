@@ -2165,7 +2165,18 @@
     dictLink.style.marginLeft = "0";
     row3.append(dictLink);
 
-    todayBox.append(row1, row2, row3);
+    const row4 = document.createElement("div");
+    row4.className = "english-today-row";
+    const pvLink = document.createElement("a");
+    pvLink.className = "add-btn english-next-btn";
+    pvLink.href = "https://claude.ai/code/artifact/e437265f-9075-47e9-a9cc-c74fc761b08e";
+    pvLink.target = "_blank";
+    pvLink.rel = "noopener";
+    pvLink.textContent = "打开 Phrasal Verbs in Use 工作台 →";
+    pvLink.style.marginLeft = "0";
+    row4.append(pvLink);
+
+    todayBox.append(row1, row2, row3, row4);
 
     const list = document.getElementById("english-checklist");
     list.innerHTML = "";
