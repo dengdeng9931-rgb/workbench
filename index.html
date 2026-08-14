@@ -2218,7 +2218,16 @@
     value2.textContent = rotation;
     row2.append(label2, value2);
 
-    todayBox.append(row1, row2);
+    const row3 = document.createElement("div");
+    row3.className = "english-today-row";
+    const dictLink = document.createElement("a");
+    dictLink.className = "add-btn english-next-btn";
+    dictLink.href = "dictation.html";
+    dictLink.textContent = "打开 Coach Shane 听写打卡 →";
+    dictLink.style.marginLeft = "0";
+    row3.append(dictLink);
+
+    todayBox.append(row1, row2, row3);
 
     const list = document.getElementById("english-checklist");
     list.innerHTML = "";
