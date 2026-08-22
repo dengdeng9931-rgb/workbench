@@ -2406,13 +2406,10 @@
     const wn = isoWeekNumber(viewedWeekStart);
     const isFirstOfPair = wn % 2 === 1;
     const partnerStart = addDaysISO(viewedWeekStart, isFirstOfPair ? 7 : -7);
-    const partnerWn = isoWeekNumber(partnerStart);
     const partnerTotal = weekTotalHours(partnerStart);
     const biweekTotal = Math.round((total + partnerTotal) * 10) / 10;
-    const firstWn = isFirstOfPair ? wn : partnerWn;
-    const secondWn = isFirstOfPair ? partnerWn : wn;
     document.getElementById("biweek-total").innerHTML =
-      `工资结算双周(第${firstWn}-${secondWn}周)合计 <b>${biweekTotal}</b> 小时`;
+      `双周合计 <b>${biweekTotal}</b> 小时`;
   }
 
   function shiftBlock(dayEntry, shift, idx) {
