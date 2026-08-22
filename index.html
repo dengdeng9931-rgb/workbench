@@ -2408,8 +2408,9 @@
     const partnerStart = addDaysISO(viewedWeekStart, isFirstOfPair ? 7 : -7);
     const partnerTotal = weekTotalHours(partnerStart);
     const biweekTotal = Math.round((total + partnerTotal) * 10) / 10;
+    const biweekRemaining = Math.round((75 - biweekTotal) * 10) / 10;
     document.getElementById("biweek-total").innerHTML =
-      `双周合计 <b>${biweekTotal}</b> 小时`;
+      `双周合计<b>${biweekTotal}</b>，剩<b>${biweekRemaining}</b>`;
   }
 
   function shiftBlock(dayEntry, shift, idx) {
