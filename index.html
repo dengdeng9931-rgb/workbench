@@ -2765,7 +2765,6 @@
     const container = document.getElementById("mini-cal-weeks");
     container.innerHTML = "";
     const thisMonday = mondayOfISO(todayISO());
-    const WEEK_LABELS = { "-1": "上周", "0": "本周", "1": "下一周" };
     [-1, 0, 1].forEach(offset => {
       const start = addDaysISO(thisMonday, offset * 7);
       const weekEntries = schedule[start];
@@ -2773,7 +2772,7 @@
       row.className = "mini-cal-week";
       const label = document.createElement("div");
       label.className = "mini-cal-week-label";
-      label.textContent = WEEK_LABELS[String(offset)];
+      label.textContent = `${isoWeekNumber(start)}周`;
       const daysRow = document.createElement("div");
       daysRow.className = "mini-cal-row";
       weekDaysOf(start).forEach((dateISO, i) => {
