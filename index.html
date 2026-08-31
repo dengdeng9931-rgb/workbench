@@ -2491,7 +2491,7 @@
     const biweekTotal = Math.round((total + partnerTotal) * 10) / 10;
     const biweekRemaining = Math.round((75 - biweekTotal) * 10) / 10;
 
-    const grossPay = weekTotalPay(viewedWeekStart) + weekTotalPay(partnerStart);
+    const grossPay = weekTotalPay(viewedWeekStart); // 工资按单周算，不跟双周工时合并
     const netPay = Math.round(grossPay * NET_RATIO);
     const needMore = Math.round(1050 - netPay);
     document.getElementById("biweek-total").innerHTML =
