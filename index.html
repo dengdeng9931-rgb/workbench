@@ -2379,7 +2379,7 @@
   // Sydney Harbour Marriott EA 2015 · flexible part time new associate · $29.09/h基础时薪折算
   // 平日白班104%、晚班104%+L4估算10%、夜班104%+L4估算15%、周六129%、周日179%、公共假期254%
   const PAY_RATES = { day: 30.25, eve: 33.32, night: 34.85, sat: 37.53, sun: 52.07, ph: 73.89 };
-  const NET_RATIO = 0.80; // 从实际到手工资反推校准出的净/毛比例
+  const NET_RATIO = 0.802; // 从实际到手工资反推校准出的净/毛比例（3个周期均值79.9%/80.2%/80.6%）
 
   // 把 [startMin, endMin) 这段连续分钟数拆成 凌晨<7am / 白班7am-7pm / 晚班>7pm，
   // 支持跨过午夜的班次（凌晨那段会正确落回"夜班"而不是被算成前一天的"晚班"）
