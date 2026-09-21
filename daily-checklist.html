@@ -210,15 +210,6 @@
     <div class="check-list" id="rc-list"></div>
   </section>
 
-  <section class="panel">
-    <div class="panel-head">
-      <span class="tag">CLOSE</span>
-      <h2>关店检查</h2>
-      <span class="count-chip" id="cc-count">0 / 0</span>
-    </div>
-    <div class="check-list" id="cc-list"></div>
-  </section>
-
   <p class="footer-note">勾选只存在这台设备的浏览器里，换设备/清缓存不会同步。</p>
 </div>
 
@@ -245,24 +236,14 @@
   ];
 
   const RC_ITEMS = [
-    { id: "rc1", text: "长桌、高桌擦干净" },
-    { id: "rc2", text: "入口门清洁，没有食物残渣和污渍" },
-    { id: "rc3", text: "水、咖啡、茶水台擦干净，没有水渍" },
-    { id: "rc4", text: "咖啡机擦干净，没有溢出的痕迹" },
-    { id: "rc5", text: "补充餐巾纸" },
-    { id: "rc6", text: "桌椅摆整齐" },
-    { id: "rc7", text: "补充咖啡和茶" },
-    { id: "rc8", text: "补充消毒剂" },
-  ];
-
-  const CC_ITEMS = [
-    { id: "cc1", text: "入门口清洁" },
-    { id: "cc2", text: "补饮料／糖／茶／咖啡豆／纸杯／餐巾纸/抽屉" },
-    { id: "cc3", text: "擦拭所有空桌／盐胡椒摆放" },
-    { id: "cc4", text: "Top up sanitizer bottles" },
-    { id: "cc5", text: "double check hot box and heater off" },
-    { id: "cc6", text: "锁上所有柜子" },
-    { id: "cc7", text: "Take all keys and return them at Level B2" },
+    { id: "rc1", text: "补饮料／糖／茶／咖啡豆／纸杯／餐巾纸/抽屉" },
+    { id: "rc2", text: "擦拭摆放所有空桌／盐胡椒摆放" },
+    { id: "rc3", text: "咖啡/茶水台 水渍清理" },
+    { id: "rc4", text: "入门口/清洁台清理" },
+    { id: "rc5", text: "Top up sanitizer bottles." },
+    { id: "rc6", text: "double check hot box and heater off" },
+    { id: "rc7", text: "锁上所有柜子" },
+    { id: "rc8", text: "Take all keys and return them at Level B2" },
   ];
 
   function toISO(d) {
@@ -372,7 +353,6 @@
     document.getElementById("next-reset").textContent = nextResetLabel();
     buildList(document.getElementById("dc-list"), DC_ITEMS, document.getElementById("dc-count"));
     buildList(document.getElementById("rc-list"), RC_ITEMS, document.getElementById("rc-count"));
-    buildList(document.getElementById("cc-list"), CC_ITEMS, document.getElementById("cc-count"));
   }
 
   document.getElementById("reset-now-btn").addEventListener("click", () => {
