@@ -135,7 +135,17 @@
   }
   .check-row:hover { background: var(--paper-sunken); }
   .check-row.sub { margin-left: 20px; }
-  .check-row .mark { font-size: 19px; line-height: 1; flex-shrink: 0; }
+  .check-row .mark {
+    width: 18px; height: 18px; flex-shrink: 0;
+    border-radius: 50%;
+    border: 2px solid var(--ink-faint);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .check-row.done .mark {
+    border-color: var(--done);
+    background: var(--done);
+  }
+  .check-row .mark svg { width: 11px; height: 11px; display: block; }
   .check-row .txt { font-size: 14px; }
   .check-row.done { background: var(--done-soft); }
   .check-row.done:hover { background: var(--done-soft); filter: brightness(0.97); }
@@ -281,7 +291,9 @@
       row.className = "check-row" + (item.group ? " sub" : "") + (done ? " done" : "");
       const mark = document.createElement("span");
       mark.className = "mark";
-      mark.textContent = done ? "✅" : "⭕️";
+      mark.innerHTML = done
+        ? '<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 8.5L6.2 11.5L13 4.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        : "";
       const txt = document.createElement("span");
       txt.className = "txt";
       txt.textContent = item.text;
