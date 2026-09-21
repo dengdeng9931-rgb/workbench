@@ -175,6 +175,45 @@
     font-size: 12px; color: var(--ink-faint); text-align: center;
     padding: 8px 18px 0; line-height: 1.6;
   }
+
+  .lookup-block {
+    border-top: 1px solid var(--line);
+    padding: 4px 18px 14px;
+  }
+  .lookup-block summary {
+    cursor: pointer; padding: 12px 4px;
+    font-size: 13.5px; font-weight: 600; color: var(--accent);
+    list-style: none;
+  }
+  .lookup-block summary::-webkit-details-marker { display: none; }
+  .lookup-block summary::before { content: "▸ "; }
+  .lookup-block[open] summary::before { content: "▾ "; }
+  .lookup-body { padding: 2px 4px 0; }
+  .lookup-search {
+    width: 100%; font: inherit; font-size: 14px;
+    padding: 9px 11px; margin-bottom: 10px;
+    border: 1px solid var(--line); border-radius: var(--radius-control);
+    background: var(--paper-sunken); color: var(--ink);
+  }
+  .lookup-search:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .lookup-cat {
+    font-size: 11.5px; font-weight: 700; letter-spacing: 0.04em;
+    color: var(--ink-soft); margin: 12px 2px 4px;
+  }
+  .lookup-cat:first-child { margin-top: 2px; }
+  .lookup-row {
+    display: flex; flex-direction: column; gap: 1px;
+    padding: 7px 8px; border-radius: 8px; font-size: 13px;
+  }
+  .lookup-row:nth-child(odd) { background: var(--paper-sunken); }
+  .lookup-row .par { color: var(--ink-soft); font-size: 11.5px; }
+  .lookup-row .full { color: var(--ink); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; }
+  .lookup-row.warn .full { color: var(--danger); }
+  .lookup-empty { padding: 14px 8px; text-align: center; color: var(--ink-faint); font-size: 13px; }
+  .lookup-note {
+    font-size: 11.5px; color: var(--ink-faint); line-height: 1.6;
+    margin: 12px 2px 0; padding-top: 10px; border-top: 1px dashed var(--line);
+  }
 </style>
 </head>
 <body>
@@ -199,6 +238,14 @@
       <span class="count-chip" id="dc-count">0 / 0</span>
     </div>
     <div class="check-list" id="dc-list"></div>
+    <details class="lookup-block">
+      <summary>📋 系统全名对照表（订货登记时查这个）</summary>
+      <div class="lookup-body">
+        <input type="search" id="lookup-search" class="lookup-search" placeholder="搜索品名，比如 vodka 或 pepsi…" />
+        <div id="lookup-results"></div>
+        <p class="lookup-note">Tequila Gold 在系统里对应品牌是 <b>Olmeca Gold</b>，搜索时注意关键词。周四夜单和周日夜单，订购量需 ×2.5。最后更新 2026-09-17，改了原表要记得告诉我同步。</p>
+      </div>
+    </details>
   </section>
 
   <section class="panel">
@@ -244,6 +291,54 @@
     { id: "rc6", text: "double check hot box and heater off" },
     { id: "rc7", text: "锁上所有柜子" },
     { id: "rc8", text: "Take all keys and return them at Level B2" },
+  ];
+
+  // Par表品名 → 系统里下单要用的 Product Desc 全名，来自 Exec-Lounge-订购产品对照表.md（2026-09-17）
+  const PRODUCT_LOOKUP = [
+    { cat: "软饮 Soft Drinks", rows: [
+      ["Bitter Lemon", "Softdrink/Bitter Lemon/300ML/BTL"],
+      ["Ginger Ale", "Softdrink/Ginger Ale/300ML/BTL"],
+      ["Pepsi Max", "Softdrink/Pepsi Max/300ML/BTL"],
+      ["Pepsi Cola", "Softdrink/Pepsi/300ML/BTL"],
+      ["Lemonade", "Softdrink/Schweppes Lemonade/300ML/BTL"],
+      ["Tonic Water", "Softdrink/Tonic Water/300ML/BTL"],
+      ["Sodawater", "Softdrink/Soda Water/300ML/BTL"],
+      ["Lime Cordial（Par表归在Other）", "Softdrink/Schweppes Lime Cordial/750ML x 12/CASE"],
+    ]},
+    { cat: "水 Water", rows: [
+      ["Still Water 500ml", "Water/Still/Santa Vittoria/500ML/BTL"],
+      ["Still Water 1000ml", "Water/Still/Santa Vittoria/1LTL/BTL"],
+      ["Sparkling Water 500ml", "Water/Spark/Santa Vittoria/500ML/BTL"],
+      ["Sparkling Water 1000ml", "Water/Spark/Santa Vittoria/1LT/BTL"],
+    ]},
+    { cat: "啤酒 Beer", rows: [
+      ["Stone & Wood Pacific Ale", "Beer/Domestic/Stone&Wood Pacific Ale/Ctn24/330ml/BTL"],
+      ["Little Creatures Pale Ale", "Beer/Domestic/Little Creatures Pale Ale/Ctn24/330ml/BTL"],
+      ["Kirin Ichiban", "Beer/Imported/Kirin Ichiban/Ctn24/330ml/BTL"],
+      ["James Boag Light", "Beer/Domestic/James Boags Premium Light/Ctn24/375ml/BTL"],
+      ["Hahn Super Dry", "Beer/Domestic/Hahn Super/Ctn24/330ml/BTL"],
+      ["CHB", "Beer/Domestic/CHB Lager/375ML/CAN"],
+    ]},
+    { cat: "葡萄酒 Wine", rows: [
+      ["Shiraz", "ZZZ/Wine/Red/Chain of Fire Shiraz Cab/750ML/BTL2"],
+      ["Pinot Noir", "ZZZ/Wine/Red/Chain of Fire Pinot Noir/750ML/BTL2"],
+      ["Chardonnay", "ZZZ/Wine/White/Chain of Fire Chardonnay/750ML/BTL"],
+      ["Sauv Blan Semillon", "ZZZ/Wine/White/Chain of Fire Sauv Blan Semillon/750ML/BTL"],
+      ["Brut Cuvee", "ZZZ/Wine/Sparkling/Chain of Fire NV Spark Brut/750ML/BTL2"],
+      ["VIP Red wine（疑似轮换款，需与采购确认）", "Wine/Red/Aphelion Welkin Nero d'Avola/750ML/BTL 或 Wine/Red/Finisterre MR Cabernet Sauvignon/750ML/BTL"],
+      ["VIP White wine", "⚠️ 尚未查到，需系统内搜索确认", true],
+    ]},
+    { cat: "烈酒 Liquor", rows: [
+      ["Absolut Blue Vodka", "ZZZ/Liquor/Vodka/Absolut Blue/700ML/BTL"],
+      ["Gin Beefeta", "ZZZ/Liquor/Gin/Beefeater Gin/700ML/BTL"],
+      ["Tequila Gold", "ZZZ/Liquor/Tequila/Olmeca Gold/700ML/BTL"],
+      ["Bacardi", "Liquor/Rum/Bacardi/1000ML/BTL"],
+      ["Chivas", "ZZZ/Liquor/Scotch/Chivas Regal/700ML/BTL"],
+      ["Jack Daniel", "ZZZ/Liquor/Bourbon/Jack Daniels/1LT/BTL2"],
+      ["Aperol", "ZZZ/Liquor/Aperitif/Aperol/700ML/BTL"],
+      ["Campari", "⚠️ 尚未查到，需系统内搜索确认", true],
+      ["Angostrua Bitter", "⚠️ 尚未查到，需系统内搜索确认", true],
+    ]},
   ];
 
   function toISO(d) {
@@ -370,6 +465,44 @@
   document.getElementById("lightbox").addEventListener("click", () => {
     document.getElementById("lightbox").hidden = true;
   });
+
+  function renderLookup(keyword) {
+    const kw = (keyword || "").trim().toLowerCase();
+    const results = document.getElementById("lookup-results");
+    results.innerHTML = "";
+    let shown = 0;
+    PRODUCT_LOOKUP.forEach(group => {
+      const rows = kw
+        ? group.rows.filter(r => r[0].toLowerCase().includes(kw) || r[1].toLowerCase().includes(kw))
+        : group.rows;
+      if (!rows.length) return;
+      const catEl = document.createElement("div");
+      catEl.className = "lookup-cat";
+      catEl.textContent = group.cat;
+      results.appendChild(catEl);
+      rows.forEach(([par, full, warn]) => {
+        shown++;
+        const row = document.createElement("div");
+        row.className = "lookup-row" + (warn ? " warn" : "");
+        const parEl = document.createElement("div");
+        parEl.className = "par";
+        parEl.textContent = par;
+        const fullEl = document.createElement("div");
+        fullEl.className = "full";
+        fullEl.textContent = full;
+        row.append(parEl, fullEl);
+        results.appendChild(row);
+      });
+    });
+    if (!shown) {
+      const empty = document.createElement("div");
+      empty.className = "lookup-empty";
+      empty.textContent = "没找到，换个关键词试试";
+      results.appendChild(empty);
+    }
+  }
+  document.getElementById("lookup-search").addEventListener("input", (e) => renderLookup(e.target.value));
+  renderLookup("");
 
   render();
   // 万一这个页面开着跨过了下午1点，每分钟自动检查一次要不要清空
