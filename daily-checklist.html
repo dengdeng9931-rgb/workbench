@@ -134,7 +134,7 @@
     user-select: none;
   }
   .check-row:hover { background: var(--paper-sunken); }
-  .check-row.sub { margin-left: 20px; }
+  .check-item.sub { margin-left: 20px; }
   .check-row .mark {
     width: 18px; height: 18px; flex-shrink: 0;
     border-radius: 50%;
@@ -150,6 +150,26 @@
   .check-row.done { background: var(--done-soft); }
   .check-row.done:hover { background: var(--done-soft); filter: brightness(0.97); }
   .check-row.done .txt { color: var(--ink-faint); text-decoration: line-through; text-decoration-color: var(--ink-faint); }
+
+  .check-thumbs {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    margin: 2px 10px 10px 42px;
+  }
+  .check-thumbs img {
+    height: 72px; width: auto; max-width: 100px;
+    border-radius: 8px; border: 1px solid var(--line);
+    cursor: zoom-in; object-fit: cover; display: block;
+  }
+  .check-thumbs img:hover { border-color: var(--accent); }
+
+  .lightbox {
+    position: fixed; inset: 0; z-index: 999;
+    background: rgba(10, 14, 11, 0.86);
+    display: flex; align-items: center; justify-content: center;
+    padding: 28px; cursor: zoom-out;
+  }
+  .lightbox[hidden] { display: none; }
+  .lightbox img { max-width: 100%; max-height: 100%; border-radius: 10px; box-shadow: var(--shadow); }
 
   .footer-note {
     font-size: 12px; color: var(--ink-faint); text-align: center;
@@ -190,22 +210,35 @@
     <div class="check-list" id="rc-list"></div>
   </section>
 
+  <section class="panel">
+    <div class="panel-head">
+      <span class="tag">CLOSE</span>
+      <h2>关店检查</h2>
+      <span class="count-chip" id="cc-count">0 / 0</span>
+    </div>
+    <div class="check-list" id="cc-list"></div>
+  </section>
+
   <p class="footer-note">勾选只存在这台设备的浏览器里，换设备/清缓存不会同步。</p>
+</div>
+
+<div class="lightbox" id="lightbox" hidden>
+  <img id="lightbox-img" src="" alt="" />
 </div>
 
 <script>
   const STORE = "workbench.dailychecklist.v1";
 
   const DC_ITEMS = [
-    { id: "dc1", text: "盘点库存并订货（周日至周四）" },
+    { id: "dc1", text: "盘点库存并订货（周日至周四）", images: ["checklist-img/stock-1.jpg", "checklist-img/stock-2.png", "checklist-img/stock-3.jpg", "checklist-img/stock-4.jpg"] },
     { id: "dc2", text: "关闭并核销已送达的 amenity，核对离店日期" },
     { id: "dc3", text: "在 loop 邮件里发预测报表（附件+文件名要对）" },
-    { id: "dc4", text: "在厨房群里发预测" },
+    { id: "dc4", text: "在厨房群里发预测", images: ["checklist-img/kitchen-forecast.png"] },
     { id: "dc5", text: "检查明天的 amenity（提前准备，因为厨师需要提前24小时通知，所以要看两天）" },
-    { id: "dc6", text: "在群里发消息告诉厨师 amenity 数量" },
+    { id: "dc6", text: "在群里发消息告诉厨师 amenity 数量", images: ["checklist-img/amenity-count.png"] },
     { id: "dc7", text: "检查未来3天的 X5 amenity" },
     { id: "dc8", text: "检查连住14晚以上+套房（DUPLEX）、且还有5天以上入住的客人，发送入住前邮件" },
-    { id: "dc9", text: "在 GXP 系统里录入 powwow 作为 amenity，并在群里更新" },
+    { id: "dc9", text: "在 GXP 系统里录入 powwow 作为 amenity，并在群里更新", images: ["checklist-img/powwow.png"] },
     { id: "dc10a", text: "Specials（特殊餐饮/需求）", group: "提前核对特殊要求" },
     { id: "dc10b", text: "VIP", group: "提前核对特殊要求" },
     { id: "dc10c", text: "LST（长住客）", group: "提前核对特殊要求" },
@@ -220,6 +253,16 @@
     { id: "rc6", text: "桌椅摆整齐" },
     { id: "rc7", text: "补充咖啡和茶" },
     { id: "rc8", text: "补充消毒剂" },
+  ];
+
+  const CC_ITEMS = [
+    { id: "cc1", text: "入门口清洁" },
+    { id: "cc2", text: "补饮料／糖／茶／咖啡豆／纸杯／餐巾纸/抽屉" },
+    { id: "cc3", text: "擦拭所有空桌／盐胡椒摆放" },
+    { id: "cc4", text: "Top up sanitizer bottles" },
+    { id: "cc5", text: "double check hot box and heater off" },
+    { id: "cc6", text: "锁上所有柜子" },
+    { id: "cc7", text: "Take all keys and return them at Level B2" },
   ];
 
   function toISO(d) {
@@ -287,8 +330,12 @@
       }
       const done = !!data.checked[item.id];
       if (done) doneCount++;
+
+      const wrap = document.createElement("div");
+      wrap.className = "check-item" + (item.group ? " sub" : "");
+
       const row = document.createElement("div");
-      row.className = "check-row" + (item.group ? " sub" : "") + (done ? " done" : "");
+      row.className = "check-row" + (done ? " done" : "");
       const mark = document.createElement("span");
       mark.className = "mark";
       mark.innerHTML = done
@@ -299,7 +346,23 @@
       txt.textContent = item.text;
       row.append(mark, txt);
       row.addEventListener("click", () => toggle(item.id));
-      container.appendChild(row);
+      wrap.appendChild(row);
+
+      if (item.images && item.images.length) {
+        const thumbs = document.createElement("div");
+        thumbs.className = "check-thumbs";
+        item.images.forEach(src => {
+          const img = document.createElement("img");
+          img.src = src;
+          img.loading = "lazy";
+          img.alt = item.text;
+          img.addEventListener("click", () => openLightbox(src));
+          thumbs.appendChild(img);
+        });
+        wrap.appendChild(thumbs);
+      }
+
+      container.appendChild(wrap);
     });
     countEl.textContent = `${doneCount} / ${items.length}`;
   }
@@ -309,6 +372,7 @@
     document.getElementById("next-reset").textContent = nextResetLabel();
     buildList(document.getElementById("dc-list"), DC_ITEMS, document.getElementById("dc-count"));
     buildList(document.getElementById("rc-list"), RC_ITEMS, document.getElementById("rc-count"));
+    buildList(document.getElementById("cc-list"), CC_ITEMS, document.getElementById("cc-count"));
   }
 
   document.getElementById("reset-now-btn").addEventListener("click", () => {
@@ -317,6 +381,14 @@
     data.periodKey = periodKeyNow();
     save();
     render();
+  });
+
+  function openLightbox(src) {
+    document.getElementById("lightbox-img").src = src;
+    document.getElementById("lightbox").hidden = false;
+  }
+  document.getElementById("lightbox").addEventListener("click", () => {
+    document.getElementById("lightbox").hidden = true;
   });
 
   render();
