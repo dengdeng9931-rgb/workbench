@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" href="icon-192.png" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-title" content="Daily Checklist" />
+<meta name="theme-color" content="#2f5f86" />
+<title>Daily Checklist</title>
+<style>
+  :root {
+    --paper: #eef1ec;
+    --paper-raised: #ffffff;
+    --paper-sunken: #e4e9e1;
+    --ink: #1e2a22;
+    --ink-soft: #5b6960;
+    --ink-faint: #8a978e;
+    --line: #d6dcd1;
+    --accent: #2f5f86;
+    --accent-soft: #dde7ef;
+    --done: #2f7a4f;
+    --done-soft: #dcece1;
+    --danger: #a24d3c;
+    --danger-soft: #f3e3de;
+    --shadow: 0 1px 2px rgba(30, 42, 34, 0.06), 0 6px 16px -8px rgba(30, 42, 34, 0.12);
+    --radius-card: 14px;
+    --radius-control: 9px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #141813;
+      --paper-raised: #1d221e;
+      --paper-sunken: #191d17;
+      --ink: #e7ece5;
+      --ink-soft: #99a69b;
+      --ink-faint: #6c766e;
+      --line: #2b3129;
+      --accent: #6fa8d8;
+      --accent-soft: #22323f;
+      --done: #6fcf97;
+      --done-soft: #1f3327;
+      --danger: #e08b74;
+      --danger-soft: #3a2621;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 20px -8px rgba(0, 0, 0, 0.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #141813; --paper-raised: #1d221e; --paper-sunken: #191d17;
+    --ink: #e7ece5; --ink-soft: #99a69b; --ink-faint: #6c766e; --line: #2b3129;
+    --accent: #6fa8d8; --accent-soft: #22323f;
+    --done: #6fcf97; --done-soft: #1f3327;
+    --danger: #e08b74; --danger-soft: #3a2621;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 20px -8px rgba(0, 0, 0, 0.5);
+  }
+  :root[data-theme="light"] {
+    --paper: #eef1ec; --paper-raised: #ffffff; --paper-sunken: #e4e9e1;
+    --ink: #1e2a22; --ink-soft: #5b6960; --ink-faint: #8a978e; --line: #d6dcd1;
+    --accent: #2f5f86; --accent-soft: #dde7ef;
+    --done: #2f7a4f; --done-soft: #dcece1;
+    --danger: #a24d3c; --danger-soft: #f3e3de;
+    --shadow: 0 1px 2px rgba(30, 42, 34, 0.06), 0 6px 16px -8px rgba(30, 42, 34, 0.12);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background: radial-gradient(circle at 1px 1px, var(--line) 1px, transparent 0) 0 0/22px 22px, var(--paper);
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 20px 16px 64px; }
+  header.top {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px; padding: 6px 4px 18px; flex-wrap: wrap;
+  }
+  header.top a.back {
+    font-size: 12.5px; color: var(--ink-soft); text-decoration: none;
+    display: block; margin-bottom: 6px;
+  }
+  header.top a.back:hover { color: var(--accent); }
+  header.top h1 {
+    font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+    font-weight: 600; font-size: 22px; margin: 0;
+  }
+  header.top .sub { font-size: 12.5px; color: var(--ink-soft); margin-top: 3px; }
+
+  .reset-bar {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    background: var(--accent-soft); border-radius: 12px;
+    padding: 10px 14px; margin-bottom: 16px; font-size: 12.5px; color: var(--ink-soft);
+  }
+  .reset-bar b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .reset-now-btn {
+    font-size: 12px; color: var(--accent); background: none;
+    border: 1px solid var(--accent); border-radius: 7px;
+    padding: 5px 9px; cursor: pointer; flex-shrink: 0;
+  }
+  .reset-now-btn:hover { background: var(--accent); color: #fff; }
+
+  .panel {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .panel-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 18px 10px; border-bottom: 1px solid var(--line);
+  }
+  .panel-head .tag {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 3px 7px; border-radius: 5px;
+    color: var(--accent); background: var(--accent-soft);
+  }
+  .panel-head h2 { font-size: 15.5px; font-weight: 600; margin: 0; flex: 1; }
+  .count-chip {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-variant-numeric: tabular-nums; font-size: 12px; color: var(--ink-soft);
+  }
+
+  .check-list { padding: 8px 12px 14px; display: flex; flex-direction: column; gap: 3px; }
+  .check-group-label {
+    font-size: 12px; color: var(--ink-soft); font-weight: 600;
+    margin: 10px 10px 2px;
+  }
+  .check-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 10px; border-radius: 10px; cursor: pointer;
+    user-select: none;
+  }
+  .check-row:hover { background: var(--paper-sunken); }
+  .check-row.sub { margin-left: 20px; }
+  .check-row .mark { font-size: 19px; line-height: 1; flex-shrink: 0; }
+  .check-row .txt { font-size: 14px; }
+  .check-row.done { background: var(--done-soft); }
+  .check-row.done:hover { background: var(--done-soft); filter: brightness(0.97); }
+  .check-row.done .txt { color: var(--ink-faint); text-decoration: line-through; text-decoration-color: var(--ink-faint); }
+
+  .footer-note {
+    font-size: 12px; color: var(--ink-faint); text-align: center;
+    padding: 8px 18px 0; line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <a class="back" href="index.html">← 返回工作台</a>
+      <h1>Daily Checklist</h1>
+      <div class="sub">Executive Lounge · 电脑操作 + 日常检查</div>
+    </div>
+  </header>
+
+  <div class="reset-bar">
+    <span>每天下午1点自动清空重来，下次重置：<b id="next-reset">—</b></span>
+    <button type="button" class="reset-now-btn" id="reset-now-btn">立即重置</button>
+  </div>
+
+  <section class="panel">
+    <div class="panel-head">
+      <span class="tag">PC</span>
+      <h2>Daily Checklist（电脑操作）</h2>
+      <span class="count-chip" id="dc-count">0 / 0</span>
+    </div>
+    <div class="check-list" id="dc-list"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <span class="tag">FLOOR</span>
+      <h2>日常检查</h2>
+      <span class="count-chip" id="rc-count">0 / 0</span>
+    </div>
+    <div class="check-list" id="rc-list"></div>
+  </section>
+
+  <p class="footer-note">勾选只存在这台设备的浏览器里，换设备/清缓存不会同步。</p>
+</div>
+
+<script>
+  const STORE = "workbench.dailychecklist.v1";
+
+  const DC_ITEMS = [
+    { id: "dc1", text: "盘点库存并订货（周日至周四）" },
+    { id: "dc2", text: "关闭并核销已送达的 amenity，核对离店日期" },
+    { id: "dc3", text: "在 loop 邮件里发预测报表（附件+文件名要对）" },
+    { id: "dc4", text: "在厨房群里发预测" },
+    { id: "dc5", text: "检查明天的 amenity（提前准备，因为厨师需要提前24小时通知，所以要看两天）" },
+    { id: "dc6", text: "在群里发消息告诉厨师 amenity 数量" },
+    { id: "dc7", text: "检查未来3天的 X5 amenity" },
+    { id: "dc8", text: "检查连住14晚以上+套房（DUPLEX）、且还有5天以上入住的客人，发送入住前邮件" },
+    { id: "dc9", text: "在 GXP 系统里录入 powwow 作为 amenity，并在群里更新" },
+    { id: "dc10a", text: "Specials（特殊餐饮/需求）", group: "提前核对特殊要求" },
+    { id: "dc10b", text: "VIP", group: "提前核对特殊要求" },
+    { id: "dc10c", text: "LST（长住客）", group: "提前核对特殊要求" },
+  ];
+
+  const RC_ITEMS = [
+    { id: "rc1", text: "长桌、高桌擦干净" },
+    { id: "rc2", text: "入口门清洁，没有食物残渣和污渍" },
+    { id: "rc3", text: "水、咖啡、茶水台擦干净，没有水渍" },
+    { id: "rc4", text: "咖啡机擦干净，没有溢出的痕迹" },
+    { id: "rc5", text: "补充餐巾纸" },
+    { id: "rc6", text: "桌椅摆整齐" },
+    { id: "rc7", text: "补充咖啡和茶" },
+    { id: "rc8", text: "补充消毒剂" },
+  ];
+
+  function toISO(d) {
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+
+  // 周期边界是每天13:00——现在如果还没到今天13:00，就还算在"昨天13:00开始"那个周期里
+  function periodKeyNow() {
+    const now = new Date();
+    const k = new Date(now);
+    if (now.getHours() < 13) k.setDate(k.getDate() - 1);
+    return toISO(k);
+  }
+
+  function nextResetLabel() {
+    const now = new Date();
+    const next = new Date(now);
+    next.setHours(13, 0, 0, 0);
+    const sameDay = next > now;
+    if (!sameDay) next.setDate(next.getDate() + 1);
+    return (sameDay ? "今天" : "明天") + " 13:00";
+  }
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORE);
+      if (raw) return JSON.parse(raw);
+    } catch (e) { /* fall through */ }
+    return { periodKey: periodKeyNow(), checked: {} };
+  }
+  function save() { localStorage.setItem(STORE, JSON.stringify(data)); }
+
+  let data = load();
+  if (!data.checked || typeof data.checked !== "object") data.checked = {};
+
+  function ensureFreshPeriod() {
+    const pk = periodKeyNow();
+    if (data.periodKey !== pk) {
+      data.periodKey = pk;
+      data.checked = {};
+      save();
+    }
+  }
+
+  function toggle(id) {
+    data.checked[id] = !data.checked[id];
+    save();
+    render();
+  }
+
+  function buildList(container, items, countEl) {
+    container.innerHTML = "";
+    let doneCount = 0;
+    let lastGroup = null;
+    items.forEach(item => {
+      if (item.group && item.group !== lastGroup) {
+        const label = document.createElement("div");
+        label.className = "check-group-label";
+        label.textContent = item.group;
+        container.appendChild(label);
+        lastGroup = item.group;
+      } else if (!item.group) {
+        lastGroup = null;
+      }
+      const done = !!data.checked[item.id];
+      if (done) doneCount++;
+      const row = document.createElement("div");
+      row.className = "check-row" + (item.group ? " sub" : "") + (done ? " done" : "");
+      const mark = document.createElement("span");
+      mark.className = "mark";
+      mark.textContent = done ? "✅" : "⭕️";
+      const txt = document.createElement("span");
+      txt.className = "txt";
+      txt.textContent = item.text;
+      row.append(mark, txt);
+      row.addEventListener("click", () => toggle(item.id));
+      container.appendChild(row);
+    });
+    countEl.textContent = `${doneCount} / ${items.length}`;
+  }
+
+  function render() {
+    ensureFreshPeriod();
+    document.getElementById("next-reset").textContent = nextResetLabel();
+    buildList(document.getElementById("dc-list"), DC_ITEMS, document.getElementById("dc-count"));
+    buildList(document.getElementById("rc-list"), RC_ITEMS, document.getElementById("rc-count"));
+  }
+
+  document.getElementById("reset-now-btn").addEventListener("click", () => {
+    if (!confirm("确定要现在清空所有勾选吗？")) return;
+    data.checked = {};
+    data.periodKey = periodKeyNow();
+    save();
+    render();
+  });
+
+  render();
+  // 万一这个页面开着跨过了下午1点，每分钟自动检查一次要不要清空
+  setInterval(render, 60000);
+</script>
+</body>
+</html>

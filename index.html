@@ -1210,6 +1210,17 @@
     background: var(--paper-sunken);
   }
 
+  .schedule-link-row {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .schedule-link-row .add-btn {
+    display: block;
+    width: 100%;
+    text-align: center;
+    text-decoration: none;
+  }
+
   .location-manager input[type="text"] {
     flex: 1 1 140px;
     min-width: 0;
@@ -1472,6 +1483,9 @@
       <div class="panel-head">
         <span class="tag">SHIFT</span>
         <h2 id="schedule-heading">排班</h2>
+      </div>
+      <div class="schedule-link-row">
+        <a class="add-btn" href="daily-checklist.html">📋 打开 Daily Checklist（电脑操作 + 日常检查）→</a>
       </div>
       <div class="location-manager">
         <p class="location-manager-label">工作地点 / 部门</p>
