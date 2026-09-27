@@ -156,8 +156,8 @@
     margin: 2px 10px 10px 42px;
   }
   .check-thumbs img {
-    height: 72px; width: auto; max-width: 100px;
-    border-radius: 8px; border: 1px solid var(--line);
+    height: 40px; width: auto; max-width: 60px;
+    border-radius: 6px; border: 1px solid var(--line);
     cursor: zoom-in; object-fit: cover; display: block;
   }
   .check-thumbs img:hover { border-color: var(--accent); }
@@ -222,7 +222,7 @@
     <div>
       <a class="back" href="index.html">← 返回工作台</a>
       <h1>Daily Checklist</h1>
-      <div class="sub">Executive Lounge · 电脑操作 + 日常检查</div>
+      <div class="sub">Executive Lounge · 2-5工作 + report工作 + 日常检查</div>
     </div>
   </header>
 
@@ -233,11 +233,20 @@
 
   <section class="panel">
     <div class="panel-head">
-      <span class="tag">PC</span>
-      <h2>Daily Checklist（电脑操作）</h2>
-      <span class="count-chip" id="dc-count">0 / 0</span>
+      <span class="tag">2-5PM</span>
+      <h2>2-5 工作</h2>
+      <span class="count-chip" id="pm-count">0 / 0</span>
     </div>
-    <div class="check-list" id="dc-list"></div>
+    <div class="check-list" id="pm-list"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <span class="tag">REPORT</span>
+      <h2>report 工作</h2>
+      <span class="count-chip" id="rp-count">0 / 0</span>
+    </div>
+    <div class="check-list" id="rp-list"></div>
     <details class="lookup-block">
       <summary>📋 系统全名对照表（订货登记时查这个）</summary>
       <div class="lookup-body">
@@ -267,19 +276,36 @@
 <script>
   const STORE = "workbench.dailychecklist.v1";
 
-  const DC_ITEMS = [
-    { id: "dc1", text: "盘点库存并订货（周日至周四）", images: ["checklist-img/stock-1.jpg", "checklist-img/stock-2.png", "checklist-img/stock-3.jpg", "checklist-img/stock-4.jpg"] },
-    { id: "dc2", text: "关闭并核销已送达的 amenity，核对离店日期" },
-    { id: "dc3", text: "在 loop 邮件里发预测报表（附件+文件名要对）" },
-    { id: "dc4", text: "在厨房群里发预测", images: ["checklist-img/kitchen-forecast.png"] },
-    { id: "dc5", text: "检查明天的 amenity（提前准备，因为厨师需要提前24小时通知，所以要看两天）" },
-    { id: "dc6", text: "在群里发消息告诉厨师 amenity 数量", images: ["checklist-img/amenity-count.png"] },
-    { id: "dc7", text: "检查未来3天的 X5 amenity" },
-    { id: "dc8", text: "检查连住14晚以上+套房（DUPLEX）、且还有5天以上入住的客人，发送入住前邮件" },
-    { id: "dc9", text: "在 GXP 系统里录入 powwow 作为 amenity，并在群里更新", images: ["checklist-img/powwow.png"] },
-    { id: "dc10a", text: "Specials（特殊餐饮/需求）", group: "提前核对特殊要求" },
-    { id: "dc10b", text: "VIP", group: "提前核对特殊要求" },
-    { id: "dc10c", text: "LST（长住客）", group: "提前核对特殊要求" },
+  const PM_ITEMS = [
+    { id: "pm1", text: "2点到清理桌面／拿 mid day 甜品" },
+    { id: "pm2", text: "briefing" },
+    { id: "pm3", text: "B3取货（周六、周日除外）", images: ["checklist-img/b3-1.jpg", "checklist-img/b3-2.jpg"] },
+    { id: "pm3a", text: "空酒瓶要带下去", indent: true },
+    { id: "pm3b", text: "顺便查看 Misc 的储存量", indent: true },
+    { id: "pm4", text: "补充汽水、啤酒和白葡萄酒" },
+    { id: "pm5", text: "整理咖啡站／桌子" },
+    { id: "pm6", text: "布置干货推车" },
+    { id: "pm7", text: "3:30打开热食保温柜（需60分钟升温）" },
+    { id: "pm8", text: "4:00再次清理桌面" },
+    { id: "pm9", text: "4:30出去帮忙set dinner" },
+    { id: "pm10", text: "4-6点左右更新剩余amenity" },
+  ];
+
+  const REPORT_ITEMS = [
+    { id: "rp1", text: "先点A GXP Amenity Cases看总表，颜色/时间不正常的修改" },
+    { id: "rp2", text: "Special Pre Arrival report 加明天的Amenity" },
+    { id: "rp3", text: "GB/AV tmr Opera和GXP上更新" },
+    { id: "rp4", text: "检查未来3天的X5 amenity" },
+    { id: "rp5", text: "录入powwow并在群里更新", images: ["checklist-img/powwow.png"] },
+    { id: "rp6", text: "关amenity发群里", images: ["checklist-img/amenity-count.png"] },
+    { id: "rp6a", text: "early amenities", indent: true },
+    { id: "rp6b", text: "Specials（特殊餐饮/需求）", group: "提前核对特殊要求" },
+    { id: "rp6c", text: "VIP", group: "提前核对特殊要求" },
+    { id: "rp6d", text: "LST（长住客）", group: "提前核对特殊要求" },
+    { id: "rp7", text: "邮件和chef群里发预测报表（附件+文件名要对）", images: ["checklist-img/forecast-1.jpg", "checklist-img/kitchen-forecast.png", "checklist-img/forecast-3.jpg"] },
+    { id: "rp8", text: "盘点库存并订货（五六除外）", images: ["checklist-img/stock-1.jpg", "checklist-img/stock-2.png", "checklist-img/stock-3.jpg", "checklist-img/stock-4.jpg"] },
+    { id: "rp8a", text: "Misc看情况决定", indent: true },
+    { id: "rp9", text: "LST 14+ night for T+5days 发入住前邮件，更新文档", images: ["checklist-img/pre-arrival-email.jpg"] },
   ];
 
   const RC_ITEMS = [
@@ -408,7 +434,7 @@
       if (done) doneCount++;
 
       const wrap = document.createElement("div");
-      wrap.className = "check-item" + (item.group ? " sub" : "");
+      wrap.className = "check-item" + (item.group || item.indent ? " sub" : "");
 
       const row = document.createElement("div");
       row.className = "check-row" + (done ? " done" : "");
@@ -446,7 +472,8 @@
   function render() {
     ensureFreshPeriod();
     document.getElementById("next-reset").textContent = nextResetLabel();
-    buildList(document.getElementById("dc-list"), DC_ITEMS, document.getElementById("dc-count"));
+    buildList(document.getElementById("pm-list"), PM_ITEMS, document.getElementById("pm-count"));
+    buildList(document.getElementById("rp-list"), REPORT_ITEMS, document.getElementById("rp-count"));
     buildList(document.getElementById("rc-list"), RC_ITEMS, document.getElementById("rc-count"));
   }
 
