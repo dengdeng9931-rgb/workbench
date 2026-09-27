@@ -110,7 +110,14 @@
   .panel-head {
     display: flex; align-items: center; gap: 10px;
     padding: 14px 18px 10px; border-bottom: 1px solid var(--line);
+    cursor: pointer; list-style: none;
   }
+  .panel-head::-webkit-details-marker { display: none; }
+  .panel-head::before {
+    content: "▾"; font-size: 10px; color: var(--ink-faint); flex-shrink: 0;
+  }
+  .panel:not([open]) .panel-head::before { content: "▸"; }
+  .panel:not([open]) .panel-head { border-bottom: none; }
   .panel-head .tag {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
@@ -129,7 +136,7 @@
     margin: 10px 10px 2px;
   }
   .check-row {
-    display: flex; align-items: center; gap: 10px;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px;
     padding: 10px 10px; border-radius: 10px; cursor: pointer;
     user-select: none;
   }
@@ -146,21 +153,17 @@
     background: var(--done);
   }
   .check-row .mark svg { width: 11px; height: 11px; display: block; }
-  .check-row .txt { font-size: 14px; }
+  .check-row .txt { font-size: 14px; flex: 1 1 auto; min-width: 100px; }
   .check-row.done { background: var(--done-soft); }
   .check-row.done:hover { background: var(--done-soft); filter: brightness(0.97); }
   .check-row.done .txt { color: var(--ink-faint); text-decoration: line-through; text-decoration-color: var(--ink-faint); }
 
-  .check-thumbs {
-    display: flex; gap: 8px; flex-wrap: wrap;
-    margin: 2px 10px 10px 42px;
-  }
-  .check-thumbs img {
-    height: 40px; width: auto; max-width: 60px;
-    border-radius: 6px; border: 1px solid var(--line);
+  .check-row .thumb {
+    height: 30px; width: auto; max-width: 46px; flex-shrink: 0;
+    border-radius: 5px; border: 1px solid var(--line);
     cursor: zoom-in; object-fit: cover; display: block;
   }
-  .check-thumbs img:hover { border-color: var(--accent); }
+  .check-row .thumb:hover { border-color: var(--accent); }
 
   .lightbox {
     position: fixed; inset: 0; z-index: 999;
@@ -231,21 +234,21 @@
     <button type="button" class="reset-now-btn" id="reset-now-btn">立即重置</button>
   </div>
 
-  <section class="panel">
-    <div class="panel-head">
+  <details class="panel" id="pm-details" open>
+    <summary class="panel-head">
       <span class="tag">2-5PM</span>
       <h2>2-5 工作</h2>
       <span class="count-chip" id="pm-count">0 / 0</span>
-    </div>
+    </summary>
     <div class="check-list" id="pm-list"></div>
-  </section>
+  </details>
 
-  <section class="panel">
-    <div class="panel-head">
+  <details class="panel" id="rp-details" open>
+    <summary class="panel-head">
       <span class="tag">REPORT</span>
       <h2>report 工作</h2>
       <span class="count-chip" id="rp-count">0 / 0</span>
-    </div>
+    </summary>
     <div class="check-list" id="rp-list"></div>
     <details class="lookup-block">
       <summary>📋 系统全名对照表（订货登记时查这个）</summary>
@@ -255,16 +258,16 @@
         <p class="lookup-note">Tequila Gold 在系统里对应品牌是 <b>Olmeca Gold</b>，搜索时注意关键词。周四夜单和周日夜单，订购量需 ×2.5。最后更新 2026-09-17，改了原表要记得告诉我同步。</p>
       </div>
     </details>
-  </section>
+  </details>
 
-  <section class="panel">
-    <div class="panel-head">
+  <details class="panel" id="rc-details" open>
+    <summary class="panel-head">
       <span class="tag">FLOOR</span>
       <h2>日常检查</h2>
       <span class="count-chip" id="rc-count">0 / 0</span>
-    </div>
+    </summary>
     <div class="check-list" id="rc-list"></div>
-  </section>
+  </details>
 
   <p class="footer-note">勾选只存在这台设备的浏览器里，换设备/清缓存不会同步。</p>
 </div>
@@ -447,34 +450,40 @@
       txt.className = "txt";
       txt.textContent = item.text;
       row.append(mark, txt);
-      row.addEventListener("click", () => toggle(item.id));
-      wrap.appendChild(row);
 
       if (item.images && item.images.length) {
-        const thumbs = document.createElement("div");
-        thumbs.className = "check-thumbs";
         item.images.forEach(src => {
           const img = document.createElement("img");
+          img.className = "thumb";
           img.src = src;
           img.loading = "lazy";
           img.alt = item.text;
-          img.addEventListener("click", () => openLightbox(src));
-          thumbs.appendChild(img);
+          img.addEventListener("click", (e) => { e.stopPropagation(); openLightbox(src); });
+          row.appendChild(img);
         });
-        wrap.appendChild(thumbs);
       }
 
+      row.addEventListener("click", () => toggle(item.id));
+      wrap.appendChild(row);
       container.appendChild(wrap);
     });
     countEl.textContent = `${doneCount} / ${items.length}`;
+    return { done: doneCount, total: items.length };
+  }
+
+  // 某个板块全部勾完就自动收起（不用手动点关），没勾完就自动展开；
+  // 只有真的重新 render 过一遍才会这样判断一次，不会在她手动展开一个已完成的板块后，
+  // 被下面那个每分钟一次的检查（只看要不要清空，不重新 render）偷偷再收回去。
+  function applyAutoCollapse(detailsId, counts) {
+    document.getElementById(detailsId).open = counts.done < counts.total;
   }
 
   function render() {
     ensureFreshPeriod();
     document.getElementById("next-reset").textContent = nextResetLabel();
-    buildList(document.getElementById("pm-list"), PM_ITEMS, document.getElementById("pm-count"));
-    buildList(document.getElementById("rp-list"), REPORT_ITEMS, document.getElementById("rp-count"));
-    buildList(document.getElementById("rc-list"), RC_ITEMS, document.getElementById("rc-count"));
+    applyAutoCollapse("pm-details", buildList(document.getElementById("pm-list"), PM_ITEMS, document.getElementById("pm-count")));
+    applyAutoCollapse("rp-details", buildList(document.getElementById("rp-list"), REPORT_ITEMS, document.getElementById("rp-count")));
+    applyAutoCollapse("rc-details", buildList(document.getElementById("rc-list"), RC_ITEMS, document.getElementById("rc-count")));
   }
 
   document.getElementById("reset-now-btn").addEventListener("click", () => {
@@ -532,8 +541,13 @@
   renderLookup("");
 
   render();
-  // 万一这个页面开着跨过了下午1点，每分钟自动检查一次要不要清空
-  setInterval(render, 60000);
+  // 万一这个页面开着跨过了下午1点，每分钟检查一次要不要清空——
+  // 只在真的要清空时才整页重新 render，平时不重新 render，这样她手动展开一个
+  // 已经打完勾的板块看一眼，不会过一分钟又被自动收起来
+  setInterval(() => {
+    if (periodKeyNow() !== data.periodKey) render();
+    else document.getElementById("next-reset").textContent = nextResetLabel();
+  }, 60000);
 </script>
 </body>
 </html>
