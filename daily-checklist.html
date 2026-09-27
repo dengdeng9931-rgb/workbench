@@ -234,7 +234,7 @@
     <button type="button" class="reset-now-btn" id="reset-now-btn">立即重置</button>
   </div>
 
-  <details class="panel" id="pm-details" open>
+  <details class="panel" id="pm-details">
     <summary class="panel-head">
       <span class="tag">2-5PM</span>
       <h2>2-5 工作</h2>
@@ -243,7 +243,7 @@
     <div class="check-list" id="pm-list"></div>
   </details>
 
-  <details class="panel" id="rp-details" open>
+  <details class="panel" id="rp-details">
     <summary class="panel-head">
       <span class="tag">REPORT</span>
       <h2>report 工作</h2>
@@ -260,7 +260,7 @@
     </details>
   </details>
 
-  <details class="panel" id="rc-details" open>
+  <details class="panel" id="rc-details">
     <summary class="panel-head">
       <span class="tag">FLOOR</span>
       <h2>日常检查</h2>
@@ -471,11 +471,10 @@
     return { done: doneCount, total: items.length };
   }
 
-  // 某个板块全部勾完就自动收起（不用手动点关），没勾完就自动展开；
-  // 只有真的重新 render 过一遍才会这样判断一次，不会在她手动展开一个已完成的板块后，
-  // 被下面那个每分钟一次的检查（只看要不要清空，不重新 render）偷偷再收回去。
+  // 默认都是收起的（她自己点开要做的那一块）。只在某个板块刚好全部勾完时自动帮她收起来，
+  // 没勾完的时候绝不主动展开——不然每次点一下勾就被强制弹开，跟"平时就是折叠的"这个诉求冲突。
   function applyAutoCollapse(detailsId, counts) {
-    document.getElementById(detailsId).open = counts.done < counts.total;
+    if (counts.done >= counts.total) document.getElementById(detailsId).open = false;
   }
 
   function render() {
