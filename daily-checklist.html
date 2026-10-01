@@ -230,7 +230,7 @@
   </header>
 
   <div class="reset-bar">
-    <span>每天下午1点自动清空重来，下次重置：<b id="next-reset">—</b></span>
+    <span>每天早上5点自动清空重来，下次重置：<b id="next-reset">—</b></span>
     <button type="button" class="reset-now-btn" id="reset-now-btn">立即重置</button>
   </div>
 
@@ -372,21 +372,21 @@
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   }
 
-  // 周期边界是每天13:00——现在如果还没到今天13:00，就还算在"昨天13:00开始"那个周期里
+  // 周期边界是每天05:00——现在如果还没到今天05:00，就还算在"昨天05:00开始"那个周期里
   function periodKeyNow() {
     const now = new Date();
     const k = new Date(now);
-    if (now.getHours() < 13) k.setDate(k.getDate() - 1);
+    if (now.getHours() < 5) k.setDate(k.getDate() - 1);
     return toISO(k);
   }
 
   function nextResetLabel() {
     const now = new Date();
     const next = new Date(now);
-    next.setHours(13, 0, 0, 0);
+    next.setHours(5, 0, 0, 0);
     const sameDay = next > now;
     if (!sameDay) next.setDate(next.getDate() + 1);
-    return (sameDay ? "今天" : "明天") + " 13:00";
+    return (sameDay ? "今天" : "明天") + " 05:00";
   }
 
   function load() {
@@ -537,7 +537,7 @@
   renderLookup("");
 
   render();
-  // 万一这个页面开着跨过了下午1点，每分钟检查一次要不要清空——
+  // 万一这个页面开着跨过了早上5点，每分钟检查一次要不要清空——
   // 只在真的要清空时才整页重新 render，平时不重新 render，这样她手动展开一个
   // 已经打完勾的板块看一眼，不会过一分钟又被自动收起来
   setInterval(() => {
