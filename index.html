@@ -2390,10 +2390,28 @@
     return (dayEntry.shifts || []).reduce((sum, sh) => sum + computeShift(sh).hours, 0);
   }
 
-  // Sydney Harbour Marriott EA 2015 · flexible part time new associate · $29.09/h基础时薪折算
+  // Sydney Harbour Marriott EA 2015 · flexible part time new associate · 按基础时薪折算
   // 平日白班104%、晚班104%+L4估算10%、夜班104%+L4估算15%、周六129%、周日179%、公共假期254%
-  const PAY_RATES = { day: 30.25, eve: 33.32, night: 34.85, sat: 37.53, sun: 52.07, ph: 73.89 };
-  const NET_RATIO = 0.802; // 从实际到手工资反推校准出的净/毛比例（3个周期均值79.9%/80.2%/80.6%）
+  // 基础时薪随合同变化：2026-09-12 起 $29.45，之前 $29.09（日期字符串可以直接比大小，新的排前面）
+  const BASE_RATE_CHANGES = [["2026-09-12", 29.45], ["0000-00-00", 29.09]];
+  // 晚班实发比纯按EA百分比算出来的偏高：用4个完整周期实发工资拟合，每个晚班小时平均多出约$3.9毛工资
+  // （原因没确认，可能是晚班加成/Level 4时薪比我估的高；拿到工资单上的晚班加成明细后应该改成真实数字，然后删掉这一项）
+  const EVE_EMPIRICAL_EXTRA = 3.9;
+  const NET_RATIO = 0.789; // 加上面那项修正后，4个周期(27Jul-20Sep)实发工资拟合出的净/毛比例
+
+  function payRatesFor(dateISO) {
+    const base = (BASE_RATE_CHANGES.find(([from]) => dateISO >= from) || [null, 29.09])[1];
+    const l4 = base * (20.73 / 19.67); // Level 4 时薪：按EA里2015年L3→L4的比例估算，未经工资单核实
+    const dayRate = 1.04 * base;
+    return {
+      day: dayRate,
+      eve: dayRate + 0.10 * l4 + EVE_EMPIRICAL_EXTRA,
+      night: dayRate + 0.15 * l4,
+      sat: 1.29 * base,
+      sun: 1.79 * base,
+      ph: 2.54 * base,
+    };
+  }
 
   // 把 [startMin, endMin) 这段连续分钟数拆成 凌晨<7am / 白班7am-7pm / 晚班>7pm，
   // 支持跨过午夜的班次（凌晨那段会正确落回"夜班"而不是被算成前一天的"晚班"）
@@ -2430,13 +2448,14 @@
     const workMin = endMin - startMin;
     if (workMin <= 0) return 0;
     const breakMin = shift.hasBreak ? 30 : 0;
+    const R = payRatesFor(dateISO);
 
     if (shift.isHoliday) {
-      return (Math.max(0, workMin - breakMin) / 60) * PAY_RATES.ph;
+      return (Math.max(0, workMin - breakMin) / 60) * R.ph;
     }
     const dow = weekdayOfISO(dateISO); // 0=周日 .. 6=周六
-    if (dow === 6) return (Math.max(0, workMin - breakMin) / 60) * PAY_RATES.sat;
-    if (dow === 0) return (Math.max(0, workMin - breakMin) / 60) * PAY_RATES.sun;
+    if (dow === 6) return (Math.max(0, workMin - breakMin) / 60) * R.sat;
+    if (dow === 0) return (Math.max(0, workMin - breakMin) / 60) * R.sun;
 
     // 平日：拆成 凌晨<7am / 白班7am-7pm / 晚班>7pm 三段（跨午夜安全）
     let { night: nightMin, day: dayMin, eve: eveMin } = bandMinutes(startMin, endMin);
@@ -2450,7 +2469,7 @@
       else eveMin = Math.max(0, eveMin - breakMin);
     }
 
-    return (nightMin / 60) * PAY_RATES.night + (dayMin / 60) * PAY_RATES.day + (eveMin / 60) * PAY_RATES.eve;
+    return (nightMin / 60) * R.night + (dayMin / 60) * R.day + (eveMin / 60) * R.eve;
   }
 
   function dayTotalPay(dayEntry) {
