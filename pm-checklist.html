@@ -270,6 +270,31 @@
     font-size: 12.5px; color: var(--accent); font-variant-numeric: tabular-nums;
     min-width: 64px; text-align: right; flex-shrink: 0;
   }
+
+  .page-tabs {
+    display: flex; gap: 6px; margin-bottom: 16px;
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+  }
+  .page-tab-btn {
+    flex-shrink: 0; font: inherit; font-size: 13px; font-weight: 600;
+    color: var(--ink-soft); background: var(--paper-raised);
+    border: 1px solid var(--line); border-radius: 9px;
+    padding: 8px 14px; cursor: pointer;
+  }
+  .page-tab-btn.active { color: #fff; background: var(--accent); border-color: var(--accent); }
+
+  .tool-panel {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .tool-panel-head { padding: 14px 18px 10px; border-bottom: 1px solid var(--line); }
+  .tool-panel-head h2 { font-size: 15.5px; font-weight: 600; margin: 0; }
+  .tool-panel-body { padding: 14px 18px 16px; }
+  .tool-panel-body > .lookup-block { margin: 12px -18px 0; }
 </style>
 </head>
 <body>
@@ -281,53 +306,64 @@
     </div>
   </header>
 
-  <div class="reset-bar">
-    <span>每天早上5点自动清空重来，下次重置：<b id="next-reset">—</b></span>
-    <button type="button" class="reset-now-btn" id="reset-now-btn">立即重置</button>
-  </div>
+  <nav class="page-tabs" id="page-tabs">
+    <button type="button" class="page-tab-btn active" data-page="checklist">Checklist</button>
+    <button type="button" class="page-tab-btn" data-page="powwow-chef">Powwow · Chef</button>
+    <button type="button" class="page-tab-btn" data-page="amenity">Amenity</button>
+    <button type="button" class="page-tab-btn" data-page="stock">Stock</button>
+  </nav>
 
-  <details class="panel" id="pm-details">
-    <summary class="panel-head">
-      <span class="tag">2-5PM</span>
-      <h2>2-5 工作</h2>
-      <span class="count-chip" id="pm-count">0 / 0</span>
-    </summary>
-    <div class="check-list" id="pm-list"></div>
-  </details>
+  <section class="page" id="page-checklist">
+    <div class="reset-bar">
+      <span>每天早上5点自动清空重来，下次重置：<b id="next-reset">—</b></span>
+      <button type="button" class="reset-now-btn" id="reset-now-btn">立即重置</button>
+    </div>
 
-  <details class="panel" id="rp-details">
-    <summary class="panel-head">
-      <span class="tag">REPORT</span>
-      <h2>report 工作</h2>
-      <span class="count-chip" id="rp-count">0 / 0</span>
-    </summary>
-    <div class="check-list" id="rp-list"></div>
+    <details class="panel" id="pm-details">
+      <summary class="panel-head">
+        <span class="tag">2-5PM</span>
+        <h2>2-5 工作</h2>
+        <span class="count-chip" id="pm-count">0 / 0</span>
+      </summary>
+      <div class="check-list" id="pm-list"></div>
+    </details>
 
-    <details class="lookup-block">
-      <summary>📝 Powwow 文字（日期=今天）</summary>
-      <div class="lookup-body">
+    <details class="panel" id="rp-details">
+      <summary class="panel-head">
+        <span class="tag">REPORT</span>
+        <h2>report 工作</h2>
+        <span class="count-chip" id="rp-count">0 / 0</span>
+      </summary>
+      <div class="check-list" id="rp-list"></div>
+    </details>
+
+    <details class="panel" id="rc-details">
+      <summary class="panel-head">
+        <span class="tag">FLOOR</span>
+        <h2>日常检查</h2>
+        <span class="count-chip" id="rc-count">0 / 0</span>
+      </summary>
+      <div class="check-list" id="rc-list"></div>
+    </details>
+
+    <p class="footer-note">勾选只存在这台设备的浏览器里，换设备/清缓存不会同步。</p>
+  </section>
+
+  <section class="page" id="page-powwow-chef" hidden>
+    <section class="tool-panel">
+      <div class="tool-panel-head"><h2>📝 Powwow 文字（日期=今天）</h2></div>
+      <div class="tool-panel-body">
         <div class="tool-row">今天日期：<b id="powwow-date">—</b></div>
         <textarea id="powwow-text" class="tool-textarea" rows="6"></textarea>
         <button type="button" class="copy-btn" id="powwow-copy-btn">📋 复制</button>
         <span class="copy-ok" id="powwow-copy-ok" hidden>已复制</span>
       </div>
-    </details>
+    </section>
 
-    <details class="lookup-block">
-      <summary>🎁 关 Amenities 清单（日期=明天）</summary>
-      <div class="lookup-body">
-        <div class="tool-row">送达日期：<b id="amenity-date">—</b></div>
-        <div id="amenity-items"></div>
-        <button type="button" class="copy-btn" id="amenity-copy-btn">📋 一键复制</button>
-        <span class="copy-ok" id="amenity-copy-ok" hidden>已复制</span>
-        <div class="tool-preview" id="amenity-preview"></div>
-      </div>
-    </details>
-
-    <details class="lookup-block">
-      <summary>👨‍🍳 发给 Chef 的消息（按今天星期自动选菜单）</summary>
-      <div class="lookup-body">
-        <div class="tool-row">今天：<b id="chef-weekday">—</b>，固定菜单 Soup of the Day / bread rolls 另加：</div>
+    <section class="tool-panel">
+      <div class="tool-panel-head"><h2>👨‍🍳 发给 Chef 的消息（按今天星期自动选菜单）</h2></div>
+      <div class="tool-panel-body">
+        <div class="tool-row">今天：<b id="chef-weekday">—</b></div>
         <div id="chef-items"></div>
         <div class="tool-row">
           <label for="chef-pax">今晚 pax 人数：</label>
@@ -337,11 +373,26 @@
         <span class="copy-ok" id="chef-copy-ok" hidden>已复制</span>
         <div class="tool-preview" id="chef-preview"></div>
       </div>
-    </details>
+    </section>
+  </section>
 
-    <details class="lookup-block">
-      <summary>📦 订货计算器（输入库存箱数，自动算需订购的"个"数）</summary>
-      <div class="lookup-body">
+  <section class="page" id="page-amenity" hidden>
+    <section class="tool-panel">
+      <div class="tool-panel-head"><h2>🎁 关 Amenities 清单（日期=明天）</h2></div>
+      <div class="tool-panel-body">
+        <div class="tool-row">送达日期：<b id="amenity-date">—</b></div>
+        <div id="amenity-items"></div>
+        <button type="button" class="copy-btn" id="amenity-copy-btn">📋 一键复制</button>
+        <span class="copy-ok" id="amenity-copy-ok" hidden>已复制</span>
+        <div class="tool-preview" id="amenity-preview"></div>
+      </div>
+    </section>
+  </section>
+
+  <section class="page" id="page-stock" hidden>
+    <section class="tool-panel">
+      <div class="tool-panel-head"><h2>📦 订货计算器（输入库存箱数，自动算需订购的"个"数）</h2></div>
+      <div class="tool-panel-body">
         <div class="tool-row">
           <label><input type="radio" name="order-par-mode" id="order-par-daily" checked /> 日常</label>
           <label><input type="radio" name="order-par-mode" id="order-par-weekend" /> 周末</label>
@@ -351,29 +402,18 @@
         <span class="copy-ok" id="order-copy-ok" hidden>已复制</span>
         <div class="tool-preview" id="order-preview"></div>
         <p class="lookup-note">库存按每个品类实际单位填：有"箱"规格的填箱数，其余（烈酒/VIP酒）直接填个数。需订购数量已经换算成系统下单用的"个"数，不用你再算。VIP White/Red wine 暂时没有代码，先空着，需要你自己在系统里搜索确认。数据来自 2026-10-10 的 PM Stock Requirement.xlsx + 你发的产品代码。</p>
+
+        <details class="lookup-block">
+          <summary>📋 系统全名对照表（订货登记时查这个）</summary>
+          <div class="lookup-body">
+            <input type="search" id="lookup-search" class="lookup-search" placeholder="搜索品名，比如 vodka 或 pepsi…" />
+            <div id="lookup-results"></div>
+            <p class="lookup-note">Tequila Gold 在系统里对应品牌是 <b>Olmeca Gold</b>，搜索时注意关键词。周四夜单和周日夜单，订购量需 ×2.5。最后更新 2026-09-17，改了原表要记得告诉我同步。</p>
+          </div>
+        </details>
       </div>
-    </details>
-
-    <details class="lookup-block">
-      <summary>📋 系统全名对照表（订货登记时查这个）</summary>
-      <div class="lookup-body">
-        <input type="search" id="lookup-search" class="lookup-search" placeholder="搜索品名，比如 vodka 或 pepsi…" />
-        <div id="lookup-results"></div>
-        <p class="lookup-note">Tequila Gold 在系统里对应品牌是 <b>Olmeca Gold</b>，搜索时注意关键词。周四夜单和周日夜单，订购量需 ×2.5。最后更新 2026-09-17，改了原表要记得告诉我同步。</p>
-      </div>
-    </details>
-  </details>
-
-  <details class="panel" id="rc-details">
-    <summary class="panel-head">
-      <span class="tag">FLOOR</span>
-      <h2>日常检查</h2>
-      <span class="count-chip" id="rc-count">0 / 0</span>
-    </summary>
-    <div class="check-list" id="rc-list"></div>
-  </details>
-
-  <p class="footer-note">勾选只存在这台设备的浏览器里，换设备/清缓存不会同步。</p>
+    </section>
+  </section>
 </div>
 
 <div class="lightbox" id="lightbox" hidden>
@@ -473,7 +513,7 @@
 
   // 可能出现的 amenity 项目（没出现的那天就不勾），数量手动填
   const AMENITY_ITEMS = [
-    "Welcome", "Savoury", "Savoury Board", "KOKO black", "Bag of KOKO",
+    "Welcome", "Savoury Board", "KOKO black", "Bag of KOKO",
     "Kid's amenity", "Choco strawberries", "Anniversary", "Congratulation",
     "Honeymoon", "Birthday", "Breakfast Pastry", "Fruit Bowl", "VIP chef special",
   ];
@@ -489,6 +529,8 @@
     6: ["Pork dimsim", "Vegetable Gyoza (Vegan)", "Fried Rice (GF)"],
   };
   const WEEKDAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  // 每天都要数的固定项，跟当天的 3 道热食一起出现在 Remaining Items 里
+  const CHEF_FIXED_ITEMS = ["Soup of the Day", "Fruit Bowl"];
 
   function toISO(d) {
     const pad = (n) => String(n).padStart(2, "0");
@@ -612,7 +654,7 @@
     const container = document.getElementById("chef-items");
     container.innerHTML = "";
     chefRefs = [];
-    WEEKLY_MENU[wd].forEach(name => {
+    WEEKLY_MENU[wd].concat(CHEF_FIXED_ITEMS).forEach(name => {
       const row = document.createElement("div");
       row.className = "tool-item-row";
       const label = document.createElement("span");
@@ -941,6 +983,14 @@
   }
   document.getElementById("lookup-search").addEventListener("input", (e) => renderLookup(e.target.value));
   renderLookup("");
+
+  function showPage(name) {
+    document.querySelectorAll(".page").forEach(p => { p.hidden = p.id !== "page-" + name; });
+    document.querySelectorAll(".page-tab-btn").forEach(b => { b.classList.toggle("active", b.dataset.page === name); });
+  }
+  document.querySelectorAll(".page-tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => showPage(btn.dataset.page));
+  });
 
   initPowwow();
   initAmenities();
