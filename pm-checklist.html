@@ -217,6 +217,43 @@
     font-size: 11.5px; color: var(--ink-faint); line-height: 1.6;
     margin: 12px 2px 0; padding-top: 10px; border-top: 1px dashed var(--line);
   }
+
+  .tool-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 10px; font-size: 13px; color: var(--ink-soft);
+  }
+  .tool-row b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .tool-row label { flex-shrink: 0; }
+  .tool-item-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 4px; border-radius: 8px;
+  }
+  .tool-item-row:hover { background: var(--paper-sunken); }
+  .tool-item-row input[type="checkbox"] { width: 16px; height: 16px; flex-shrink: 0; }
+  .tool-item-label { flex: 1; font-size: 13.5px; cursor: pointer; }
+  .tool-number {
+    width: 68px; font: inherit; font-size: 13px;
+    padding: 5px 7px; border: 1px solid var(--line); border-radius: 7px;
+    background: var(--paper-sunken); color: var(--ink);
+  }
+  .tool-number:disabled { opacity: 0.4; }
+  .tool-textarea {
+    width: 100%; font: inherit; font-size: 13px; line-height: 1.6;
+    padding: 9px 11px; margin-bottom: 10px;
+    border: 1px solid var(--line); border-radius: var(--radius-control);
+    background: var(--paper-sunken); color: var(--ink); resize: vertical;
+  }
+  .copy-btn {
+    font-size: 12.5px; color: #fff; background: var(--accent);
+    border: none; border-radius: 7px; padding: 7px 14px; cursor: pointer;
+  }
+  .copy-btn:hover { filter: brightness(1.08); }
+  .copy-ok { font-size: 12px; color: var(--done); margin-left: 8px; }
+  .tool-preview {
+    margin-top: 10px; padding: 10px 12px; background: var(--paper-sunken);
+    border-radius: 9px; font-size: 12.5px; white-space: pre-wrap;
+    color: var(--ink-soft); font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
 </style>
 </head>
 <body>
@@ -249,6 +286,43 @@
       <span class="count-chip" id="rp-count">0 / 0</span>
     </summary>
     <div class="check-list" id="rp-list"></div>
+
+    <details class="lookup-block">
+      <summary>📝 Powwow 文字（日期=今天）</summary>
+      <div class="lookup-body">
+        <div class="tool-row">今天日期：<b id="powwow-date">—</b></div>
+        <textarea id="powwow-text" class="tool-textarea" rows="6"></textarea>
+        <button type="button" class="copy-btn" id="powwow-copy-btn">📋 复制</button>
+        <span class="copy-ok" id="powwow-copy-ok" hidden>已复制</span>
+      </div>
+    </details>
+
+    <details class="lookup-block">
+      <summary>🎁 关 Amenities 清单（日期=明天）</summary>
+      <div class="lookup-body">
+        <div class="tool-row">送达日期：<b id="amenity-date">—</b></div>
+        <div id="amenity-items"></div>
+        <button type="button" class="copy-btn" id="amenity-copy-btn">📋 一键复制</button>
+        <span class="copy-ok" id="amenity-copy-ok" hidden>已复制</span>
+        <div class="tool-preview" id="amenity-preview"></div>
+      </div>
+    </details>
+
+    <details class="lookup-block">
+      <summary>👨‍🍳 发给 Chef 的消息（按今天星期自动选菜单）</summary>
+      <div class="lookup-body">
+        <div class="tool-row">今天：<b id="chef-weekday">—</b>，固定菜单 Soup of the Day / bread rolls 另加：</div>
+        <div id="chef-items"></div>
+        <div class="tool-row">
+          <label for="chef-pax">今晚 pax 人数：</label>
+          <input type="number" id="chef-pax" class="tool-number" min="0" />
+        </div>
+        <button type="button" class="copy-btn" id="chef-copy-btn">📋 一键复制</button>
+        <span class="copy-ok" id="chef-copy-ok" hidden>已复制</span>
+        <div class="tool-preview" id="chef-preview"></div>
+      </div>
+    </details>
+
     <details class="lookup-block">
       <summary>📋 系统全名对照表（订货登记时查这个）</summary>
       <div class="lookup-body">
@@ -366,9 +440,168 @@
     ]},
   ];
 
+  // 可能出现的 amenity 项目（没出现的那天就不勾），数量手动填
+  const AMENITY_ITEMS = [
+    "Welcome", "Savoury", "Savoury Board", "KOKO black", "Bag of KOKO",
+    "Kid's amenity", "Choco strawberries", "Anniversary", "Congratulation",
+    "Honeymoon", "Birthday", "Breakfast Pastry", "Fruit Bowl", "VIP chef special",
+  ];
+
+  // 每周固定菜单（Hot Food），周日=0 ... 周六=6，对应 Date.getDay()
+  const WEEKLY_MENU = {
+    0: ["assorted Pies", "Chicken tulips (GF)", "Mini Sausage rolls (GF)"],
+    1: ["Chicken ragu Filo parcel", "Thai Veg Curry Puff", "Vegetable Spring rolls"],
+    2: ["Meat Pizza", "Vegetable Pizza", "Potato, corn & cheese croquette"],
+    3: ["Mini Cottage pie (GF)", "Mini vegetarian cottage pie (GF)", "Assorted quiches"],
+    4: ["Chicken tulips (GF) – honey & soy", "Spinach & ricotta pastizzi", "Tempura Prawns"],
+    5: ["Beef Nachos (GF)", "Vegetable Nachos (GF)", "Beef Empanadas"],
+    6: ["Pork dimsim", "Vegetable Gyoza (Vegan)", "Fried Rice (GF)"],
+  };
+  const WEEKDAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
   function toISO(d) {
     const pad = (n) => String(n).padStart(2, "0");
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+
+  function ddmm(d) {
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}`;
+  }
+
+  // 优先用 Clipboard API，公司电脑可能限制权限/非 https 场景时退回 execCommand
+  function copyText(text, okId) {
+    const ok = document.getElementById(okId);
+    const flash = () => {
+      ok.hidden = false;
+      clearTimeout(flash._t);
+      flash._t = setTimeout(() => { ok.hidden = true; }, 1500);
+    };
+    const fallback = () => {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try { document.execCommand("copy"); } catch (e) { /* ignore */ }
+      document.body.removeChild(ta);
+      flash();
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(flash).catch(fallback);
+    } else {
+      fallback();
+    }
+  }
+
+  function initPowwow() {
+    const today = new Date();
+    document.getElementById("powwow-date").textContent = ddmm(today);
+    const ta = document.getElementById("powwow-text");
+    ta.value = `Pow wow ${ddmm(today)}\n`;
+    document.getElementById("powwow-copy-btn").addEventListener("click", () => {
+      copyText(ta.value, "powwow-copy-ok");
+    });
+  }
+
+  let amenityRefs = [];
+  function buildAmenityText() {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const lines = [`Amenities for ${ddmm(tomorrow)}`, ""];
+    amenityRefs.forEach(({ name, cb, num }) => {
+      const v = parseInt(num.value, 10);
+      if (cb.checked && v > 0) lines.push(`${name} x${v}`);
+    });
+    return lines.join("\n");
+  }
+  function updateAmenityPreview() {
+    document.getElementById("amenity-preview").textContent = buildAmenityText();
+  }
+  function initAmenities() {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    document.getElementById("amenity-date").textContent = ddmm(tomorrow);
+    const container = document.getElementById("amenity-items");
+    container.innerHTML = "";
+    amenityRefs = [];
+    AMENITY_ITEMS.forEach((name, i) => {
+      const row = document.createElement("div");
+      row.className = "tool-item-row";
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.id = "amenity-cb-" + i;
+      const label = document.createElement("label");
+      label.className = "tool-item-label";
+      label.htmlFor = cb.id;
+      label.textContent = name;
+      const num = document.createElement("input");
+      num.type = "number";
+      num.min = "1";
+      num.className = "tool-number";
+      num.placeholder = "x";
+      num.disabled = true;
+      cb.addEventListener("change", () => {
+        num.disabled = !cb.checked;
+        if (cb.checked) num.focus();
+        updateAmenityPreview();
+      });
+      num.addEventListener("input", updateAmenityPreview);
+      row.append(cb, label, num);
+      container.appendChild(row);
+      amenityRefs.push({ name, cb, num });
+    });
+    updateAmenityPreview();
+    document.getElementById("amenity-copy-btn").addEventListener("click", () => {
+      copyText(buildAmenityText(), "amenity-copy-ok");
+    });
+  }
+
+  let chefRefs = [];
+  function buildChefText() {
+    const pax = document.getElementById("chef-pax").value.trim();
+    const lines = [`Hi Chef, we have ${pax || "___"} pax for tonight and attached forecast for next 7 days.`, "", "Remaining Items:"];
+    let any = false;
+    chefRefs.forEach(({ name, num }) => {
+      const v = parseInt(num.value, 10);
+      if (v > 0) { lines.push(`• ${v} ${name}`); any = true; }
+    });
+    if (!any) lines.push("• （暂无剩余）");
+    return lines.join("\n");
+  }
+  function updateChefPreview() {
+    document.getElementById("chef-preview").textContent = buildChefText();
+  }
+  function initChef() {
+    const today = new Date();
+    const wd = today.getDay();
+    document.getElementById("chef-weekday").textContent = WEEKDAY_NAMES[wd];
+    const container = document.getElementById("chef-items");
+    container.innerHTML = "";
+    chefRefs = [];
+    WEEKLY_MENU[wd].forEach(name => {
+      const row = document.createElement("div");
+      row.className = "tool-item-row";
+      const label = document.createElement("span");
+      label.className = "tool-item-label";
+      label.textContent = name;
+      const num = document.createElement("input");
+      num.type = "number";
+      num.min = "0";
+      num.className = "tool-number";
+      num.placeholder = "剩余数量";
+      num.addEventListener("input", updateChefPreview);
+      row.append(label, num);
+      container.appendChild(row);
+      chefRefs.push({ name, num });
+    });
+    document.getElementById("chef-pax").addEventListener("input", updateChefPreview);
+    updateChefPreview();
+    document.getElementById("chef-copy-btn").addEventListener("click", () => {
+      copyText(buildChefText(), "chef-copy-ok");
+    });
   }
 
   // 周期边界是每天05:00——现在如果还没到今天05:00，就还算在"昨天05:00开始"那个周期里
@@ -534,6 +767,10 @@
   }
   document.getElementById("lookup-search").addEventListener("input", (e) => renderLookup(e.target.value));
   renderLookup("");
+
+  initPowwow();
+  initAmenities();
+  initChef();
 
   render();
   // 万一这个页面开着跨过了早上5点，每分钟检查一次要不要清空——
