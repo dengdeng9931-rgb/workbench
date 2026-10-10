@@ -346,14 +346,11 @@
           <label><input type="radio" name="order-par-mode" id="order-par-daily" checked /> 日常</label>
           <label><input type="radio" name="order-par-mode" id="order-par-weekend" /> 周末</label>
         </div>
-        <div class="tool-row">
-          <label><input type="checkbox" id="order-thu-sun" /> 今晚是周四夜单或周日夜单（订购量 ×2.5）</label>
-        </div>
         <div id="order-items"></div>
         <button type="button" class="copy-btn" id="order-copy-btn">📋 一键复制订货清单</button>
         <span class="copy-ok" id="order-copy-ok" hidden>已复制</span>
         <div class="tool-preview" id="order-preview"></div>
-        <p class="lookup-note">库存按每个品类实际单位填：有"箱"规格的填箱数，其余（烈酒/VIP酒/CHB）直接填个数。需订购数量已经换算成系统下单用的"个"数，不用你再算。VIP White/Red wine 没有代码，需要你自己在系统里搜索确认；CHB 的箱规不确定，先按个数直接计算，如果其实是按箱订的告诉我改。数据来自 2026-10-10 的 PM Stock Requirement.xlsx + 你发的产品代码。</p>
+        <p class="lookup-note">库存按每个品类实际单位填：有"箱"规格的填箱数，其余（烈酒/VIP酒）直接填个数。需订购数量已经换算成系统下单用的"个"数，不用你再算。VIP White/Red wine 暂时没有代码，先空着，需要你自己在系统里搜索确认。数据来自 2026-10-10 的 PM Stock Requirement.xlsx + 你发的产品代码。</p>
       </div>
     </details>
 
@@ -659,9 +656,9 @@
       { name: "Stone & Wood Pacific Ale", code: "L0000285946", unit: "box", caseSize: 24, parDaily: 2, parWeekend: 2 },
       { name: "Little Creatures Pale Ale", code: "L0000266231", unit: "box", caseSize: 24, parDaily: 2, parWeekend: 2 },
       { name: "Kirin Ichiban", code: "L0000395562", unit: "box", caseSize: 24, parDaily: 2, parWeekend: 2 },
-      { name: "James Boag Light", code: "L0000243440", unit: "box", caseSize: 24, parDaily: 1, parWeekend: 1 },
+      { name: "James Boag Light", code: "243440", unit: "box", caseSize: 24, parDaily: 1, parWeekend: 1 },
       { name: "Hahn Super Dry", code: "L0000243739", unit: "box", caseSize: 24, parDaily: 1, parWeekend: 1 },
-      { name: "CHB", code: "L0004255940", unit: "each", caseSize: null, parDaily: 2, parWeekend: 2, note: "箱规不确定，先按个数直接计算" },
+      { name: "CHB", code: "L0004255940", unit: "box", caseSize: 16, parDaily: 2, parWeekend: 2, note: "箱规16个/箱，待她本人再确认" },
     ]},
     { cat: "葡萄酒 Wine", items: [
       { name: "Shiraz", code: "L0001374482", unit: "box", caseSize: 12, parDaily: 3, parWeekend: 4 },
@@ -684,7 +681,7 @@
     ]},
     { cat: "其他 Other", items: [
       { name: "Lime Cordial", code: "L0000220474", unit: "each", caseSize: null, parDaily: 2, parWeekend: 2 },
-      { name: "Angostrua Bitter", code: "L0000218605", unit: "each", caseSize: null, parDaily: 1, parWeekend: 1 },
+      { name: "Angostrua Bitter", code: "218605", unit: "each", caseSize: null, parDaily: 1, parWeekend: 1 },
     ]},
   ];
 
@@ -694,8 +691,7 @@
   }
   function computeOrderQty(item, stockVal) {
     const par = currentParMode() === "weekend" ? item.parWeekend : item.parDaily;
-    let diff = Math.max(0, par - stockVal);
-    if (document.getElementById("order-thu-sun").checked) diff *= 2.5;
+    const diff = Math.max(0, par - stockVal);
     const qty = item.unit === "box" ? diff * item.caseSize : diff;
     return Math.round(qty);
   }
@@ -776,7 +772,6 @@
     });
     document.getElementById("order-par-daily").addEventListener("change", refreshOrder);
     document.getElementById("order-par-weekend").addEventListener("change", refreshOrder);
-    document.getElementById("order-thu-sun").addEventListener("change", refreshOrder);
     document.getElementById("order-copy-btn").addEventListener("click", () => {
       copyText(buildOrderText(), "order-copy-ok");
     });
