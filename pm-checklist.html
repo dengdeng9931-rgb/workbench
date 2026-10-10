@@ -295,6 +295,15 @@
   .tool-panel-head h2 { font-size: 15.5px; font-weight: 600; margin: 0; }
   .tool-panel-body { padding: 14px 18px 16px; }
   .tool-panel-body > .lookup-block { margin: 12px -18px 0; }
+
+  .misc-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .misc-table th, .misc-table td { padding: 7px 6px; text-align: left; border-bottom: 1px solid var(--line); }
+  .misc-table th { font-size: 10.5px; color: var(--ink-soft); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+  .misc-table th:first-child, .misc-table td:first-child { width: 44%; }
+  .misc-name { font-size: 13px; color: var(--ink); }
+  .misc-input { width: 44px; font: inherit; font-size: 13px; padding: 5px 6px; border: 1px solid var(--line); border-radius: 7px; background: var(--paper-sunken); color: var(--ink); }
+  .misc-remind { font-size: 12px; color: var(--done); white-space: nowrap; }
+  .misc-remind.misc-warn { color: var(--danger); font-weight: 600; }
 </style>
 </head>
 <body>
@@ -311,6 +320,7 @@
     <button type="button" class="page-tab-btn" data-page="powwow-chef">Powwow · Chef</button>
     <button type="button" class="page-tab-btn" data-page="amenity">Amenity</button>
     <button type="button" class="page-tab-btn" data-page="stock">Stock</button>
+    <button type="button" class="page-tab-btn" data-page="misc">Misc</button>
   </nav>
 
   <section class="page" id="page-checklist">
@@ -408,6 +418,30 @@
             <p class="lookup-note">Tequila Gold 在系统里对应品牌是 <b>Olmeca Gold</b>，搜索时注意关键词。周四夜单和周日夜单，订购量需 ×2.5。最后更新 2026-09-17，改了原表要记得告诉我同步。</p>
           </div>
         </details>
+      </div>
+    </section>
+  </section>
+
+  <section class="page" id="page-misc" hidden>
+    <section class="tool-panel">
+      <div class="tool-panel-head"><h2>📦 Misc 库存表（截图发群里）</h2></div>
+      <div class="tool-panel-body">
+        <table class="misc-table">
+          <thead>
+            <tr><th>产品名字</th><th>BOH</th><th>Cage</th><th>提醒</th></tr>
+          </thead>
+          <tbody id="misc-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="tool-panel">
+      <div class="tool-panel-head"><h2>📋 订货清单（复制后直接用）</h2></div>
+      <div class="tool-panel-body">
+        <button type="button" class="copy-btn" id="misc-order-copy-btn">📋 一键复制订货清单</button>
+        <span class="copy-ok" id="misc-order-copy-ok" hidden>已复制</span>
+        <div class="tool-preview" id="misc-order-preview"></div>
+        <p class="lookup-note">"产品名字"是你平时用的简称，复制出来的是系统里的全名，后面带起订量提醒（有的起订量比较大，比如餐巾纸起订15-20箱，算出来的缺口数量不够的话自己按起订量调整）。数据来自 2026-10-10 的 Exe Lounge Misc.xlsx。</p>
       </div>
     </section>
   </section>
@@ -812,6 +846,96 @@
     refreshOrder();
   }
 
+  // Misc 耗材 par/起订量/系统全名/代码，来自 Exe Lounge Misc.xlsx（2026-10-10，Sheet1 (2)）
+  const MISC_ITEMS = [
+    { name: "Cocktail napkins", unit: "Box", parStock: 2, minOrder: "10 Boxes", sysName: "Napkin Cocktail Hotel/2000/BX", code: null },
+    { name: "Napkins", unit: "Box", parStock: 4, minOrder: "15 - 20 Boxes", sysName: "Napkin Dinner White A La Carte/500/BX", code: "L0000220771" },
+    { name: "Paper cups", unit: "Box", parStock: 2, minOrder: "6 Boxes", sysName: "Disposalbes Cup Foam Coffee/8OZ/CTN", code: "L0000245154" },
+    { name: "Cup lids", unit: "Box", parStock: 2, minOrder: "4 Boxes", sysName: "BIO Lid White 8oz/1000/CTN", code: null },
+    { name: "Stirrers", unit: "Box", parStock: 2, minOrder: "10 Packs", sysName: "Wooden Stirrer/1000/PK", code: null },
+    { name: "Chopsticks", unit: "Box", parStock: 5, minOrder: "10 Packs", sysName: "Disposables Chopstick Japanese/100/PK", code: null },
+    { name: "Gloves", unit: "Box", parStock: 2, minOrder: "10 Packs", sysName: "Glove Vinyl Clear Powder Free Large/100/PKT", code: null },
+    { name: "Brown Chux", unit: "Roll", parStock: 2, minOrder: "4 Rolls", sysName: "Wipes Roll Heavy Duty Espresso/50X30CM/ EA", code: null },
+    { name: "CO2 for sparkling water", unit: "Tank", parStock: 1, minOrder: "1 Tank", sysName: "Co2 Gas/6KG/EA", code: null },
+    { name: "Helium tank", unit: "Tank", parStock: 1, minOrder: "1 Tank", sysName: "Helium Gas/D Size/EA", code: null },
+    { name: "Biscuit (EAL)", unit: "Box", parStock: 2, minOrder: "6 Box", sysName: "Biscuits P/C Scotch & Nice/29.8G/150/CTN", code: "414001" },
+    { name: "Chocolatier Box", unit: "Box", parStock: 2, minOrder: "6 Box", sysName: "Chocolatier Pure Indulgence Assorted Chocolate/40G/20EA/BX", code: null },
+    { name: "Decaf Coffee", unit: "Box", parStock: 3, minOrder: "5 Box", sysName: "Lor Caps Ristretto Decaf UTZ/10PCx10/BX", code: null },
+    { name: "Coffee machine cleaning tablets", unit: "Jar", parStock: 2, minOrder: "4 Jar", sysName: "Cafetto S15 Tablets/BTL", code: "610106" },
+    { name: "Milk frother cleaner (blue chemical)", unit: "Bottle", parStock: 2, minOrder: "4 Bottles", sysName: "Milk Line Cleaner/EA", code: null },
+  ];
+
+  let miscRefs = [];
+  function computeMiscQty(item, cage, boh) {
+    return Math.max(0, item.parStock - (cage + boh));
+  }
+  function buildMiscOrderText() {
+    const lines = [];
+    miscRefs.forEach(({ item, bohInput, cageInput }) => {
+      const cage = parseFloat(cageInput.value) || 0;
+      const boh = parseFloat(bohInput.value) || 0;
+      const qty = computeMiscQty(item, cage, boh);
+      if (qty > 0) {
+        const codePart = item.code ? `  代码:${item.code}` : "";
+        lines.push(`${item.sysName}  建议订 ${qty} ${item.unit}${codePart}（起订量：${item.minOrder}）`);
+      }
+    });
+    return lines.length ? lines.join("\n") : "（当前输入下不需要订货）";
+  }
+  function refreshMisc() {
+    miscRefs.forEach(({ item, bohInput, cageInput, remindEl }) => {
+      const cage = parseFloat(cageInput.value) || 0;
+      const boh = parseFloat(bohInput.value) || 0;
+      const qty = computeMiscQty(item, cage, boh);
+      remindEl.textContent = qty > 0 ? "⚠️ 需订货" : "✅ 充足";
+      remindEl.classList.toggle("misc-warn", qty > 0);
+    });
+    document.getElementById("misc-order-preview").textContent = buildMiscOrderText();
+  }
+  function initMisc() {
+    const tbody = document.getElementById("misc-tbody");
+    tbody.innerHTML = "";
+    miscRefs = [];
+    MISC_ITEMS.forEach(item => {
+      const tr = document.createElement("tr");
+
+      const tdName = document.createElement("td");
+      tdName.className = "misc-name";
+      tdName.textContent = item.name;
+
+      const tdBoh = document.createElement("td");
+      const bohInput = document.createElement("input");
+      bohInput.type = "number";
+      bohInput.min = "0";
+      bohInput.className = "misc-input";
+      bohInput.placeholder = "0";
+      bohInput.addEventListener("input", refreshMisc);
+      tdBoh.appendChild(bohInput);
+
+      const tdCage = document.createElement("td");
+      const cageInput = document.createElement("input");
+      cageInput.type = "number";
+      cageInput.min = "0";
+      cageInput.className = "misc-input";
+      cageInput.placeholder = "0";
+      cageInput.addEventListener("input", refreshMisc);
+      tdCage.appendChild(cageInput);
+
+      const tdRemind = document.createElement("td");
+      const remindEl = document.createElement("span");
+      remindEl.className = "misc-remind";
+      tdRemind.appendChild(remindEl);
+
+      tr.append(tdName, tdBoh, tdCage, tdRemind);
+      tbody.appendChild(tr);
+      miscRefs.push({ item, bohInput, cageInput, remindEl });
+    });
+    document.getElementById("misc-order-copy-btn").addEventListener("click", () => {
+      copyText(buildMiscOrderText(), "misc-order-copy-ok");
+    });
+    refreshMisc();
+  }
+
   // 周期边界是每天05:00——现在如果还没到今天05:00，就还算在"昨天05:00开始"那个周期里
   function periodKeyNow() {
     const now = new Date();
@@ -988,6 +1112,7 @@
   initAmenities();
   initChef();
   initBeverageOrder();
+  initMisc();
 
   render();
   // 万一这个页面开着跨过了早上5点，每分钟检查一次要不要清空——
