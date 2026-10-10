@@ -302,6 +302,7 @@
   .misc-table th:first-child, .misc-table td:first-child { width: 44%; }
   .misc-name { font-size: 13px; color: var(--ink); }
   .misc-input { width: 44px; font: inherit; font-size: 13px; padding: 5px 6px; border: 1px solid var(--line); border-radius: 7px; background: var(--paper-sunken); color: var(--ink); }
+  .misc-input-wide { width: 76px; }
   .misc-par { font-size: 13px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
   .misc-cat-row td {
     font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
@@ -448,8 +449,9 @@
             <tr><th>系统全名</th><th>需要订的数量</th><th>参考定量</th></tr>
           </thead>
           <tbody id="misc-order-tbody"></tbody>
+          <tbody id="misc-order-hamper-tbody"></tbody>
         </table>
-        <p class="lookup-note">"需要订的数量"根据上面库存表的 BOH+Cage 跟 Par Stock 自动算，填了数字会自动更新。"参考定量"：日常耗材是起订量（有的比较大，比如餐巾纸起订15-20箱）；S&D Hamper 那几样没有库存记录，是按你给的两张历史订单截图整理的参考订货量，不会自动变。数据来自 2026-10-10 的 Exe Lounge Misc.xlsx + 你给的订单截图。</p>
+        <p class="lookup-note">日常耗材："需要订的数量"跟上面库存表联动——根据你填的 BOH+Cage 和 Par Stock 自动算缺口，自动更新，不用自己写；"参考定量"是起订量（有的比较大，比如餐巾纸起订15-20箱）。S&D Hamper 没有库存记录也没法自动算，"需要订的数量"那一栏需要你自己填，"参考定量"列的是按你给的历史订单截图整理的参考订货量，供你参考——Roasted Nuts 那项额外有起订金额 Minimum $200 的要求。数据来自 2026-10-10 的 Exe Lounge Misc.xlsx + 你给的订单截图。</p>
       </div>
     </section>
   </section>
@@ -878,21 +880,25 @@
     ]},
   ];
 
-  // S&D Hamper：没有库存/par记录，只是按用户给的两张历史订单截图整理的参考订货量
-  const HAMPER_REF_ITEMS = [
-    { sysName: "Pastry Other/Byron Bay Milk Chocolate Chunky/60G/12/CTN", refQty: "1 CTN" },
-    { sysName: "Pastry Other/Byron Bay Rocky Road/60G/12/CTN", refQty: "2 CTN" },
-    { sysName: "60GX12(12) S/WRAP G/F Triple Choc Fudge Cookie", refQty: "2 EA" },
-    { sysName: "Dry/Nuts/SESH Campfire Nut Mix/130G/12/BX", refQty: "2 BX" },
-    { sysName: "Dry/Nuts/SESH Nippers Sweet Salty Nut Mix/130G/12/BX", refQty: "2 BX" },
-    { sysName: "Pastry Others/Boodles Boosted Choc Speckle/90G/10/BX", refQty: "1–3 BX" },
-    { sysName: "Pastry Others/Boodles Choc & Hazelnut/90G/10/BX", refQty: "1–2 BX" },
-    { sysName: "Pastry Others/Boodles Choc & Caramel/90G/10/BX", refQty: "1 BX" },
-    { sysName: "Dry/Roasted Nuts Australian Lime & Sea salt/12Ea/CTN", refQty: "10 CTN" },
-    { sysName: "Dry/Red Rock Sea Salt Chips/45G/18EA", refQty: "2 CTN" },
-    { sysName: "Mini Bar/Red Rock Sour Cream & Sweet Chilli/45G/EA", refQty: "2 CTN" },
-    { sysName: "Potato Chips Sea Salt & Balsamic Vinegar/18x45gr", refQty: "2 CTN" },
+  // S&D Hamper：没有 par 值，不能自动算缺口；参考定量按用户给的两张历史订单截图整理，
+  // 后两项（Sundried Tomato & Basil Bagels / Chocolate Coated Brittle）是 xlsx 里新出现的，没有历史参考
+  const HAMPER_ITEMS = [
+    { name: "Byron Bay Milk Chocolate Chunky", unit: "CTN", sysName: "Pastry Other/Byron Bay Milk Chocolate Chunky/60G/12/CTN", refQty: "1 CTN" },
+    { name: "Byron Bay Rocky Road", unit: "CTN", sysName: "Pastry Other/Byron Bay Rocky Road/60G/12/CTN", refQty: "2 CTN" },
+    { name: "Triple Choc Fudge Cookie", unit: "EA", sysName: "60GX12(12) S/WRAP G/F Triple Choc Fudge Cookie", refQty: "2 EA" },
+    { name: "SESH Campfire Nut Mix", unit: "BX", sysName: "Dry/Nuts/SESH Campfire Nut Mix/130G/12/BX", refQty: "2 BX" },
+    { name: "SESH Nippers Sweet Salty Nut Mix", unit: "BX", sysName: "Dry/Nuts/SESH Nippers Sweet Salty Nut Mix/130G/12/BX", refQty: "2 BX" },
+    { name: "Boodles Boosted Choc Speckle", unit: "BX", sysName: "Pastry Others/Boodles Boosted Choc Speckle/90G/10/BX", refQty: "1–3 BX" },
+    { name: "Boodles Choc & Hazelnut", unit: "BX", sysName: "Pastry Others/Boodles Choc & Hazelnut/90G/10/BX", refQty: "1–2 BX" },
+    { name: "Boodles Choc & Caramel", unit: "BX", sysName: "Pastry Others/Boodles Choc & Caramel/90G/10/BX", refQty: "1 BX" },
+    { name: "Roasted Nuts Australian Lime & Sea salt", unit: "CTN", sysName: "Dry/Roasted Nuts Australian Lime & Sea salt/12Ea/CTN", refQty: "10 CTN", priceNote: "起订金额 Minimum $200" },
+    { name: "Red Rock Sea Salt Chips", unit: "CTN", sysName: "Dry/Red Rock Sea Salt Chips/45G/18EA", refQty: "2 CTN" },
+    { name: "Red Rock Sour Cream & Sweet Chilli", unit: "CTN", sysName: "Mini Bar/Red Rock Sour Cream & Sweet Chilli/45G/EA", refQty: "2 CTN" },
+    { name: "Potato Chips Sea Salt & Balsamic Vinegar", unit: "CTN", sysName: "Potato Chips Sea Salt & Balsamic Vinegar/18x45gr", refQty: "2 CTN" },
+    { name: "Sundried Tomato & Basil Bagels", unit: "EA", sysName: "Sundried Tomato & Basil Bagels 50g #22146", refQty: null },
+    { name: "Chocolate Coated Brittle", unit: null, sysName: "Chocolate Coated Brittle 135g #22161", refQty: null },
   ];
+  MISC_GROUPS.push({ cat: "S&D Hamper", items: HAMPER_ITEMS });
 
   let miscRefs = [];
   function computeMiscQty(item, cage, boh) {
@@ -903,6 +909,7 @@
     tbody.innerHTML = "";
     let any = false;
     miscRefs.forEach(({ item, bohInput, cageInput }) => {
+      if (item.parStock === undefined) return; // S&D Hamper 没有 par，走单独的静态表格，不在这里算
       const cage = parseFloat(cageInput.value) || 0;
       const boh = parseFloat(bohInput.value) || 0;
       const qty = computeMiscQty(item, cage, boh);
@@ -927,30 +934,44 @@
       tr.appendChild(td);
       tbody.appendChild(tr);
     }
-
+  }
+  // S&D Hamper 的"需要订的数量"是手填输入框，只建一次，不能跟着 refreshMiscOrderTable 一起重建，
+  // 不然她刚打的字会被每次库存输入触发的刷新清空
+  function buildHamperOrderRows() {
+    const tbody = document.getElementById("misc-order-hamper-tbody");
+    tbody.innerHTML = "";
     const capRow = document.createElement("tr");
     capRow.className = "misc-cat-row";
     const capTd = document.createElement("td");
     capTd.colSpan = 3;
-    capTd.textContent = "S&D Hamper 参考（历史订货量，非实时库存）";
+    capTd.textContent = "S&D Hamper（没有库存自动核算，自己填需要订的数量）";
     capRow.appendChild(capTd);
     tbody.appendChild(capRow);
 
-    HAMPER_REF_ITEMS.forEach(h => {
+    HAMPER_ITEMS.forEach(item => {
       const tr = document.createElement("tr");
       const td1 = document.createElement("td");
-      td1.textContent = h.sysName;
+      td1.textContent = item.sysName;
+
       const td2 = document.createElement("td");
-      td2.textContent = "—";
+      const qtyInput = document.createElement("input");
+      qtyInput.type = "text";
+      qtyInput.className = "misc-input misc-input-wide";
+      qtyInput.placeholder = item.refQty ? "如 " + item.refQty : "自己填";
+      td2.appendChild(qtyInput);
+
       const td3 = document.createElement("td");
-      td3.textContent = h.refQty;
+      let refText = item.refQty || "暂无参考";
+      if (item.priceNote) refText += `（${item.priceNote}）`;
+      td3.textContent = refText;
+
       tr.append(td1, td2, td3);
       tbody.appendChild(tr);
     });
   }
   function refreshMisc() {
-    miscRefs.forEach(({ item, bohInput, cageInput, parEl }) => {
-      parEl.textContent = item.parStock;
+    miscRefs.forEach(({ item, parEl }) => {
+      parEl.textContent = item.parStock !== undefined ? item.parStock : "—";
     });
     refreshMiscOrderTable();
   }
@@ -1002,6 +1023,7 @@
         miscRefs.push({ item, bohInput, cageInput, parEl });
       });
     });
+    buildHamperOrderRows();
     refreshMisc();
   }
 
