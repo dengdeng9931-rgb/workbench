@@ -398,10 +398,7 @@
           <label><input type="radio" name="order-par-mode" id="order-par-weekend" /> 周末</label>
         </div>
         <div id="order-items"></div>
-        <button type="button" class="copy-btn" id="order-copy-btn">📋 一键复制订货清单</button>
-        <span class="copy-ok" id="order-copy-ok" hidden>已复制</span>
-        <div class="tool-preview" id="order-preview"></div>
-        <p class="lookup-note">库存按每个品类实际单位填：有"箱"规格的填箱数，其余（烈酒/VIP酒）直接填个数。需订购数量已经换算成系统下单用的"个"数，不用你再算。VIP White/Red wine 暂时没有代码，先空着，需要你自己在系统里搜索确认。数据来自 2026-10-10 的 PM Stock Requirement.xlsx + 你发的产品代码。</p>
+        <p class="lookup-note">软饮/水/啤酒/葡萄酒：填当前库存（有"箱"规格的填箱数），自动算出需订购的"个"数。烈酒 Liquor 不用填库存——那栏收集的是空瓶子，直接在方框里写空瓶数，这个数字本身就是要订购的数量（个）。VIP White/Red wine 暂时没有代码，先空着，需要你自己在系统里搜索确认。数据来自 2026-10-10 的 PM Stock Requirement.xlsx + 你发的产品代码。</p>
 
         <details class="lookup-block">
           <summary>📋 系统全名对照表（订货登记时查这个）</summary>
@@ -530,7 +527,7 @@
   };
   const WEEKDAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   // 每天都要数的固定项，跟当天的 3 道热食一起出现在 Remaining Items 里
-  const CHEF_FIXED_ITEMS = ["Soup of the Day", "Fruit Bowl"];
+  const CHEF_FIXED_ITEMS = ["Soup", "Fruit Bowl"];
 
   function toISO(d) {
     const pad = (n) => String(n).padStart(2, "0");
@@ -711,15 +708,15 @@
       { name: "VIP White wine", code: null, unit: "each", caseSize: null, parDaily: 6, parWeekend: 6, note: "没有代码，需系统内搜索确认" },
       { name: "VIP Red wine", code: null, unit: "each", caseSize: null, parDaily: 6, parWeekend: 6, note: "没有代码，需系统内搜索确认" },
     ]},
-    { cat: "烈酒 Liquor", items: [
-      { name: "Absolut Blue Vodka", code: "L0000218736", unit: "each", caseSize: null, parDaily: 6, parWeekend: 6 },
-      { name: "Gin Beefeta", code: "L0000218762", unit: "each", caseSize: null, parDaily: 7, parWeekend: 7 },
-      { name: "Tequila Gold", code: "L0000243649", unit: "each", caseSize: null, parDaily: 3, parWeekend: 3 },
-      { name: "Bacardi", code: "L0000218780", unit: "each", caseSize: null, parDaily: 3, parWeekend: 3 },
-      { name: "Chivas", code: "L0000218872", unit: "each", caseSize: null, parDaily: 5, parWeekend: 5 },
-      { name: "Jack Daniel", code: "L0000243847", unit: "each", caseSize: null, parDaily: 6, parWeekend: 6 },
-      { name: "Aperol", code: "L0000218619", unit: "each", caseSize: null, parDaily: 2, parWeekend: 2 },
-      { name: "Campari", code: "L0000218622", unit: "each", caseSize: null, parDaily: 3, parWeekend: 3 },
+    { cat: "烈酒 Liquor", note: "收集空瓶子，不统计库存——方框里直接写空瓶数＝需要订购的数量（个）", items: [
+      { name: "Absolut Blue Vodka", code: "L0000218736", directOrder: true },
+      { name: "Gin Beefeta", code: "L0000218762", directOrder: true },
+      { name: "Tequila Gold", code: "L0000243649", directOrder: true },
+      { name: "Bacardi", code: "L0000218780", directOrder: true },
+      { name: "Chivas", code: "L0000218872", directOrder: true },
+      { name: "Jack Daniel", code: "L0000243847", directOrder: true },
+      { name: "Aperol", code: "L0000218619", directOrder: true },
+      { name: "Campari", code: "L0000218622", directOrder: true },
     ]},
     { cat: "其他 Other", items: [
       { name: "Lime Cordial", code: "L0000220474", unit: "each", caseSize: null, parDaily: 2, parWeekend: 2 },
@@ -737,26 +734,14 @@
     const qty = item.unit === "box" ? diff * item.caseSize : diff;
     return Math.round(qty);
   }
-  function buildOrderText() {
-    const lines = [];
-    beverageRefs.forEach(({ item, stockInput }) => {
-      const v = parseFloat(stockInput.value);
-      const stockVal = isNaN(v) ? 0 : v;
-      const qty = computeOrderQty(item, stockVal);
-      if (qty > 0) {
-        lines.push(`${item.name}  ${item.code || "⚠️无代码待确认"}  x${qty}`);
-      }
-    });
-    return lines.length ? lines.join("\n") : "（当前输入下不需要订货）";
-  }
   function refreshOrder() {
     beverageRefs.forEach(({ item, stockInput, needEl }) => {
+      if (item.directOrder) return;
       const v = parseFloat(stockInput.value);
       const stockVal = isNaN(v) ? 0 : v;
       const qty = computeOrderQty(item, stockVal);
       needEl.textContent = qty > 0 ? `→ ${qty} 个` : "—";
     });
-    document.getElementById("order-preview").textContent = buildOrderText();
   }
   function initBeverageOrder() {
     const container = document.getElementById("order-items");
@@ -767,6 +752,12 @@
       catEl.className = "lookup-cat";
       catEl.textContent = group.cat;
       container.appendChild(catEl);
+      if (group.note) {
+        const groupNoteEl = document.createElement("div");
+        groupNoteEl.className = "order-note";
+        groupNoteEl.textContent = "⚠️ " + group.note;
+        container.appendChild(groupNoteEl);
+      }
       group.items.forEach(item => {
         const row = document.createElement("div");
         row.className = "order-row";
@@ -793,30 +784,31 @@
         const stockInput = document.createElement("input");
         stockInput.type = "number";
         stockInput.min = "0";
-        stockInput.step = "0.5";
+        stockInput.step = item.directOrder ? "1" : "0.5";
         stockInput.className = "tool-number";
-        stockInput.placeholder = "0";
+        stockInput.placeholder = item.directOrder ? "需订几个" : "0";
         const unitLabel = document.createElement("span");
         unitLabel.className = "order-unit";
-        unitLabel.textContent = item.unit === "box" ? "箱" : "个";
+        unitLabel.textContent = item.directOrder ? "个" : (item.unit === "box" ? "箱" : "个");
         stockWrap.append(stockInput, unitLabel);
 
-        const needEl = document.createElement("div");
-        needEl.className = "order-need";
-        needEl.textContent = "—";
+        row.append(nameWrap, stockWrap);
 
-        stockInput.addEventListener("input", refreshOrder);
+        let needEl = null;
+        if (!item.directOrder) {
+          needEl = document.createElement("div");
+          needEl.className = "order-need";
+          needEl.textContent = "—";
+          stockInput.addEventListener("input", refreshOrder);
+          row.appendChild(needEl);
+        }
 
-        row.append(nameWrap, stockWrap, needEl);
         container.appendChild(row);
         beverageRefs.push({ item, stockInput, needEl });
       });
     });
     document.getElementById("order-par-daily").addEventListener("change", refreshOrder);
     document.getElementById("order-par-weekend").addEventListener("change", refreshOrder);
-    document.getElementById("order-copy-btn").addEventListener("click", () => {
-      copyText(buildOrderText(), "order-copy-ok");
-    });
     refreshOrder();
   }
 
