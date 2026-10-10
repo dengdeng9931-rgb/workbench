@@ -254,6 +254,22 @@
     border-radius: 9px; font-size: 12.5px; white-space: pre-wrap;
     color: var(--ink-soft); font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   }
+
+  .order-row {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 7px 4px; border-radius: 8px;
+  }
+  .order-row:hover { background: var(--paper-sunken); }
+  .order-name { flex: 1 1 140px; min-width: 120px; }
+  .order-name .nm { font-size: 13.5px; color: var(--ink); }
+  .order-code { font-size: 11px; color: var(--ink-faint); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .order-note { font-size: 11px; color: var(--danger); margin-top: 1px; }
+  .order-stock { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+  .order-unit { font-size: 12px; color: var(--ink-soft); }
+  .order-need {
+    font-size: 12.5px; color: var(--accent); font-variant-numeric: tabular-nums;
+    min-width: 64px; text-align: right; flex-shrink: 0;
+  }
 </style>
 </head>
 <body>
@@ -320,6 +336,24 @@
         <button type="button" class="copy-btn" id="chef-copy-btn">📋 一键复制</button>
         <span class="copy-ok" id="chef-copy-ok" hidden>已复制</span>
         <div class="tool-preview" id="chef-preview"></div>
+      </div>
+    </details>
+
+    <details class="lookup-block">
+      <summary>📦 订货计算器（输入库存箱数，自动算需订购的"个"数）</summary>
+      <div class="lookup-body">
+        <div class="tool-row">
+          <label><input type="radio" name="order-par-mode" id="order-par-daily" checked /> 日常</label>
+          <label><input type="radio" name="order-par-mode" id="order-par-weekend" /> 周末</label>
+        </div>
+        <div class="tool-row">
+          <label><input type="checkbox" id="order-thu-sun" /> 今晚是周四夜单或周日夜单（订购量 ×2.5）</label>
+        </div>
+        <div id="order-items"></div>
+        <button type="button" class="copy-btn" id="order-copy-btn">📋 一键复制订货清单</button>
+        <span class="copy-ok" id="order-copy-ok" hidden>已复制</span>
+        <div class="tool-preview" id="order-preview"></div>
+        <p class="lookup-note">库存按每个品类实际单位填：有"箱"规格的填箱数，其余（烈酒/VIP酒/CHB）直接填个数。需订购数量已经换算成系统下单用的"个"数，不用你再算。VIP White/Red wine 没有代码，需要你自己在系统里搜索确认；CHB 的箱规不确定，先按个数直接计算，如果其实是按箱订的告诉我改。数据来自 2026-10-10 的 PM Stock Requirement.xlsx + 你发的产品代码。</p>
       </div>
     </details>
 
@@ -604,6 +638,151 @@
     });
   }
 
+  // 饮品订货参照表：par/周末par/系统代码/箱规，来自 PM Stock Requirement.xlsx（2026-10-10）+ 用户提供的产品代码
+  const BEVERAGE_ORDER = [
+    { cat: "软饮 Soft Drinks", items: [
+      { name: "Bitter Lemon", code: "L0000243297", unit: "box", caseSize: 24, parDaily: 3, parWeekend: 4 },
+      { name: "Ginger Ale", code: "L0000243400", unit: "box", caseSize: 24, parDaily: 3, parWeekend: 4 },
+      { name: "Pepsi Max", code: "L0000220493", unit: "box", caseSize: 24, parDaily: 6, parWeekend: 12 },
+      { name: "Pepsi Cola", code: "L0000220491", unit: "box", caseSize: 24, parDaily: 4, parWeekend: 8 },
+      { name: "Lemonade", code: "L0000220490", unit: "box", caseSize: 24, parDaily: 3, parWeekend: 5 },
+      { name: "Tonic Water", code: "L0000220501", unit: "box", caseSize: 24, parDaily: 2, parWeekend: 2 },
+      { name: "Sodawater", code: "L0000243432", unit: "box", caseSize: 24, parDaily: 2, parWeekend: 2 },
+    ]},
+    { cat: "水 Water", items: [
+      { name: "Sparkling Water 1000ml", code: "L0001235156", unit: "box", caseSize: 12, parDaily: 1, parWeekend: 1 },
+      { name: "Sparkling Water 500ml", code: "L0001511962", unit: "box", caseSize: 24, parDaily: 1, parWeekend: 1 },
+      { name: "Still Water 1000ml", code: "L0001511960", unit: "box", caseSize: 12, parDaily: 1, parWeekend: 1 },
+      { name: "Still Water 500ml", code: "L0001235147", unit: "box", caseSize: 24, parDaily: 1, parWeekend: 1 },
+    ]},
+    { cat: "啤酒 Beer", items: [
+      { name: "Stone & Wood Pacific Ale", code: "L0000285946", unit: "box", caseSize: 24, parDaily: 2, parWeekend: 2 },
+      { name: "Little Creatures Pale Ale", code: "L0000266231", unit: "box", caseSize: 24, parDaily: 2, parWeekend: 2 },
+      { name: "Kirin Ichiban", code: "L0000395562", unit: "box", caseSize: 24, parDaily: 2, parWeekend: 2 },
+      { name: "James Boag Light", code: "L0000243440", unit: "box", caseSize: 24, parDaily: 1, parWeekend: 1 },
+      { name: "Hahn Super Dry", code: "L0000243739", unit: "box", caseSize: 24, parDaily: 1, parWeekend: 1 },
+      { name: "CHB", code: "L0004255940", unit: "each", caseSize: null, parDaily: 2, parWeekend: 2, note: "箱规不确定，先按个数直接计算" },
+    ]},
+    { cat: "葡萄酒 Wine", items: [
+      { name: "Shiraz", code: "L0001374482", unit: "box", caseSize: 12, parDaily: 3, parWeekend: 4 },
+      { name: "Pinot Noir", code: "L0001691535", unit: "box", caseSize: 12, parDaily: 3, parWeekend: 3 },
+      { name: "Chardonnay", code: "L0001691536", unit: "box", caseSize: 12, parDaily: 3, parWeekend: 3 },
+      { name: "Sauv Blan Semillon", code: "L0003260326", unit: "box", caseSize: 12, parDaily: 3, parWeekend: 3 },
+      { name: "Brut Cuvee", code: "L0001374472", unit: "box", caseSize: 12, parDaily: 3, parWeekend: 3 },
+      { name: "VIP White wine", code: null, unit: "each", caseSize: null, parDaily: 6, parWeekend: 6, note: "没有代码，需系统内搜索确认" },
+      { name: "VIP Red wine", code: null, unit: "each", caseSize: null, parDaily: 6, parWeekend: 6, note: "没有代码，需系统内搜索确认" },
+    ]},
+    { cat: "烈酒 Liquor", items: [
+      { name: "Absolut Blue Vodka", code: "L0000218736", unit: "each", caseSize: null, parDaily: 6, parWeekend: 6 },
+      { name: "Gin Beefeta", code: "L0000218762", unit: "each", caseSize: null, parDaily: 7, parWeekend: 7 },
+      { name: "Tequila Gold", code: "L0000243649", unit: "each", caseSize: null, parDaily: 3, parWeekend: 3 },
+      { name: "Bacardi", code: "L0000218780", unit: "each", caseSize: null, parDaily: 3, parWeekend: 3 },
+      { name: "Chivas", code: "L0000218872", unit: "each", caseSize: null, parDaily: 5, parWeekend: 5 },
+      { name: "Jack Daniel", code: "L0000243847", unit: "each", caseSize: null, parDaily: 6, parWeekend: 6 },
+      { name: "Aperol", code: "L0000218619", unit: "each", caseSize: null, parDaily: 2, parWeekend: 2 },
+      { name: "Campari", code: "L0000218622", unit: "each", caseSize: null, parDaily: 3, parWeekend: 3 },
+    ]},
+    { cat: "其他 Other", items: [
+      { name: "Lime Cordial", code: "L0000220474", unit: "each", caseSize: null, parDaily: 2, parWeekend: 2 },
+      { name: "Angostrua Bitter", code: "L0000218605", unit: "each", caseSize: null, parDaily: 1, parWeekend: 1 },
+    ]},
+  ];
+
+  let beverageRefs = [];
+  function currentParMode() {
+    return document.getElementById("order-par-weekend").checked ? "weekend" : "daily";
+  }
+  function computeOrderQty(item, stockVal) {
+    const par = currentParMode() === "weekend" ? item.parWeekend : item.parDaily;
+    let diff = Math.max(0, par - stockVal);
+    if (document.getElementById("order-thu-sun").checked) diff *= 2.5;
+    const qty = item.unit === "box" ? diff * item.caseSize : diff;
+    return Math.round(qty);
+  }
+  function buildOrderText() {
+    const lines = [];
+    beverageRefs.forEach(({ item, stockInput }) => {
+      const v = parseFloat(stockInput.value);
+      const stockVal = isNaN(v) ? 0 : v;
+      const qty = computeOrderQty(item, stockVal);
+      if (qty > 0) {
+        lines.push(`${item.name}  ${item.code || "⚠️无代码待确认"}  x${qty}`);
+      }
+    });
+    return lines.length ? lines.join("\n") : "（当前输入下不需要订货）";
+  }
+  function refreshOrder() {
+    beverageRefs.forEach(({ item, stockInput, needEl }) => {
+      const v = parseFloat(stockInput.value);
+      const stockVal = isNaN(v) ? 0 : v;
+      const qty = computeOrderQty(item, stockVal);
+      needEl.textContent = qty > 0 ? `→ ${qty} 个` : "—";
+    });
+    document.getElementById("order-preview").textContent = buildOrderText();
+  }
+  function initBeverageOrder() {
+    const container = document.getElementById("order-items");
+    container.innerHTML = "";
+    beverageRefs = [];
+    BEVERAGE_ORDER.forEach(group => {
+      const catEl = document.createElement("div");
+      catEl.className = "lookup-cat";
+      catEl.textContent = group.cat;
+      container.appendChild(catEl);
+      group.items.forEach(item => {
+        const row = document.createElement("div");
+        row.className = "order-row";
+
+        const nameWrap = document.createElement("div");
+        nameWrap.className = "order-name";
+        const nm = document.createElement("div");
+        nm.className = "nm";
+        nm.textContent = item.name;
+        nameWrap.appendChild(nm);
+        const codeEl = document.createElement("div");
+        codeEl.className = "order-code";
+        codeEl.textContent = item.code || "— 无代码 —";
+        nameWrap.appendChild(codeEl);
+        if (item.note) {
+          const noteEl = document.createElement("div");
+          noteEl.className = "order-note";
+          noteEl.textContent = "⚠️ " + item.note;
+          nameWrap.appendChild(noteEl);
+        }
+
+        const stockWrap = document.createElement("div");
+        stockWrap.className = "order-stock";
+        const stockInput = document.createElement("input");
+        stockInput.type = "number";
+        stockInput.min = "0";
+        stockInput.step = "0.5";
+        stockInput.className = "tool-number";
+        stockInput.placeholder = "0";
+        const unitLabel = document.createElement("span");
+        unitLabel.className = "order-unit";
+        unitLabel.textContent = item.unit === "box" ? "箱" : "个";
+        stockWrap.append(stockInput, unitLabel);
+
+        const needEl = document.createElement("div");
+        needEl.className = "order-need";
+        needEl.textContent = "—";
+
+        stockInput.addEventListener("input", refreshOrder);
+
+        row.append(nameWrap, stockWrap, needEl);
+        container.appendChild(row);
+        beverageRefs.push({ item, stockInput, needEl });
+      });
+    });
+    document.getElementById("order-par-daily").addEventListener("change", refreshOrder);
+    document.getElementById("order-par-weekend").addEventListener("change", refreshOrder);
+    document.getElementById("order-thu-sun").addEventListener("change", refreshOrder);
+    document.getElementById("order-copy-btn").addEventListener("click", () => {
+      copyText(buildOrderText(), "order-copy-ok");
+    });
+    refreshOrder();
+  }
+
   // 周期边界是每天05:00——现在如果还没到今天05:00，就还算在"昨天05:00开始"那个周期里
   function periodKeyNow() {
     const now = new Date();
@@ -771,6 +950,7 @@
   initPowwow();
   initAmenities();
   initChef();
+  initBeverageOrder();
 
   render();
   // 万一这个页面开着跨过了早上5点，每分钟检查一次要不要清空——
