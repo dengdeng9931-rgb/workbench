@@ -1380,6 +1380,116 @@
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; }
   }
+
+  /* ---- Checklist 页（从 pm-checklist.html 搬过来，ck- 前缀避免和其他页面样式冲突）---- */
+  .ck-reset-bar {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    background: var(--accent-soft); border-radius: 12px;
+    padding: 10px 14px; margin-bottom: 16px; font-size: 12.5px; color: var(--ink-soft);
+  }
+  .ck-reset-bar b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .ck-reset-now-btn {
+    font-size: 12px; color: var(--accent); background: none;
+    border: 1px solid var(--accent); border-radius: 7px;
+    padding: 5px 9px; cursor: pointer; flex-shrink: 0;
+  }
+  .ck-reset-now-btn:hover { background: var(--accent); color: #fff; }
+
+  .ck-panel {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .ck-panel-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 18px 10px; border-bottom: 1px solid var(--line);
+    cursor: pointer; list-style: none;
+  }
+  .ck-panel-head::-webkit-details-marker { display: none; }
+  .ck-panel-head::before { content: "▾"; font-size: 10px; color: var(--ink-faint); flex-shrink: 0; }
+  .ck-panel:not([open]) .ck-panel-head::before { content: "▸"; }
+  .ck-panel:not([open]) .ck-panel-head { border-bottom: none; }
+  .ck-panel-head .ck-tag {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 3px 7px; border-radius: 5px;
+    color: var(--accent); background: var(--accent-soft);
+  }
+  .ck-panel-head h2 { font-size: 15.5px; font-weight: 600; margin: 0; flex: 1; }
+  .ck-count-chip {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-variant-numeric: tabular-nums; font-size: 12px; color: var(--ink-soft);
+  }
+
+  .ck-list { padding: 8px 12px 14px; display: flex; flex-direction: column; gap: 3px; }
+  .ck-row {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px;
+    padding: 10px 10px; border-radius: 10px; cursor: pointer; user-select: none;
+  }
+  .ck-row:hover { background: var(--paper-sunken); }
+  .ck-item.sub { margin-left: 20px; }
+  .ck-row .ck-mark {
+    width: 18px; height: 18px; flex-shrink: 0; border-radius: 50%;
+    border: 2px solid var(--ink-faint);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ck-row.done .ck-mark { border-color: var(--done); background: var(--done); }
+  .ck-row .ck-mark svg { width: 11px; height: 11px; display: block; }
+  .ck-row .ck-txt { font-size: 14px; flex: 1 1 auto; min-width: 100px; }
+  .ck-row.done { background: var(--done-soft); }
+  .ck-row.done:hover { background: var(--done-soft); filter: brightness(0.97); }
+  .ck-row.done .ck-txt { color: var(--ink-faint); text-decoration: line-through; text-decoration-color: var(--ink-faint); }
+  .ck-row .ck-thumb {
+    height: 30px; width: auto; max-width: 46px; flex-shrink: 0;
+    border-radius: 5px; border: 1px solid var(--line);
+    cursor: zoom-in; object-fit: cover; display: block;
+  }
+  .ck-row .ck-thumb:hover { border-color: var(--accent); }
+
+  .ck-lightbox {
+    position: fixed; inset: 0; z-index: 999;
+    background: rgba(10, 14, 11, 0.86);
+    display: flex; align-items: center; justify-content: center;
+    padding: 28px; cursor: zoom-out;
+  }
+  .ck-lightbox[hidden] { display: none; }
+  .ck-lightbox img { max-width: 100%; max-height: 100%; border-radius: 10px; box-shadow: var(--shadow); }
+
+  .ck-footer-note { font-size: 12px; color: var(--ink-faint); text-align: center; padding: 8px 18px 0; line-height: 1.6; }
+
+  /* ---- 订货计算器页 ---- */
+  .ord-row {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 7px 4px; border-radius: 8px;
+  }
+  .ord-row:hover { background: var(--paper-sunken); }
+  .ord-name { flex: 1 1 140px; min-width: 120px; }
+  .ord-name .nm { font-size: 13.5px; color: var(--ink); }
+  .ord-code { font-size: 11px; color: var(--ink-faint); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .ord-note { font-size: 11px; color: var(--danger); margin-top: 1px; }
+  .ord-stock { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+  .ord-unit { font-size: 12px; color: var(--ink-soft); }
+  .ord-need {
+    font-size: 12.5px; color: var(--accent); font-variant-numeric: tabular-nums;
+    min-width: 64px; text-align: right; flex-shrink: 0;
+  }
+  .ord-number {
+    width: 68px; font: inherit; font-size: 13px;
+    padding: 5px 7px; border: 1px solid var(--line); border-radius: 7px;
+    background: var(--paper-sunken); color: var(--ink);
+  }
+  .ord-cat {
+    font-size: 11.5px; font-weight: 700; letter-spacing: 0.04em;
+    color: var(--ink-soft); margin: 12px 2px 4px;
+  }
+  .ord-cat:first-child { margin-top: 2px; }
+  .ord-tool-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 10px; font-size: 13px; color: var(--ink-soft);
+  }
 </style>
 </head>
 <body>
@@ -1397,50 +1507,63 @@
   </header>
 
   <nav class="tabbar" role="tablist" aria-label="页面切换">
-    <button type="button" class="tab-btn" data-tab="todo" role="tab">待办</button>
+    <button type="button" class="tab-btn" data-tab="checklist" role="tab">Checklist</button>
+    <button type="button" class="tab-btn" data-tab="order" role="tab">订货计算器</button>
     <button type="button" class="tab-btn" data-tab="notes" role="tab">记录</button>
     <button type="button" class="tab-btn" data-tab="schedule" role="tab">排班</button>
     <button type="button" class="tab-btn" data-tab="tixing" role="tab">提醒</button>
     <button type="button" class="tab-btn" data-tab="interest" role="tab">兴趣</button>
   </nav>
 
-  <main class="board" id="view-todo">
-    <section class="panel panel--task" aria-labelledby="task-heading">
+  <main class="board" id="view-checklist">
+    <div class="ck-reset-bar">
+      <span>每天早上5点自动清空重来，下次重置：<b id="ck-next-reset">—</b></span>
+      <button type="button" class="ck-reset-now-btn" id="ck-reset-now-btn">立即重置</button>
+    </div>
+
+    <details class="ck-panel" id="ck-pm-details">
+      <summary class="ck-panel-head">
+        <span class="ck-tag">2-5PM</span>
+        <h2>2-5 工作</h2>
+        <span class="ck-count-chip" id="ck-pm-count">0 / 0</span>
+      </summary>
+      <div class="ck-list" id="ck-pm-list"></div>
+    </details>
+
+    <details class="ck-panel" id="ck-rp-details">
+      <summary class="ck-panel-head">
+        <span class="ck-tag">REPORT</span>
+        <h2>report 工作</h2>
+        <span class="ck-count-chip" id="ck-rp-count">0 / 0</span>
+      </summary>
+      <div class="ck-list" id="ck-rp-list"></div>
+    </details>
+
+    <details class="ck-panel" id="ck-rc-details">
+      <summary class="ck-panel-head">
+        <span class="ck-tag">FLOOR</span>
+        <h2>日常检查</h2>
+        <span class="ck-count-chip" id="ck-rc-count">0 / 0</span>
+      </summary>
+      <div class="ck-list" id="ck-rc-list"></div>
+    </details>
+
+    <p class="ck-footer-note">勾选只存在这台设备的浏览器里，换设备/清缓存不会同步。</p>
+  </main>
+
+  <main class="board" id="view-order" hidden>
+    <section class="panel panel--task" aria-labelledby="order-heading">
       <div class="panel-head">
-        <span class="tag">TO-DO</span>
-        <h2 id="task-heading">待办事项</h2>
-        <span class="count-chip" id="task-count">0 项</span>
+        <span class="tag">STOCK</span>
+        <h2 id="order-heading">订货计算器</h2>
       </div>
-      <form class="add-row stacked" id="task-form">
-        <div class="toolbar-row">
-          <input type="text" id="task-input" placeholder="添加一项待办…" autocomplete="off" maxlength="240" />
+      <div style="padding: 14px 18px 18px;">
+        <div class="ord-tool-row">
+          <label><input type="radio" name="ord-par-mode" id="ord-par-daily" checked /> 日常</label>
+          <label style="margin-left: 14px;"><input type="radio" name="ord-par-mode" id="ord-par-weekend" /> 周末</label>
         </div>
-        <div class="toolbar-row">
-          <div class="pri-pick" id="task-priority-picker" role="radiogroup" aria-label="轻重缓急">
-            <button type="button" class="pri-pick-btn pri-1" data-pri="1">重要紧急</button>
-            <button type="button" class="pri-pick-btn pri-2 active" data-pri="2">重要不紧急</button>
-            <button type="button" class="pri-pick-btn pri-3" data-pri="3">紧急不重要</button>
-            <button type="button" class="pri-pick-btn pri-4" data-pri="4">不重要不紧急</button>
-            <button type="button" class="pri-pick-btn pri-5" data-pri="5">灵感</button>
-          </div>
-          <span class="date-input date-field" id="task-date-field">
-            <span class="date-field-text placeholder" id="task-date-text">月/日</span>
-            <input type="date" id="task-date" class="date-field-input" aria-label="截止日期（可选）" />
-          </span>
-          <button type="submit" class="add-btn">添加</button>
-        </div>
-      </form>
-      <div class="pri-filter" id="pri-filter">
-        <button type="button" class="pri-filter-btn active" data-pri="all">全部</button>
-        <button type="button" class="pri-filter-btn" data-pri="1">重要紧急</button>
-        <button type="button" class="pri-filter-btn" data-pri="2">重要不紧急</button>
-        <button type="button" class="pri-filter-btn" data-pri="3">紧急不重要</button>
-        <button type="button" class="pri-filter-btn" data-pri="4">不重要不紧急</button>
-        <button type="button" class="pri-filter-btn" data-pri="5">灵感</button>
+        <div id="ord-items"></div>
       </div>
-      <ul class="item-list" id="task-list"></ul>
-      <div class="empty" id="task-empty">还没有待办事项，从上面输入开始吧</div>
-      <button class="done-toggle" id="task-done-toggle" hidden></button>
     </section>
   </main>
 
@@ -1483,9 +1606,6 @@
       <div class="panel-head">
         <span class="tag">SHIFT</span>
         <h2 id="schedule-heading">排班</h2>
-      </div>
-      <div class="schedule-link-row">
-        <a class="add-btn" href="daily-checklist.html">📋 Daily Checklist</a>
       </div>
       <div class="location-manager">
         <p class="location-manager-label">工作地点 / 部门</p>
@@ -1567,6 +1687,10 @@
 
 <div class="toast" id="toast"></div>
 
+<div class="ck-lightbox" id="ck-lightbox" hidden>
+  <img id="ck-lightbox-img" src="" alt="" />
+</div>
+
 <script>
   const STORE_TASKS = "workbench.tasks.v1";
   const STORE_IDEAS = "workbench.ideas.v1";
@@ -1610,8 +1734,6 @@
     localStorage.setItem(IDEAS_MIGRATED_FLAG, "1");
   }
   if (tasksMigrated) save(STORE_TASKS, tasks);
-  let showDone = false;
-  let priorityFilter = "all";
 
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
@@ -1852,110 +1974,6 @@
     if (d < 0) return " has-date overdue";
     if (d === 0) return " has-date today-due";
     return " has-date";
-  }
-
-  function sortOpenTasks(list) {
-    return [...list].sort((a, b) => {
-      const pw = PRIORITY_META[b.priority].weight - PRIORITY_META[a.priority].weight;
-      if (pw !== 0) return pw;
-      if (a.date && b.date) return a.date < b.date ? -1 : a.date > b.date ? 1 : 0;
-      if (a.date) return -1;
-      if (b.date) return 1;
-      return b.ts - a.ts;
-    });
-  }
-
-  function renderTasks() {
-    const list = document.getElementById("task-list");
-    const empty = document.getElementById("task-empty");
-    const doneToggle = document.getElementById("task-done-toggle");
-    const filtered = priorityFilter === "all" ? tasks : tasks.filter(t => t.priority === priorityFilter);
-    const open = sortOpenTasks(filtered.filter(t => !t.done));
-    const done = filtered.filter(t => t.done).sort((a, b) => b.ts - a.ts);
-
-    document.getElementById("task-count").textContent = `${open.length} 项`;
-    list.innerHTML = "";
-
-    empty.style.display = filtered.length === 0 ? "block" : "none";
-
-    const visible = showDone ? [...open, ...done] : open;
-    visible.forEach(t => list.appendChild(taskRow(t)));
-
-    if (done.length > 0) {
-      doneToggle.hidden = false;
-      doneToggle.textContent = showDone ? `隐藏已完成 (${done.length})` : `显示已完成 (${done.length})`;
-    } else {
-      doneToggle.hidden = true;
-    }
-  }
-
-  function taskRow(t) {
-    const li = document.createElement("li");
-    li.className = "item" + (t.done ? " done" : "");
-
-    const cb = document.createElement("input");
-    cb.type = "checkbox";
-    cb.className = "check";
-    cb.checked = t.done;
-    cb.setAttribute("aria-label", "标记完成");
-    cb.addEventListener("change", () => {
-      t.done = cb.checked;
-      save(STORE_TASKS, tasks);
-      renderTasks();
-    });
-
-    const body = document.createElement("div");
-    body.className = "todo-body";
-
-    const span = document.createElement("span");
-    span.className = "item-text";
-    span.textContent = t.text;
-
-    const meta = document.createElement("div");
-    meta.className = "todo-meta";
-
-    const priSelect = document.createElement("select");
-    priSelect.className = "date-input pri-select pri-" + t.priority;
-    priSelect.setAttribute("aria-label", "轻重缓急");
-    Object.entries(PRIORITY_META).forEach(([val, m]) => {
-      const opt = document.createElement("option");
-      opt.value = val;
-      opt.textContent = m.label;
-      if (val === t.priority) opt.selected = true;
-      priSelect.appendChild(opt);
-    });
-    priSelect.addEventListener("change", () => {
-      t.priority = priSelect.value;
-      save(STORE_TASKS, tasks);
-      renderTasks();
-    });
-
-    const dateField = makeCompactDateField(t.date, "截止日期（可选）", "row-date" + dueClass(t));
-    dateField.input.addEventListener("change", () => {
-      t.date = dateField.input.value || null;
-      save(STORE_TASKS, tasks);
-      renderTasks();
-    });
-
-    meta.append(priSelect, dateField);
-    body.append(span, meta);
-
-    const actions = document.createElement("div");
-    actions.className = "item-actions";
-
-    const delBtn = document.createElement("button");
-    delBtn.className = "icon-btn danger";
-    delBtn.innerHTML = iconTrash;
-    delBtn.title = "删除";
-    delBtn.addEventListener("click", () => {
-      tasks = tasks.filter(x => x.id !== t.id);
-      save(STORE_TASKS, tasks);
-      renderTasks();
-    });
-
-    actions.append(delBtn);
-    li.append(cb, body, actions);
-    return li;
   }
 
   function renderXiaoshi() {
@@ -2837,7 +2855,8 @@
   });
 
   function setActiveTab(tab) {
-    document.getElementById("view-todo").hidden = tab !== "todo";
+    document.getElementById("view-checklist").hidden = tab !== "checklist";
+    document.getElementById("view-order").hidden = tab !== "order";
     document.getElementById("view-notes").hidden = tab !== "notes";
     document.getElementById("view-schedule").hidden = tab !== "schedule";
     document.getElementById("view-tixing").hidden = tab !== "tixing";
@@ -2847,39 +2866,6 @@
   }
   document.querySelectorAll(".tab-btn").forEach(b => {
     b.addEventListener("click", () => setActiveTab(b.dataset.tab));
-  });
-
-  document.querySelectorAll(".pri-filter-btn").forEach(b => {
-    b.addEventListener("click", () => {
-      priorityFilter = b.dataset.pri;
-      document.querySelectorAll(".pri-filter-btn").forEach(x => x.classList.toggle("active", x === b));
-      renderTasks();
-    });
-  });
-
-  const taskDateInput = document.getElementById("task-date");
-  const taskDateText = document.getElementById("task-date-text");
-  taskDateInput.addEventListener("input", () => syncDateFieldText(taskDateInput, taskDateText));
-
-  let newTaskPriority = "2";
-  document.querySelectorAll("#task-priority-picker .pri-pick-btn").forEach(b => {
-    b.addEventListener("click", () => {
-      newTaskPriority = b.dataset.pri;
-      document.querySelectorAll("#task-priority-picker .pri-pick-btn").forEach(x => x.classList.toggle("active", x === b));
-    });
-  });
-
-  document.getElementById("task-form").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const input = document.getElementById("task-input");
-    const text = input.value.trim();
-    if (!text) return;
-    tasks.unshift({ id: uid(), text, done: false, date: taskDateInput.value || null, priority: newTaskPriority, ts: Date.now() });
-    save(STORE_TASKS, tasks);
-    input.value = "";
-    taskDateInput.value = "";
-    syncDateFieldText(taskDateInput, taskDateText);
-    renderTasks();
   });
 
   let tixingEntryType = "tixing";
@@ -2927,10 +2913,6 @@
     }
   });
 
-  document.getElementById("task-done-toggle").addEventListener("click", () => {
-    showDone = !showDone;
-    renderTasks();
-  });
 
   document.getElementById("habit-form").addEventListener("submit", (e) => {
     e.preventDefault();
@@ -3099,7 +3081,315 @@
     document.getElementById("interestUpdated").textContent = "最近更新：" + INTEREST_LAST_UPDATED;
   }
 
-  renderTasks();
+  // ---- Checklist 页（从 pm-checklist.html 搬过来，ck 前缀避免跟其他页面的同名函数/变量冲突）----
+  const CK_STORE = "workbench.dailychecklist.v1";
+
+  const CK_PM_ITEMS = [
+    { id: "pm1", text: "2点到清理桌面／拿 mid day 甜品" },
+    { id: "pm3", text: "B3取货（周六、周日除外）", images: ["checklist-img/b3-1.jpg", "checklist-img/b3-2.jpg"] },
+    { id: "pm3a", text: "空酒瓶要带下去", indent: true },
+    { id: "pm3b", text: "顺便查看 Misc 的储存量", indent: true },
+    { id: "pm4", text: "补充汽水、啤酒和白葡萄酒" },
+    { id: "pm5", text: "整理咖啡站／桌子" },
+    { id: "pm6", text: "布置干货推车" },
+    { id: "pm7", text: "3:30打开热食保温柜（需60分钟升温）" },
+    { id: "pm8", text: "4:00再次清理桌面" },
+    { id: "pm9", text: "4:30出去帮忙set dinner" },
+    { id: "pm10", text: "4-6点左右更新剩余amenity" },
+  ];
+
+  const CK_REPORT_ITEMS = [
+    { id: "rp1", text: "开所有表格：" },
+    { id: "rp1a", text: "预测【E4（stayover）】Preview+7天", indent: true },
+    { id: "rp1b", text: "送礼【Reservation AAR MRWGR】- Delimited Data +1天", indent: true },
+    { id: "rp1c", text: "LST【Reservation AAR MRWGR】- Delimited Data +5天", indent: true },
+    { id: "rp1d", text: "开early amenities+2", indent: true },
+    { id: "rp1e", text: "点A GXP Amenity Cases看总表,颜色/时间不正常的修改", indent: true },
+    { id: "rp2", text: "预测一周" },
+    { id: "rp3", text: "Special Pre Arrival report 加明天的Amenity" },
+    { id: "rp3a", text: "special--stays--VIP1236", indent: true },
+    { id: "rp3b", text: "VIP6更新opera", indent: true },
+    { id: "rp4", text: "四点出去转一圈" },
+    { id: "rp4a", text: "擦桌子", indent: true },
+    { id: "rp4b", text: "更新剩余Amenity", indent: true },
+    { id: "rp5", text: "GB/AV tmr Opera和GXP上更新" },
+    { id: "rp6", text: "检查未来3天的X5 amenity" },
+    { id: "rp7", text: "查看总数看情况加M1（Silver）" },
+    { id: "rp8", text: "查看early amenities和特殊需求" },
+    { id: "rp9", text: "录入powwow并在群里更新", images: ["checklist-img/powwow.png"] },
+    { id: "rp10", text: "Amenity整理", images: ["checklist-img/amenity-count.png"] },
+    { id: "rp10a", text: "关今天case", indent: true },
+    { id: "rp10b", text: "数明天数量", indent: true },
+    { id: "rp10c", text: "early amenities", indent: true },
+    { id: "rp10d", text: "提前核对特殊要求", indent: true },
+    { id: "rp11", text: "邮件和chef群里发预测报表(附件+文件名要对)", images: ["checklist-img/forecast-1.jpg", "checklist-img/kitchen-forecast.png", "checklist-img/forecast-3.jpg"] },
+    { id: "rp12", text: "LST 14+ night for T+5days 发入住前邮件,更新文档", images: ["checklist-img/pre-arrival-email.jpg"] },
+    { id: "rp13", text: "7点45盘点库存并订货(五六除外)", images: ["checklist-img/stock-1.jpg", "checklist-img/stock-2.png", "checklist-img/stock-3.jpg", "checklist-img/stock-4.jpg"] },
+    { id: "rp13a", text: "截图发群", indent: true },
+    { id: "rp13b", text: "记得提交", indent: true },
+    { id: "rp13c", text: "Misc.看情况决定", indent: true },
+  ];
+
+  const CK_RC_ITEMS = [
+    { id: "rc1", text: "补饮料／糖／茶／咖啡豆／纸杯／餐巾纸/抽屉" },
+    { id: "rc2", text: "擦拭摆放所有空桌／盐胡椒摆放" },
+    { id: "rc3", text: "咖啡/茶水台 水渍清理" },
+    { id: "rc4", text: "入门口/清洁台清理" },
+    { id: "rc5", text: "Top up sanitizer bottles." },
+    { id: "rc6", text: "double check hot box and heater off" },
+    { id: "rc7", text: "锁上所有柜子" },
+    { id: "rc8", text: "Take all keys and return them at Level B2" },
+  ];
+
+  function ckPeriodKeyNow() {
+    const now = new Date();
+    const k = new Date(now);
+    if (now.getHours() < 5) k.setDate(k.getDate() - 1);
+    return toISO(k);
+  }
+  function ckNextResetLabel() {
+    const now = new Date();
+    const next = new Date(now);
+    next.setHours(5, 0, 0, 0);
+    const sameDay = next > now;
+    if (!sameDay) next.setDate(next.getDate() + 1);
+    return (sameDay ? "今天" : "明天") + " 05:00";
+  }
+  function ckLoad() {
+    try {
+      const raw = localStorage.getItem(CK_STORE);
+      if (raw) return JSON.parse(raw);
+    } catch (e) { /* fall through */ }
+    return { periodKey: ckPeriodKeyNow(), checked: {} };
+  }
+  function ckSave() { localStorage.setItem(CK_STORE, JSON.stringify(ckData)); }
+
+  let ckData = ckLoad();
+  if (!ckData.checked || typeof ckData.checked !== "object") ckData.checked = {};
+
+  function ckEnsureFreshPeriod() {
+    const pk = ckPeriodKeyNow();
+    if (ckData.periodKey !== pk) {
+      ckData.periodKey = pk;
+      ckData.checked = {};
+      ckSave();
+    }
+  }
+  function ckToggle(id) {
+    ckData.checked[id] = !ckData.checked[id];
+    ckSave();
+    ckRender();
+  }
+  function ckBuildList(container, items, countEl) {
+    container.innerHTML = "";
+    let doneCount = 0;
+    items.forEach(item => {
+      const done = !!ckData.checked[item.id];
+      if (done) doneCount++;
+
+      const wrap = document.createElement("div");
+      wrap.className = "ck-item" + (item.indent ? " sub" : "");
+
+      const row = document.createElement("div");
+      row.className = "ck-row" + (done ? " done" : "");
+      const mark = document.createElement("span");
+      mark.className = "ck-mark";
+      mark.innerHTML = done
+        ? '<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 8.5L6.2 11.5L13 4.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        : "";
+      const txt = document.createElement("span");
+      txt.className = "ck-txt";
+      txt.textContent = item.text;
+      row.append(mark, txt);
+
+      if (item.images && item.images.length) {
+        item.images.forEach(src => {
+          const img = document.createElement("img");
+          img.className = "ck-thumb";
+          img.src = src;
+          img.loading = "lazy";
+          img.alt = item.text;
+          img.addEventListener("click", (e) => { e.stopPropagation(); ckOpenLightbox(src); });
+          row.appendChild(img);
+        });
+      }
+
+      row.addEventListener("click", () => ckToggle(item.id));
+      wrap.appendChild(row);
+      container.appendChild(wrap);
+    });
+    countEl.textContent = `${doneCount} / ${items.length}`;
+    return { done: doneCount, total: items.length };
+  }
+  function ckApplyAutoCollapse(detailsId, counts) {
+    if (counts.done >= counts.total) document.getElementById(detailsId).open = false;
+  }
+  function ckRender() {
+    ckEnsureFreshPeriod();
+    document.getElementById("ck-next-reset").textContent = ckNextResetLabel();
+    ckApplyAutoCollapse("ck-pm-details", ckBuildList(document.getElementById("ck-pm-list"), CK_PM_ITEMS, document.getElementById("ck-pm-count")));
+    ckApplyAutoCollapse("ck-rp-details", ckBuildList(document.getElementById("ck-rp-list"), CK_REPORT_ITEMS, document.getElementById("ck-rp-count")));
+    ckApplyAutoCollapse("ck-rc-details", ckBuildList(document.getElementById("ck-rc-list"), CK_RC_ITEMS, document.getElementById("ck-rc-count")));
+  }
+  document.getElementById("ck-reset-now-btn").addEventListener("click", () => {
+    if (!confirm("确定要现在清空所有勾选吗？")) return;
+    ckData.checked = {};
+    ckData.periodKey = ckPeriodKeyNow();
+    ckSave();
+    ckRender();
+  });
+  function ckOpenLightbox(src) {
+    document.getElementById("ck-lightbox-img").src = src;
+    document.getElementById("ck-lightbox").hidden = false;
+  }
+  document.getElementById("ck-lightbox").addEventListener("click", () => {
+    document.getElementById("ck-lightbox").hidden = true;
+  });
+  setInterval(() => {
+    if (ckPeriodKeyNow() !== ckData.periodKey) ckRender();
+    else document.getElementById("ck-next-reset").textContent = ckNextResetLabel();
+  }, 60000);
+
+  // ---- 订货计算器页（同样从 pm-checklist.html 搬过来，ord 前缀）----
+  const ORD_BEVERAGE_ORDER = [
+    { cat: "软饮 Soft Drinks", items: [
+      { name: "Bitter Lemon", code: "L0000243297", unit: "box", caseSize: 24, parDaily: 3, parWeekend: 4 },
+      { name: "Ginger Ale", code: "L0000243400", unit: "box", caseSize: 24, parDaily: 3, parWeekend: 4 },
+      { name: "Pepsi Max", code: "L0000220493", unit: "box", caseSize: 24, parDaily: 6, parWeekend: 12 },
+      { name: "Pepsi Cola", code: "L0000220491", unit: "box", caseSize: 24, parDaily: 4, parWeekend: 8 },
+      { name: "Lemonade", code: "L0000220490", unit: "box", caseSize: 24, parDaily: 3, parWeekend: 5 },
+      { name: "Tonic Water", code: "L0000220501", unit: "box", caseSize: 24, parDaily: 2, parWeekend: 2 },
+      { name: "Sodawater", code: "L0000243432", unit: "box", caseSize: 24, parDaily: 2, parWeekend: 2 },
+    ]},
+    { cat: "水 Water", items: [
+      { name: "Sparkling Water 1000ml", code: "L0001235156", unit: "box", caseSize: 12, parDaily: 1, parWeekend: 1 },
+      { name: "Sparkling Water 500ml", code: "L0001511962", unit: "box", caseSize: 24, parDaily: 1, parWeekend: 1 },
+      { name: "Still Water 1000ml", code: "L0001511960", unit: "box", caseSize: 12, parDaily: 1, parWeekend: 1 },
+      { name: "Still Water 500ml", code: "L0001235147", unit: "box", caseSize: 24, parDaily: 1, parWeekend: 1 },
+    ]},
+    { cat: "啤酒 Beer", items: [
+      { name: "Stone & Wood Pacific Ale", code: "L0000285946", unit: "box", caseSize: 24, parDaily: 2, parWeekend: 2 },
+      { name: "Little Creatures Pale Ale", code: "L0000266231", unit: "box", caseSize: 24, parDaily: 2, parWeekend: 2 },
+      { name: "Kirin Ichiban", code: "L0000395562", unit: "box", caseSize: 24, parDaily: 2, parWeekend: 2 },
+      { name: "James Boag Light", code: "243440", unit: "box", caseSize: 24, parDaily: 1, parWeekend: 1 },
+      { name: "Hahn Super Dry", code: "L0000243739", unit: "box", caseSize: 24, parDaily: 1, parWeekend: 1 },
+      { name: "CHB", code: "L0004255940", unit: "box", caseSize: 24, parDaily: 2, parWeekend: 2 },
+    ]},
+    { cat: "葡萄酒 Wine", items: [
+      { name: "Shiraz", code: "L0001374482", unit: "box", caseSize: 12, parDaily: 3, parWeekend: 4 },
+      { name: "Pinot Noir", code: "L0001691535", unit: "box", caseSize: 12, parDaily: 3, parWeekend: 3 },
+      { name: "Chardonnay", code: "L0001691536", unit: "box", caseSize: 12, parDaily: 3, parWeekend: 3 },
+      { name: "Sauv Blan Semillon", code: "L0003260326", unit: "box", caseSize: 12, parDaily: 3, parWeekend: 3 },
+      { name: "Brut Cuvee", code: "L0001374472", unit: "box", caseSize: 12, parDaily: 3, parWeekend: 3 },
+      { name: "VIP White wine", code: null, unit: "each", caseSize: null, parDaily: 6, parWeekend: 6, note: "没有代码，需系统内搜索确认" },
+      { name: "VIP Red wine", code: null, unit: "each", caseSize: null, parDaily: 6, parWeekend: 6, note: "没有代码，需系统内搜索确认" },
+    ]},
+    { cat: "烈酒 Liquor", note: "收集空瓶子，不统计库存——方框里直接写空瓶数＝需要订购的数量（个）", items: [
+      { name: "Absolut Blue Vodka", code: "L0000218736", directOrder: true },
+      { name: "Gin Beefeta", code: "L0000218762", directOrder: true },
+      { name: "Tequila Gold", code: "L0000243649", directOrder: true },
+      { name: "Bacardi", code: "L0000218780", directOrder: true },
+      { name: "Chivas", code: "L0000218872", directOrder: true },
+      { name: "Jack Daniel", code: "L0000243847", directOrder: true },
+      { name: "Aperol", code: "L0000218619", directOrder: true },
+      { name: "Campari", code: "L0000218622", directOrder: true },
+    ]},
+    { cat: "其他 Other", items: [
+      { name: "Lime Cordial", code: "L0000220474", unit: "each", caseSize: null, parDaily: 2, parWeekend: 2 },
+      { name: "Angostrua Bitter", code: "218605", unit: "each", caseSize: null, parDaily: 1, parWeekend: 1 },
+    ]},
+  ];
+
+  let ordRefs = [];
+  function ordCurrentParMode() {
+    return document.getElementById("ord-par-weekend").checked ? "weekend" : "daily";
+  }
+  function ordComputeQty(item, stockVal) {
+    const par = ordCurrentParMode() === "weekend" ? item.parWeekend : item.parDaily;
+    const diff = Math.max(0, par - stockVal);
+    const qty = item.unit === "box" ? diff * item.caseSize : diff;
+    return Math.round(qty);
+  }
+  function ordRefresh() {
+    ordRefs.forEach(({ item, stockInput, needEl }) => {
+      if (item.directOrder) return;
+      const v = parseFloat(stockInput.value);
+      const stockVal = isNaN(v) ? 0 : v;
+      const qty = ordComputeQty(item, stockVal);
+      needEl.textContent = qty > 0 ? `→ ${qty} 个` : "—";
+    });
+  }
+  function ordInit() {
+    const container = document.getElementById("ord-items");
+    container.innerHTML = "";
+    ordRefs = [];
+    ORD_BEVERAGE_ORDER.forEach(group => {
+      const catEl = document.createElement("div");
+      catEl.className = "ord-cat";
+      catEl.textContent = group.cat;
+      container.appendChild(catEl);
+      if (group.note) {
+        const groupNoteEl = document.createElement("div");
+        groupNoteEl.className = "ord-note";
+        groupNoteEl.textContent = "⚠️ " + group.note;
+        container.appendChild(groupNoteEl);
+      }
+      group.items.forEach(item => {
+        const row = document.createElement("div");
+        row.className = "ord-row";
+
+        const nameWrap = document.createElement("div");
+        nameWrap.className = "ord-name";
+        const nm = document.createElement("div");
+        nm.className = "nm";
+        nm.textContent = item.name;
+        nameWrap.appendChild(nm);
+        const codeEl = document.createElement("div");
+        codeEl.className = "ord-code";
+        codeEl.textContent = item.code || "— 无代码 —";
+        nameWrap.appendChild(codeEl);
+        if (item.note) {
+          const noteEl = document.createElement("div");
+          noteEl.className = "ord-note";
+          noteEl.textContent = "⚠️ " + item.note;
+          nameWrap.appendChild(noteEl);
+        }
+
+        const stockWrap = document.createElement("div");
+        stockWrap.className = "ord-stock";
+        const stockInput = document.createElement("input");
+        stockInput.type = "number";
+        stockInput.min = "0";
+        stockInput.step = item.directOrder ? "1" : "0.5";
+        stockInput.className = "ord-number";
+        stockInput.placeholder = item.directOrder ? "需订几个" : "0";
+        const unitLabel = document.createElement("span");
+        unitLabel.className = "ord-unit";
+        unitLabel.textContent = item.directOrder ? "个" : (item.unit === "box" ? "箱" : "个");
+        stockWrap.append(stockInput, unitLabel);
+
+        row.append(nameWrap, stockWrap);
+
+        let needEl = null;
+        if (!item.directOrder) {
+          needEl = document.createElement("div");
+          needEl.className = "ord-need";
+          needEl.textContent = "—";
+          stockInput.addEventListener("input", ordRefresh);
+          row.appendChild(needEl);
+        }
+
+        container.appendChild(row);
+        ordRefs.push({ item, stockInput, needEl });
+      });
+    });
+    document.getElementById("ord-par-daily").addEventListener("change", ordRefresh);
+    document.getElementById("ord-par-weekend").addEventListener("change", ordRefresh);
+    ordRefresh();
+  }
+  ordInit();
+  ckRender();
+
   renderHabits();
   renderEnglish();
   renderSchedule();
@@ -3107,8 +3397,8 @@
   renderTixing();
   renderInterest();
   const savedTab = localStorage.getItem(STORE_TAB);
-  const validTabs = ["todo", "notes", "schedule", "tixing", "interest"];
-  setActiveTab(validTabs.includes(savedTab) ? savedTab : (savedTab === "xiaoshi" ? "tixing" : "todo"));
+  const validTabs = ["checklist", "order", "notes", "schedule", "tixing", "interest"];
+  setActiveTab(validTabs.includes(savedTab) ? savedTab : (savedTab === "xiaoshi" ? "tixing" : "checklist"));
 </script>
 </body>
 </html>
