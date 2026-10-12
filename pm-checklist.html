@@ -255,20 +255,22 @@
     color: var(--ink-soft); font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   }
 
+  #order-items {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px;
+  }
+  #order-items .lookup-cat,
+  #order-items > .order-note {
+    grid-column: 1 / -1;
+  }
   .order-row {
-    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-    padding: 7px 4px; border-radius: 8px;
+    padding: 6px 4px; border-radius: 8px;
   }
   .order-row:hover { background: var(--paper-sunken); }
-  .order-name { flex: 1 1 140px; min-width: 120px; }
-  .order-name .nm { font-size: 13.5px; color: var(--ink); }
-  .order-code { font-size: 11px; color: var(--ink-faint); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .order-name .nm { font-size: 13px; color: var(--ink); }
+  .order-code { font-size: 10.5px; color: var(--ink-faint); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
   .order-note { font-size: 11px; color: var(--danger); margin-top: 1px; }
-  .order-stock { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
-  .order-unit { font-size: 12px; color: var(--ink-soft); }
-  .order-need {
-    font-size: 12.5px; color: var(--accent); font-variant-numeric: tabular-nums;
-    min-width: 64px; text-align: right; flex-shrink: 0;
+  .order-qty {
+    font-size: 12px; color: var(--accent); font-variant-numeric: tabular-nums;
   }
 
   .page-tabs {
@@ -407,14 +409,14 @@
 
   <section class="page" id="page-stock" hidden>
     <section class="tool-panel">
-      <div class="tool-panel-head"><h2>📦 订货计算器（输入库存箱数，自动算需订购的"个"数）</h2></div>
+      <div class="tool-panel-head"><h2>📦 订货参考表（名字/代码/日常订购数）</h2></div>
       <div class="tool-panel-body">
         <div class="tool-row">
           <label><input type="radio" name="order-par-mode" id="order-par-daily" checked /> 日常</label>
           <label><input type="radio" name="order-par-mode" id="order-par-weekend" /> 周末</label>
         </div>
         <div id="order-items"></div>
-        <p class="lookup-note">软饮/水/啤酒/葡萄酒：填当前库存（有"箱"规格的填箱数），自动算出需订购的"个"数。烈酒 Liquor 不用填库存——那栏收集的是空瓶子，直接在方框里写空瓶数，这个数字本身就是要订购的数量（个）。VIP White/Red wine 暂时没有代码，先空着，需要你自己在系统里搜索确认。数据来自 2026-10-10 的 PM Stock Requirement.xlsx + 你发的产品代码。</p>
+        <p class="lookup-note">需要手动填库存算订购数的话，去工作台的"订货计算器"页面（手机上用）。这里只是一张快速参考表：名字 / 代码 / 按 par 算的订购数（假设库存=0）。烈酒 Liquor 没有 par，走收空瓶子那套，这里不列数字。VIP White/Red wine 暂时没有代码，需要你自己在系统里搜索确认。数据来自 2026-10-10 的 PM Stock Requirement.xlsx + 你发的产品代码。</p>
 
         <details class="lookup-block">
           <summary>📋 系统全名对照表（订货登记时查这个）</summary>
@@ -785,29 +787,26 @@
     ]},
   ];
 
-  let beverageRefs = [];
+  // 这里是静态参考表（不再输入库存），假设库存=0，直接显示按 par 算出的订购数。
+  // 真正要输入库存算缺口的，去工作台的"订货计算器"页面。
   function currentParMode() {
     return document.getElementById("order-par-weekend").checked ? "weekend" : "daily";
   }
-  function computeOrderQty(item, stockVal) {
+  function computeOrderQty(item) {
     const par = currentParMode() === "weekend" ? item.parWeekend : item.parDaily;
-    const diff = Math.max(0, par - stockVal);
-    const qty = item.unit === "box" ? diff * item.caseSize : diff;
+    const qty = item.unit === "box" ? par * item.caseSize : par;
     return Math.round(qty);
   }
   function refreshOrder() {
-    beverageRefs.forEach(({ item, stockInput, needEl }) => {
-      if (item.directOrder) return;
-      const v = parseFloat(stockInput.value);
-      const stockVal = isNaN(v) ? 0 : v;
-      const qty = computeOrderQty(item, stockVal);
-      needEl.textContent = qty > 0 ? `→ ${qty} 个` : "—";
+    document.querySelectorAll("#order-items .order-qty").forEach(el => {
+      const item = BEVERAGE_ORDER.flatMap(g => g.items).find(i => i.name === el.dataset.name);
+      if (!item || item.directOrder) return;
+      el.textContent = `${computeOrderQty(item)} ${item.unit === "box" ? "个" : "个"}`;
     });
   }
   function initBeverageOrder() {
     const container = document.getElementById("order-items");
     container.innerHTML = "";
-    beverageRefs = [];
     BEVERAGE_ORDER.forEach(group => {
       const catEl = document.createElement("div");
       catEl.className = "lookup-cat";
@@ -839,38 +838,20 @@
           noteEl.textContent = "⚠️ " + item.note;
           nameWrap.appendChild(noteEl);
         }
-
-        const stockWrap = document.createElement("div");
-        stockWrap.className = "order-stock";
-        const stockInput = document.createElement("input");
-        stockInput.type = "number";
-        stockInput.min = "0";
-        stockInput.step = item.directOrder ? "1" : "0.5";
-        stockInput.className = "tool-number";
-        stockInput.placeholder = item.directOrder ? "需订几个" : "0";
-        const unitLabel = document.createElement("span");
-        unitLabel.className = "order-unit";
-        unitLabel.textContent = item.directOrder ? "个" : (item.unit === "box" ? "箱" : "个");
-        stockWrap.append(stockInput, unitLabel);
-
-        row.append(nameWrap, stockWrap);
-
-        let needEl = null;
         if (!item.directOrder) {
-          needEl = document.createElement("div");
-          needEl.className = "order-need";
-          needEl.textContent = "—";
-          stockInput.addEventListener("input", refreshOrder);
-          row.appendChild(needEl);
+          const qtyEl = document.createElement("div");
+          qtyEl.className = "order-qty";
+          qtyEl.dataset.name = item.name;
+          qtyEl.textContent = `${computeOrderQty(item)} 个`;
+          nameWrap.appendChild(qtyEl);
         }
 
+        row.appendChild(nameWrap);
         container.appendChild(row);
-        beverageRefs.push({ item, stockInput, needEl });
       });
     });
     document.getElementById("order-par-daily").addEventListener("change", refreshOrder);
     document.getElementById("order-par-weekend").addEventListener("change", refreshOrder);
-    refreshOrder();
   }
 
   // Misc 耗材 par/起订量/系统全名/代码，来自 Exe Lounge Misc.xlsx（2026-10-10，Sheet1 (2)）
