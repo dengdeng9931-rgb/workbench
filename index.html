@@ -1411,6 +1411,19 @@
     display: flex; align-items: center; gap: 8px;
     margin-bottom: 10px; font-size: 13px; color: var(--ink-soft);
   }
+
+  /* ---- Misc 库存表页 ---- */
+  .misc-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .misc-table th, .misc-table td { padding: 7px 6px; text-align: left; border-bottom: 1px solid var(--line); }
+  .misc-table th { font-size: 10.5px; color: var(--ink-soft); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+  .misc-table th:first-child, .misc-table td:first-child { width: 44%; }
+  .misc-name { font-size: 13px; color: var(--ink); }
+  .misc-input { width: 44px; font: inherit; font-size: 13px; padding: 5px 6px; border: 1px solid var(--line); border-radius: 7px; background: var(--paper-sunken); color: var(--ink); }
+  .misc-par { font-size: 13px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .misc-cat-row td {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--ink-soft); background: var(--paper-sunken); border-bottom: 1px solid var(--line);
+  }
 </style>
 </head>
 <body>
@@ -1428,20 +1441,26 @@
   </header>
 
   <nav class="tabbar" role="tablist" aria-label="页面切换">
-    <button type="button" class="tab-btn" data-tab="order" role="tab">订货计算器</button>
     <button type="button" class="tab-btn" data-tab="notes" role="tab">记录</button>
+    <button type="button" class="tab-btn" data-tab="order" role="tab">订货计算器</button>
+    <button type="button" class="tab-btn" data-tab="misc" role="tab">Misc</button>
     <button type="button" class="tab-btn" data-tab="schedule" role="tab">排班</button>
     <button type="button" class="tab-btn" data-tab="tixing" role="tab">提醒</button>
     <button type="button" class="tab-btn" data-tab="interest" role="tab">兴趣</button>
   </nav>
 
-  <main class="board" id="view-order">
+  <main class="board" id="view-order" hidden>
     <section class="panel panel--task" aria-labelledby="order-heading">
       <div class="panel-head">
         <span class="tag">STOCK</span>
         <h2 id="order-heading">订货计算器</h2>
       </div>
       <div style="padding: 14px 18px 18px;">
+        <div class="ord-tool-row">
+          <label for="ord-double-input">双数计算器：</label>
+          <input type="number" id="ord-double-input" class="ord-number" style="width: 80px;" placeholder="输入数字" />
+          <span>× 2 = <b id="ord-double-result">—</b></span>
+        </div>
         <div class="ord-tool-row">
           <label><input type="radio" name="ord-par-mode" id="ord-par-daily" checked /> 日常</label>
           <label style="margin-left: 14px;"><input type="radio" name="ord-par-mode" id="ord-par-weekend" /> 周末</label>
@@ -1451,7 +1470,24 @@
     </section>
   </main>
 
-  <main class="board" id="view-notes" hidden>
+  <main class="board" id="view-misc" hidden>
+    <section class="panel panel--task" aria-labelledby="misc-heading">
+      <div class="panel-head">
+        <span class="tag">MISC</span>
+        <h2 id="misc-heading">Misc 库存表</h2>
+      </div>
+      <div style="padding: 14px 18px 18px;">
+        <table class="misc-table">
+          <thead>
+            <tr><th>产品名字</th><th>BOH</th><th>Cage</th><th>Par Stock</th></tr>
+          </thead>
+          <tbody id="misc-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <main class="board" id="view-notes">
     <section class="panel panel--habit" aria-labelledby="habit-heading">
       <div class="panel-head">
         <span class="tag">STREAK</span>
@@ -2736,6 +2772,7 @@
 
   function setActiveTab(tab) {
     document.getElementById("view-order").hidden = tab !== "order";
+    document.getElementById("view-misc").hidden = tab !== "misc";
     document.getElementById("view-notes").hidden = tab !== "notes";
     document.getElementById("view-schedule").hidden = tab !== "schedule";
     document.getElementById("view-tixing").hidden = tab !== "tixing";
@@ -3099,6 +3136,99 @@
   }
   ordInit();
 
+  const ordDoubleInput = document.getElementById("ord-double-input");
+  const ordDoubleResult = document.getElementById("ord-double-result");
+  ordDoubleInput.addEventListener("input", () => {
+    const v = parseFloat(ordDoubleInput.value);
+    ordDoubleResult.textContent = isNaN(v) ? "—" : v * 2;
+  });
+
+  // ---- Misc 库存表页（从 pm-checklist.html 搬过来，只要库存表，不要下面的订货清单）----
+  const MISC_GROUPS = [
+    { cat: "Misc Supplies", items: [
+      { name: "Cocktail napkins", unit: "Box", parStock: 2 },
+      { name: "Napkins", unit: "Box", parStock: 4 },
+      { name: "Paper cups", unit: "Box", parStock: 2 },
+      { name: "Cup lids", unit: "Box", parStock: 2 },
+      { name: "Stirrers", unit: "Box", parStock: 2 },
+      { name: "Chopsticks", unit: "Box", parStock: 5 },
+      { name: "Gloves", unit: "Box", parStock: 2 },
+      { name: "Brown Chux", unit: "Roll", parStock: 2 },
+      { name: "CO2 for sparkling water", unit: "Tank", parStock: 1 },
+    ]},
+    { cat: "Guest Relations", items: [
+      { name: "Helium tank", unit: "Tank", parStock: 1 },
+      { name: "Biscuit (EAL)", unit: "Box", parStock: 2 },
+      { name: "Chocolatier Box", unit: "Box", parStock: 2 },
+      { name: "Decaf Coffee", unit: "Box", parStock: 3 },
+      { name: "Coffee machine cleaning tablets", unit: "Jar", parStock: 2 },
+      { name: "Milk frother cleaner (blue chemical)", unit: "Bottle", parStock: 2 },
+    ]},
+    { cat: "S&D Hamper", items: [
+      { name: "Byron Bay Milk Chocolate Chunky", unit: "CTN" },
+      { name: "Byron Bay Rocky Road", unit: "CTN" },
+      { name: "Triple Choc Fudge Cookie", unit: "EA" },
+      { name: "SESH Campfire Nut Mix", unit: "BX" },
+      { name: "SESH Nippers Sweet Salty Nut Mix", unit: "BX" },
+      { name: "Boodles Boosted Choc Speckle", unit: "BX" },
+      { name: "Boodles Choc & Hazelnut", unit: "BX" },
+      { name: "Boodles Choc & Caramel", unit: "BX" },
+      { name: "Roasted Nuts Australian Lime & Sea salt", unit: "CTN" },
+      { name: "Red Rock Sea Salt Chips", unit: "CTN" },
+      { name: "Red Rock Sour Cream & Sweet Chilli", unit: "CTN" },
+      { name: "Potato Chips Sea Salt & Balsamic Vinegar", unit: "CTN" },
+      { name: "Sundried Tomato & Basil Bagels", unit: "EA" },
+      { name: "Chocolate Coated Brittle", unit: null },
+    ]},
+  ];
+  function initMisc() {
+    const tbody = document.getElementById("misc-tbody");
+    tbody.innerHTML = "";
+    MISC_GROUPS.forEach(group => {
+      const catRow = document.createElement("tr");
+      catRow.className = "misc-cat-row";
+      const catTd = document.createElement("td");
+      catTd.colSpan = 4;
+      catTd.textContent = group.cat;
+      catRow.appendChild(catTd);
+      tbody.appendChild(catRow);
+
+      group.items.forEach(item => {
+        const tr = document.createElement("tr");
+
+        const tdName = document.createElement("td");
+        tdName.className = "misc-name";
+        tdName.textContent = item.name;
+
+        const tdBoh = document.createElement("td");
+        const bohInput = document.createElement("input");
+        bohInput.type = "number";
+        bohInput.min = "0";
+        bohInput.className = "misc-input";
+        bohInput.placeholder = "0";
+        tdBoh.appendChild(bohInput);
+
+        const tdCage = document.createElement("td");
+        const cageInput = document.createElement("input");
+        cageInput.type = "number";
+        cageInput.min = "0";
+        cageInput.className = "misc-input";
+        cageInput.placeholder = "0";
+        tdCage.appendChild(cageInput);
+
+        const tdPar = document.createElement("td");
+        const parEl = document.createElement("span");
+        parEl.className = "misc-par";
+        parEl.textContent = item.parStock !== undefined ? item.parStock : "—";
+        tdPar.appendChild(parEl);
+
+        tr.append(tdName, tdBoh, tdCage, tdPar);
+        tbody.appendChild(tr);
+      });
+    });
+  }
+  initMisc();
+
   renderHabits();
   renderEnglish();
   renderSchedule();
@@ -3106,8 +3236,8 @@
   renderTixing();
   renderInterest();
   const savedTab = localStorage.getItem(STORE_TAB);
-  const validTabs = ["order", "notes", "schedule", "tixing", "interest"];
-  setActiveTab(validTabs.includes(savedTab) ? savedTab : (savedTab === "xiaoshi" ? "tixing" : "order"));
+  const validTabs = ["order", "misc", "notes", "schedule", "tixing", "interest"];
+  setActiveTab(validTabs.includes(savedTab) ? savedTab : (savedTab === "xiaoshi" ? "tixing" : "notes"));
 </script>
 </body>
 </html>
