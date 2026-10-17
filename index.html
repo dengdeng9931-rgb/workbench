@@ -2090,9 +2090,10 @@
   // ---- 英语学习：今日任务面板（Grammar in Use 进度 + 精听/泛读轮换 + 每日checklist，全部本地计算，不需要每天手动更新内容） ----
   const STORE_ENGLISH = "workbench.english.v1";
   const ENGLISH_CHECKLIST_ITEMS = [
-    { id: "commute_go", label: "去程通勤：跟读巩固昨天的 Grammar in Use 例句 + 精听内容" },
-    { id: "commute_back", label: "回程通勤：刷 Obsidian 里到期的表达卡片" },
-    { id: "block2", label: "在家：精听 Coach Shane 或泛读 English News in Levels（今天做哪个见上方）" },
+    { id: "commute_go", label: "去程通勤：刷 Obsidian 里到期的表达卡片" },
+    { id: "home_direct", label: "在家：Direct English 1 小时" },
+    { id: "home_concept", label: "在家：新概念英语 阅读 + 音频 30 分钟" },
+    { id: "commute_back", label: "回程通勤：再刷一遍到期的表达卡片" },
     { id: "block3", label: "在家：把今天新收集的表达发给 Claude，整理进表达卡片" },
   ];
 
@@ -2139,8 +2140,6 @@
   function renderEnglish() {
     const dayIndex = daysBetween(english.startDate, todayISO()); // 第一天 = 0
     document.getElementById("english-day-chip").textContent = `第 ${dayIndex + 1} 天`;
-    const rotation = dayIndex % 2 === 0 ? "精听 Daily Dictation" : "泛读 English News in Levels";
-
     const todayBox = document.getElementById("english-today");
     todayBox.innerHTML = "";
 
@@ -2148,7 +2147,7 @@
     row1.className = "english-today-row";
     const label1 = document.createElement("span");
     label1.className = "english-today-label";
-    label1.textContent = "Phrasal Verbs in Use";
+    label1.textContent = "Phrasal Verbs in Use（已暂停，进度还在）";
     const value1 = document.createElement("button");
     value1.type = "button";
     value1.className = "english-today-value english-unit-edit";
@@ -2196,26 +2195,16 @@
     });
     row1b.append(rateLabel, rateWrap1);
 
-    const row2 = document.createElement("div");
-    row2.className = "english-today-row";
-    const label2 = document.createElement("span");
-    label2.className = "english-today-label";
-    label2.textContent = "今天精听/泛读";
-    const value2 = document.createElement("span");
-    value2.className = "english-today-value";
-    value2.textContent = rotation;
-    row2.append(label2, value2);
-
     const row3 = document.createElement("div");
     row3.className = "english-today-row";
     const dictLink = document.createElement("a");
     dictLink.className = "add-btn english-next-btn";
     dictLink.href = "dictation.html";
-    dictLink.textContent = "打开 Coach Shane 听写打卡 →";
+    dictLink.textContent = "打开 Coach Shane 听写打卡（已暂停）→";
     dictLink.style.marginLeft = "0";
     row3.append(dictLink);
 
-    todayBox.append(row1, row1b, row2, row3);
+    todayBox.append(row1, row1b, row3);
 
     const todayStr2 = todayISO();
     const dueUnits = Object.keys(english.reviewState)
