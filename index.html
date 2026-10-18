@@ -3036,13 +3036,43 @@
     ]},
   ];
 
+  // 每天05:00为一个周期的边界，跟 pm-checklist.html 的打卡逻辑一致
+  function periodKeyNow() {
+    const now = new Date();
+    const k = new Date(now);
+    if (now.getHours() < 5) k.setDate(k.getDate() - 1);
+    return toISO(k);
+  }
+
+  // 订货计算器的库存输入持久化，避免手机切后台几分钟后页面被系统回收、输入全部消失
+  const ORD_STOCK_STORE = "workbench.orderstock.v1";
+  function ordLoad() {
+    try {
+      const raw = localStorage.getItem(ORD_STOCK_STORE);
+      if (raw) return JSON.parse(raw);
+    } catch (e) { /* fall through */ }
+    return { periodKey: periodKeyNow(), stock: {} };
+  }
+  let ordData = ordLoad();
+  if (!ordData.stock) ordData.stock = {};
+  function ordSave() { localStorage.setItem(ORD_STOCK_STORE, JSON.stringify(ordData)); }
+  function ordEnsureFreshPeriod() {
+    const pk = periodKeyNow();
+    if (ordData.periodKey !== pk) {
+      ordData = { periodKey: pk, stock: {} };
+      ordSave();
+    }
+  }
+
   let ordRefs = [];
   function ordCurrentParMode() {
     return document.getElementById("ord-par-weekend").checked ? "weekend" : "daily";
   }
   function ordComputeQty(item, stockVal) {
     const par = ordCurrentParMode() === "weekend" ? item.parWeekend : item.parDaily;
-    const diff = Math.max(0, par - stockVal);
+    // 库存只按整箱算，输入里带的 0.5 之类小数一律舍掉，避免小数跟 input 的 step 对不上导致输入被判无效
+    const stockWhole = Math.floor(stockVal);
+    const diff = Math.max(0, par - stockWhole);
     const qty = item.unit === "box" ? diff * item.caseSize : diff;
     return Math.round(qty);
   }
@@ -3056,6 +3086,7 @@
     });
   }
   function ordInit() {
+    ordEnsureFreshPeriod();
     const container = document.getElementById("ord-items");
     container.innerHTML = "";
     ordRefs = [];
@@ -3096,9 +3127,14 @@
         const stockInput = document.createElement("input");
         stockInput.type = "number";
         stockInput.min = "0";
-        stockInput.step = item.directOrder ? "1" : "0.5";
+        stockInput.step = "any";
         stockInput.className = "ord-number";
         stockInput.placeholder = item.directOrder ? "需订几个" : "0";
+        stockInput.value = ordData.stock[item.name] || "";
+        stockInput.addEventListener("input", () => {
+          ordData.stock[item.name] = stockInput.value;
+          ordSave();
+        });
         const unitLabel = document.createElement("span");
         unitLabel.className = "ord-unit";
         unitLabel.textContent = item.directOrder ? "个" : (item.unit === "box" ? "箱" : "个");
@@ -3131,8 +3167,35 @@
     const v = parseFloat(ordDoubleInput.value);
     ordDoubleResult.textContent = isNaN(v) ? "—" : v * 2;
   });
+  ordDoubleInput.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    ordDoubleInput.value = "";
+    ordDoubleResult.textContent = "—";
+  });
 
   // ---- Misc 库存表页（从 pm-checklist.html 搬过来，只要库存表，不要下面的订货清单）----
+  // 跟 pm-checklist.html 的 Misc 页用同一个 localStorage key，同一台设备上两边数据是通的
+  const MISC_STORE = "workbench.miscstock.v1";
+  function miscLoad() {
+    try {
+      const raw = localStorage.getItem(MISC_STORE);
+      if (raw) return JSON.parse(raw);
+    } catch (e) { /* fall through */ }
+    return { periodKey: periodKeyNow(), boh: {}, cage: {} };
+  }
+  let miscData = miscLoad();
+  if (!miscData.boh) miscData.boh = {};
+  if (!miscData.cage) miscData.cage = {};
+  function miscSave() { localStorage.setItem(MISC_STORE, JSON.stringify(miscData)); }
+  function miscEnsureFreshPeriod() {
+    const pk = periodKeyNow();
+    if (miscData.periodKey !== pk) {
+      miscData = { periodKey: pk, boh: {}, cage: {} };
+      miscSave();
+    }
+  }
+
   const MISC_GROUPS = [
     { cat: "Misc Supplies", items: [
       { name: "Cocktail napkins", unit: "Box", parStock: 2 },
@@ -3171,6 +3234,7 @@
     ]},
   ];
   function initMisc() {
+    miscEnsureFreshPeriod();
     const tbody = document.getElementById("misc-tbody");
     tbody.innerHTML = "";
     MISC_GROUPS.forEach(group => {
@@ -3195,6 +3259,11 @@
         bohInput.min = "0";
         bohInput.className = "misc-input";
         bohInput.placeholder = "0";
+        bohInput.value = miscData.boh[item.name] || "";
+        bohInput.addEventListener("input", () => {
+          miscData.boh[item.name] = bohInput.value;
+          miscSave();
+        });
         tdBoh.appendChild(bohInput);
 
         const tdCage = document.createElement("td");
@@ -3203,6 +3272,11 @@
         cageInput.min = "0";
         cageInput.className = "misc-input";
         cageInput.placeholder = "0";
+        cageInput.value = miscData.cage[item.name] || "";
+        cageInput.addEventListener("input", () => {
+          miscData.cage[item.name] = cageInput.value;
+          miscSave();
+        });
         tdCage.appendChild(cageInput);
 
         const tdPar = document.createElement("td");
@@ -3227,6 +3301,12 @@
   const savedTab = localStorage.getItem(STORE_TAB);
   const validTabs = ["order", "misc", "notes", "schedule", "tixing", "interest"];
   setActiveTab(validTabs.includes(savedTab) ? savedTab : (savedTab === "xiaoshi" ? "tixing" : "notes"));
+
+  // 万一页面开着跨过了早上5点，每分钟检查一次订货计算器/Misc的库存要不要清空重来
+  setInterval(() => {
+    if (periodKeyNow() !== ordData.periodKey) ordInit();
+    if (periodKeyNow() !== miscData.periodKey) initMisc();
+  }, 60000);
 </script>
 </body>
 </html>

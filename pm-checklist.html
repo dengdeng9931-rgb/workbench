@@ -643,13 +643,16 @@
   }
 
   let amenityRefs = [];
+  let amenityCheckOrder = []; // 按勾选顺序记录名字，复制时按这个顺序输出，不是按固定列表顺序
   function buildAmenityText() {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const lines = [`Amenities for ${ddmm(tomorrow)}`, ""];
-    amenityRefs.forEach(({ name, cb, num }) => {
-      const v = parseInt(num.value, 10);
-      if (cb.checked && v > 0) lines.push(`${name} x${v}`);
+    amenityCheckOrder.forEach(name => {
+      const ref = amenityRefs.find(r => r.name === name);
+      if (!ref) return;
+      const v = parseInt(ref.num.value, 10);
+      if (ref.cb.checked && v > 0) lines.push(`${name} x${v}`);
     });
     return lines.join("\n");
   }
@@ -663,6 +666,7 @@
     const container = document.getElementById("amenity-items");
     container.innerHTML = "";
     amenityRefs = [];
+    amenityCheckOrder = [];
     AMENITY_ITEMS.forEach((name, i) => {
       const row = document.createElement("div");
       row.className = "tool-item-row";
@@ -681,7 +685,12 @@
       num.disabled = true;
       cb.addEventListener("change", () => {
         num.disabled = !cb.checked;
-        if (cb.checked) num.focus();
+        if (cb.checked) {
+          num.focus();
+          if (!amenityCheckOrder.includes(name)) amenityCheckOrder.push(name);
+        } else {
+          amenityCheckOrder = amenityCheckOrder.filter(n => n !== name);
+        }
         updateAmenityPreview();
       });
       num.addEventListener("input", updateAmenityPreview);
@@ -902,6 +911,46 @@
   ];
   MISC_GROUPS.push({ cat: "S&D Hamper", items: HAMPER_ITEMS });
 
+  // Misc 库存表 + Hamper 订货数，按同一个每天05:00的周期持久化到 localStorage，
+  // 避免手机切后台几分钟被系统回收页面后输入全部消失
+  const MISC_STORE = "workbench.miscstock.v1";
+  const HAMPER_ORDER_STORE = "workbench.hamperorder.v1";
+  function miscLoad() {
+    try {
+      const raw = localStorage.getItem(MISC_STORE);
+      if (raw) return JSON.parse(raw);
+    } catch (e) { /* fall through */ }
+    return { periodKey: periodKeyNow(), boh: {}, cage: {} };
+  }
+  let miscData = miscLoad();
+  if (!miscData.boh) miscData.boh = {};
+  if (!miscData.cage) miscData.cage = {};
+  function miscSave() { localStorage.setItem(MISC_STORE, JSON.stringify(miscData)); }
+  function miscEnsureFreshPeriod() {
+    const pk = periodKeyNow();
+    if (miscData.periodKey !== pk) {
+      miscData = { periodKey: pk, boh: {}, cage: {} };
+      miscSave();
+    }
+  }
+  function hamperLoad() {
+    try {
+      const raw = localStorage.getItem(HAMPER_ORDER_STORE);
+      if (raw) return JSON.parse(raw);
+    } catch (e) { /* fall through */ }
+    return { periodKey: periodKeyNow(), qty: {} };
+  }
+  let hamperData = hamperLoad();
+  if (!hamperData.qty) hamperData.qty = {};
+  function hamperSave() { localStorage.setItem(HAMPER_ORDER_STORE, JSON.stringify(hamperData)); }
+  function hamperEnsureFreshPeriod() {
+    const pk = periodKeyNow();
+    if (hamperData.periodKey !== pk) {
+      hamperData = { periodKey: pk, qty: {} };
+      hamperSave();
+    }
+  }
+
   let miscRefs = [];
   function computeMiscQty(item, cage, boh) {
     return Math.max(0, item.parStock - (cage + boh));
@@ -940,6 +989,7 @@
   // S&D Hamper 的"需要订的数量"是手填输入框，只建一次，不能跟着 refreshMiscOrderTable 一起重建，
   // 不然她刚打的字会被每次库存输入触发的刷新清空
   function buildHamperOrderRows() {
+    hamperEnsureFreshPeriod();
     const tbody = document.getElementById("misc-order-hamper-tbody");
     tbody.innerHTML = "";
     const capRow = document.createElement("tr");
@@ -960,6 +1010,11 @@
       qtyInput.type = "text";
       qtyInput.className = "misc-input misc-input-wide";
       qtyInput.placeholder = item.refQty ? "如 " + item.refQty : "自己填";
+      qtyInput.value = hamperData.qty[item.name] || "";
+      qtyInput.addEventListener("input", () => {
+        hamperData.qty[item.name] = qtyInput.value;
+        hamperSave();
+      });
       td2.appendChild(qtyInput);
 
       const td3 = document.createElement("td");
@@ -978,6 +1033,7 @@
     refreshMiscOrderTable();
   }
   function initMisc() {
+    miscEnsureFreshPeriod();
     const tbody = document.getElementById("misc-tbody");
     tbody.innerHTML = "";
     miscRefs = [];
@@ -1003,7 +1059,12 @@
         bohInput.min = "0";
         bohInput.className = "misc-input";
         bohInput.placeholder = "0";
-        bohInput.addEventListener("input", refreshMisc);
+        bohInput.value = miscData.boh[item.name] || "";
+        bohInput.addEventListener("input", () => {
+          miscData.boh[item.name] = bohInput.value;
+          miscSave();
+          refreshMisc();
+        });
         tdBoh.appendChild(bohInput);
 
         const tdCage = document.createElement("td");
@@ -1012,7 +1073,12 @@
         cageInput.min = "0";
         cageInput.className = "misc-input";
         cageInput.placeholder = "0";
-        cageInput.addEventListener("input", refreshMisc);
+        cageInput.value = miscData.cage[item.name] || "";
+        cageInput.addEventListener("input", () => {
+          miscData.cage[item.name] = cageInput.value;
+          miscSave();
+          refreshMisc();
+        });
         tdCage.appendChild(cageInput);
 
         const tdPar = document.createElement("td");
@@ -1214,6 +1280,8 @@
   setInterval(() => {
     if (periodKeyNow() !== data.periodKey) render();
     else document.getElementById("next-reset").textContent = nextResetLabel();
+    if (periodKeyNow() !== miscData.periodKey) initMisc();
+    if (periodKeyNow() !== hamperData.periodKey) buildHamperOrderRows();
   }, 60000);
 </script>
 </body>
